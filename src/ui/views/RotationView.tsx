@@ -119,7 +119,7 @@ export function RotationView() {
           <Select<string> ariaLabel="Bed" value={bed} options={beds.map((o) => ({ value: o.id, label: `${o.code} ${o.name}` }))} onChange={(v) => setBed(v ?? '')} className="sm" />
           <input className="input sm" style={{ width: 80 }} aria-label="Year" value={year} onChange={(e) => setYear(e.target.value)} inputMode="numeric" />
           <Select<RotationGroup> ariaLabel="Crop group" value={group} options={ROTATION_GROUPS.filter((g) => g !== 'perennial').map((g) => ({ value: g, label: ruleOf.get(g)?.label.en ?? g }))} onChange={(v) => v && setGroup(v)} className="sm" />
-          <input className="input sm" style={{ width: 160 }} placeholder="Crop (optional)" aria-label="Crop" value={crop} onChange={(e) => setCrop(e.target.value)} />
+          <input className="input sm" style={{ width: 160 }} placeholder="Crop (optional)" aria-label="Crop" value={crop} maxLength={200} onChange={(e) => setCrop(e.target.value)} />
           <button className="btn sm primary" type="submit">
             <Plus size={13} /> Add
           </button>

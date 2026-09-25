@@ -84,7 +84,8 @@ export async function duplicateProject(sourceDoc: ProjectDoc, newName: string): 
   const doc: ProjectDoc = {
     ...sourceDoc,
     id: newIdValue,
-    meta: { ...sourceDoc.meta, name: newName, createdAt: now, updatedAt: now },
+    // "<name> (copy)" can exceed the 200-character limit the stored document is validated against.
+    meta: { ...sourceDoc.meta, name: newName.slice(0, 200), createdAt: now, updatedAt: now },
     backgrounds: sourceDoc.backgrounds.map((b) => ({ ...b, assetId: idMap.get(b.assetId) ?? b.assetId })),
   };
   await db.transaction('rw', [db.projects, db.docs, db.assets], async () => {

@@ -45,11 +45,14 @@ function fmt(n: number, digits: number): string {
 export function formatLength(mm: number, system: UnitSystem = 'metric', unit?: LengthUnit): string {
   if (!Number.isFinite(mm)) return '—';
   if (system === 'imperial' && !unit) {
-    const inches = mm / MM_PER.in;
+    // Round to the displayed 0.1 in first, so 71.99 in shows as 6′ 0.0″ rather than 5′ 12.0″.
+    const inches = Math.round((mm / MM_PER.in) * 10) / 10;
     if (Math.abs(inches) < 24) return `${fmt(inches, 1)} in`;
-    const feet = Math.trunc(inches / 12);
-    const rest = Math.abs(inches - feet * 12);
-    return `${feet}′ ${fmt(rest, 1)}″`;
+    const sign = inches < 0 ? '-' : '';
+    const abs = Math.abs(inches);
+    const feet = Math.floor(abs / 12 + 1e-9);
+    const rest = Math.max(0, abs - feet * 12);
+    return `${sign}${feet}′ ${fmt(rest, 1)}″`;
   }
   const u = unit ?? (Math.abs(mm) >= 1000 ? 'm' : Math.abs(mm) >= 10 ? 'cm' : 'mm');
   const value = fromMm(mm, u);
@@ -100,12 +103,18 @@ const UNIT_ALIASES: Record<string, LengthUnit> = {
 
 /**
  * Parses user-entered lengths such as "3", "3 m", "120cm", "2,5 m" (comma
- * decimal, common in Finland) or "10'". Returns millimetres or null when the
+ * decimal, common in Finland), "10'" or "5' 6\"". Returns millimetres or null when the
  * input is not understood. A bare number is interpreted in `defaultUnit`.
  */
 export function parseLength(input: string, defaultUnit: LengthUnit = 'm'): number | null {
   const s = input.trim().toLowerCase().replace(',', '.');
   if (!s) return null;
+  // Feet and inches together, as imperial users write them: 5'6", 5′ 6″, 5 ft 6 in.
+  const fi = /^(-?)(\d+(?:\.\d+)?)\s*(?:'|′|ft|feet|foot)\s*(\d+(?:\.\d+)?)\s*(?:"|″|in|inch|inches)?$/.exec(s);
+  if (fi) {
+    const total = toMm(Number(fi[2]), 'ft') + toMm(Number(fi[3]), 'in');
+    return fi[1] ? -total : total;
+  }
   const match = /^(-?\d+(?:\.\d+)?|-?\.\d+)\s*([a-z"'″′]*)$/.exec(s);
   if (!match) return null;
   const value = Number(match[1]);

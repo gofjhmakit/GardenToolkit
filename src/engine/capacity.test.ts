@@ -102,3 +102,35 @@ describe('calculatePlantCapacity', () => {
     expect(r.warnings.length).toBe(1);
   });
 });
+
+describe('calculatePlantCapacity — very large and degenerate areas', () => {
+  const rows: PlantingRules = { method: 'rows', inRowMm: { min: 30, max: 80 }, rowMm: { min: 150, max: 300 } };
+
+  it('falls back to an area estimate for field-sized areas instead of freezing', () => {
+    const t = performance.now();
+    const r = calculatePlantCapacity({ region: rectRegion(3_000_000, 3_000_000), rules: rows }); // "3000 m" typo
+    expect(performance.now() - t).toBeLessThan(200);
+    expect(r.plants).toBeGreaterThan(0);
+    expect(r.plantsRange!.min).toBeLessThanOrEqual(r.plants!);
+    expect(r.plantsRange!.max).toBeGreaterThanOrEqual(r.plants!);
+    expect(r.positions).toEqual([]);
+    expect(r.warnings.join(' ')).toMatch(/rough area-based estimate/);
+  });
+
+  it('keeps the estimate close to the exact layout near the switch-over size', () => {
+    // 40 m × 40 m is still laid out plant by plant; 100 m × 100 m is estimated.
+    const exactRows = calculatePlantCapacity({ region: rectRegion(40_000, 40_000), rules: rows });
+    expect(exactRows.positions.length).toBeGreaterThan(0);
+    const est = calculatePlantCapacity({ region: rectRegion(100_000, 100_000), rules: rows });
+    expect(est.positions).toEqual([]);
+    const perM2Exact = exactRows.plants! / 1600;
+    const perM2Est = est.plants! / 10_000;
+    expect(Math.abs(perM2Est - perM2Exact) / perM2Exact).toBeLessThan(0.02);
+  });
+
+  it('reports non-finite areas as unmeasurable', () => {
+    const r = calculatePlantCapacity({ region: rectRegion(1e300, 1e300), rules: rows });
+    expect(r.plants).toBeNull();
+    expect(r.warnings.join(' ')).toMatch(/no measurable size/);
+  });
+});

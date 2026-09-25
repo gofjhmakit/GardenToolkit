@@ -158,7 +158,7 @@ export function toProjectFile(
   const plantIds = new Set(Object.values(doc.plantings).map((p) => p.plantId));
   const plants: Plant[] = [];
   for (const id of plantIds) {
-    const p = lookupPlant(id) ?? doc.embeddedPlants[id];
+    const p = lookupPlant(id) ?? (Object.hasOwn(doc.embeddedPlants, id) ? doc.embeddedPlants[id] : undefined);
     if (p) plants.push(p);
   }
   const usedAssets = new Set(doc.backgrounds.map((b) => b.assetId));
@@ -260,7 +260,11 @@ export function fromProjectFile(
   const warnings: string[] = [];
   const objects: ProjectDoc['objects'] = {};
   for (const o of file.objects) {
-    if (objects[o.id]) {
+    if (o.id === '__proto__') {
+      warnings.push('An object with the reserved id "__proto__" was skipped.');
+      continue;
+    }
+    if (Object.hasOwn(objects, o.id)) {
       warnings.push(`Duplicate object id ${o.id} skipped.`);
       continue;
     }
@@ -284,6 +288,10 @@ export function fromProjectFile(
   for (const raw of file.plants) {
     const p = PlantSchema.safeParse(raw);
     if (!p.success) {
+      invalidPlants++;
+      continue;
+    }
+    if (p.data.id === '__proto__') {
       invalidPlants++;
       continue;
     }
@@ -316,11 +324,11 @@ export function fromProjectFile(
   }
 
   const plantings: ProjectDoc['plantings'] = {};
-  for (const p of file.plantings) plantings[p.id] = p;
+  for (const p of file.plantings) if (p.id !== '__proto__') plantings[p.id] = p;
   const unknownPlants = new Set(
     Object.values(plantings)
       .map((p) => p.plantId)
-      .filter((id) => !opts.knownPlant(id) && !embeddedPlants[id]),
+      .filter((id) => !opts.knownPlant(id) && !Object.hasOwn(embeddedPlants, id)),
   );
   if (unknownPlants.size) {
     warnings.push(`${unknownPlants.size} plant(s) used in this project are not in your plant database and had no embedded data.`);

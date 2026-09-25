@@ -26,6 +26,8 @@ interface PromptReq {
   label: string;
   value: string;
   confirmLabel?: string;
+  /** Must not exceed the schema limit of the field being edited. Defaults to 200. */
+  maxLength?: number;
   resolve: (v: string | null) => void;
 }
 
@@ -137,7 +139,7 @@ function PromptDialog({ req }: { req: PromptReq }) {
           <button className="btn" onClick={() => close(null)}>
             Cancel
           </button>
-          <button className="btn primary" disabled={!value.trim()} onClick={() => close(value.trim())}>
+          <button className="btn primary" disabled={!value.trim()} onClick={() => close(value.trim().slice(0, req.maxLength ?? 200))}>
             {req.confirmLabel ?? 'OK'}
           </button>
         </>
@@ -146,12 +148,12 @@ function PromptDialog({ req }: { req: PromptReq }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (value.trim()) close(value.trim());
+          if (value.trim()) close(value.trim().slice(0, req.maxLength ?? 200));
         }}
       >
         <div className="field">
           <label htmlFor="prompt-input">{req.label}</label>
-          <input id="prompt-input" className="input" value={value} maxLength={200} onChange={(e) => setValue(e.target.value)} onFocus={(e) => e.target.select()} />
+          <input id="prompt-input" className="input" value={value} maxLength={req.maxLength ?? 200} onChange={(e) => setValue(e.target.value)} onFocus={(e) => e.target.select()} />
         </div>
       </form>
     </Dialog>

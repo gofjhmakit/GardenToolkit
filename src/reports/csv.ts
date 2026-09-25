@@ -8,6 +8,7 @@ import { shapeArea, shapePerimeter } from '../domain/geometry';
 import type { PlantLookup } from '../engine/plantings';
 import { generatePlantingCalendar } from '../engine/calendar';
 import { collectRows } from './builders';
+import { addDays, isValidIsoDate } from '../lib/dates';
 
 export function csvCell(v: unknown): string {
   if (v == null) return '';
@@ -90,18 +91,43 @@ export function calendarCsv(doc: ProjectDoc, lookup: PlantLookup): string {
   );
 }
 
+/** Folds a content line to at most 75 UTF-8 octets per physical line (RFC 5545 §3.1). */
+export function foldIcsLine(line: string): string {
+  const enc = new TextEncoder();
+  const parts: string[] = [];
+  let cur = '';
+  let bytes = 0;
+  for (const ch of line) {
+    const n = enc.encode(ch).length;
+    // Continuation lines start with a space, which counts towards their 75 octets.
+    if (bytes + n > (parts.length ? 74 : 75)) {
+      parts.push(cur);
+      cur = '';
+      bytes = 0;
+    }
+    cur += ch;
+    bytes += n;
+  }
+  parts.push(cur);
+  return parts.join('\r\n ');
+}
+
 /** iCalendar export of calendar tasks (all-day events). */
 export function calendarIcs(doc: ProjectDoc, lookup: PlantLookup, now = new Date()): string {
   const cal = generatePlantingCalendar(doc, lookup);
-  const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  // RFC 5545 TEXT escaping. Bare CRs are treated as line breaks too, so a title can never
+  // start a new property line.
+  const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
   const d = (iso: string) => iso.replace(/-/g, '');
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Garden Toolkit//EN', 'CALSCALE:GREGORIAN'];
   for (const e of cal.events) {
-    const end = new Date(Date.parse(e.end ?? e.start) + 86_400_000).toISOString().slice(0, 10);
+    if (!isValidIsoDate(e.start)) continue;
+    // DTEND is exclusive for all-day events.
+    const end = addDays(isValidIsoDate(e.end) && e.end >= e.start ? e.end : e.start, 1);
     lines.push('BEGIN:VEVENT', `UID:${esc(e.id)}@garden-toolkit`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${d(e.start)}`, `DTEND;VALUE=DATE:${d(end)}`, `SUMMARY:${esc(e.title)}`, `DESCRIPTION:${esc(e.basis)}`, 'END:VEVENT');
   }
   lines.push('END:VCALENDAR');
-  return lines.join('\r\n') + '\r\n';
+  return lines.map(foldIcsLine).join('\r\n') + '\r\n';
 }
 

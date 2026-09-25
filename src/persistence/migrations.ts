@@ -63,6 +63,9 @@ export function parseStoredDoc(raw: unknown): ParseDocResult {
  * project should open with its data intact rather than refuse to load.
  */
 export function repairReferences(doc: ProjectDoc): ProjectDoc {
+  // Own-property checks only: ids such as "constructor" or "toString" must not
+  // resolve to Object.prototype members and pass as existing records.
+  const hasObject = (id: string) => Object.hasOwn(doc.objects, id);
   const layers = doc.layers.length
     ? doc.layers
     : [{ id: 'layer-beds', name: 'Garden', role: 'content' as const, visible: true, locked: false, objectIds: [] }];
@@ -72,7 +75,7 @@ export function repairReferences(doc: ProjectDoc): ProjectDoc {
   const newLayers = layers.map((l) => ({
     ...l,
     objectIds: l.objectIds.filter((id) => {
-      if (!doc.objects[id] || seen.has(id)) return false;
+      if (!hasObject(id) || seen.has(id)) return false;
       seen.add(id);
       return true;
     }),
@@ -81,7 +84,7 @@ export function repairReferences(doc: ProjectDoc): ProjectDoc {
   for (const [id, obj] of Object.entries(objects)) {
     let o = obj;
     if (!layerIds.has(o.layerId)) o = { ...o, layerId: fallbackLayer.id };
-    if (o.groupId && !doc.groups[o.groupId]) o = { ...o, groupId: null };
+    if (o.groupId && !Object.hasOwn(doc.groups, o.groupId)) o = { ...o, groupId: null };
     objects[id] = o;
     if (!seen.has(id)) {
       const target = newLayers.find((l) => l.id === o.layerId) ?? newLayers[0];
@@ -89,6 +92,7 @@ export function repairReferences(doc: ProjectDoc): ProjectDoc {
       seen.add(id);
     }
   }
-  const plantings = Object.fromEntries(Object.entries(doc.plantings).filter(([, p]) => !!objects[p.objectId]));
-  return { ...doc, layers: newLayers, objects, plantings };
+  const plantings = Object.fromEntries(Object.entries(doc.plantings).filter(([, p]) => hasObject(p.objectId)));
+  const customTasks = doc.customTasks.map((t) => (t.objectId && !hasObject(t.objectId) ? { ...t, objectId: null } : t));
+  return { ...doc, layers: newLayers, objects, plantings, customTasks };
 }

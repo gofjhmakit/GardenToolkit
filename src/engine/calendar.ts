@@ -265,13 +265,14 @@ export function generatePlantingCalendar(
   }
 
   for (const task of doc.customTasks) {
-    if (!task.start.startsWith(String(season))) continue;
+    // Tasks with an impossible start date cannot be placed on the calendar.
+    if (!isValidIsoDate(task.start) || !task.start.startsWith(String(season))) continue;
     events.push({
       id: task.id,
       type: 'custom',
       title: task.title,
-      start: task.start,
-      end: task.end,
+      start: task.start.slice(0, 10),
+      end: isValidIsoDate(task.end) ? task.end.slice(0, 10) : null,
       plantingId: null,
       plantId: null,
       objectIds: task.objectId ? [task.objectId] : [],

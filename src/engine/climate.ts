@@ -8,6 +8,7 @@
  */
 import type { LocationSettings } from '../domain/project';
 import type { Plant } from '../plants/schema';
+import { isValidMonthDay } from '../lib/dates';
 
 export interface ClimatePreset {
   id: string;
@@ -56,17 +57,20 @@ export function isSouthernHemisphere(loc: LocationSettings): boolean {
 }
 
 export function frostDates(loc: LocationSettings): { lastFrost: string; firstFrost: string; placeholder: boolean } {
-  if (loc.lastFrost && loc.firstFrost) return { lastFrost: loc.lastFrost, firstFrost: loc.firstFrost, placeholder: false };
+  // Impossible dates (e.g. "13-40" from a hand-edited file) count as missing.
+  const last = isValidMonthDay(loc.lastFrost) ? loc.lastFrost : null;
+  const first = isValidMonthDay(loc.firstFrost) ? loc.firstFrost : null;
+  if (last && first) return { lastFrost: last, firstFrost: first, placeholder: false };
   return {
-    lastFrost: loc.lastFrost ?? PLACEHOLDER_FROST.lastFrost,
-    firstFrost: loc.firstFrost ?? PLACEHOLDER_FROST.firstFrost,
+    lastFrost: last ?? PLACEHOLDER_FROST.lastFrost,
+    firstFrost: first ?? PLACEHOLDER_FROST.firstFrost,
     placeholder: true,
   };
 }
 
 /** Frost-free days between last spring and first autumn frost (northern pattern). */
 export function frostFreeDays(loc: LocationSettings): number | null {
-  if (!loc.lastFrost || !loc.firstFrost) return null;
+  if (!isValidMonthDay(loc.lastFrost) || !isValidMonthDay(loc.firstFrost)) return null;
   const y = 2001;
   const a = Date.UTC(y, Number(loc.lastFrost.slice(0, 2)) - 1, Number(loc.lastFrost.slice(3)));
   let b = Date.UTC(y, Number(loc.firstFrost.slice(0, 2)) - 1, Number(loc.firstFrost.slice(3)));

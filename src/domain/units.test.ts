@@ -39,3 +39,31 @@ describe('units — imperial and odd input', () => {
     expect(parseLength('3 m 20 cm')).toBeNull();
   });
 });
+
+describe('units — what imperial users type and read', () => {
+  it('parses feet and inches written together', () => {
+    const ft6in = 6 * 304.8 + 6 * 25.4;
+    expect(parseLength(`6' 6"`)).toBeCloseTo(ft6in);
+    expect(parseLength(`6'6"`)).toBeCloseTo(ft6in);
+    expect(parseLength('6′ 6″')).toBeCloseTo(ft6in);
+    expect(parseLength('6 ft 6 in')).toBeCloseTo(ft6in);
+    expect(parseLength(`6'6`)).toBeCloseTo(ft6in);
+    expect(parseLength(`-2' 3"`)).toBeCloseTo(-(2 * 304.8 + 3 * 25.4));
+    expect(parseLength(`6' 6 m`)).toBeNull();
+  });
+  it('never shows 12 inches in the inch part', () => {
+    // 71.996 in used to be shown as 5′ 12.0″.
+    expect(formatLength(1828.7, 'imperial')).toBe('6′ 0.0″');
+    expect(formatLength(-1828.7, 'imperial')).toBe('-6′ 0.0″');
+    expect(formatLength(609.5, 'imperial')).toBe('2′ 0.0″');
+    for (let mm = 610; mm < 4000; mm += 0.37) {
+      const inchPart = Number(/ ([\d.]+)″$/.exec(formatLength(mm, 'imperial'))![1]);
+      expect(inchPart).toBeLessThan(12);
+    }
+  });
+  it('reads back what it displays (imperial round trip within display precision)', () => {
+    for (let mm = 610; mm < 30000; mm += 97.3) {
+      expect(parseLength(formatLength(mm, 'imperial'))).toBeCloseTo(mm, -1);
+    }
+  });
+});

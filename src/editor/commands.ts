@@ -393,7 +393,7 @@ export function pasteObjects(doc: ProjectDoc, payload: ClipboardPayload, offset:
     const objectId = idMap.get(p.objectId);
     if (!objectId) continue;
     const id = newId('pl');
-    doc.plantings[id] = { ...structuredClone(p), id, objectId, createdAt: now + p.createdAt.slice(-4) };
+    doc.plantings[id] = { ...structuredClone(p), id, objectId, createdAt: now };
   }
   for (const g of groupMap.values()) dissolveGroupIfSmall(doc, g);
   return created.map((o) => o.id);
@@ -419,15 +419,18 @@ export function duplicateObjects(doc: ProjectDoc, ids: readonly string[], offset
 // Layers
 // ---------------------------------------------------------------------------
 
+/** Matches LayerSchema; longer names would make the stored project fail validation. */
+const MAX_LAYER_NAME = 100;
+
 export function addLayer(doc: ProjectDoc, name: string): string {
   const id = newId('layer');
-  doc.layers.push({ id, name, role: 'content', visible: true, locked: false, objectIds: [] });
+  doc.layers.push({ id, name: name.slice(0, MAX_LAYER_NAME), role: 'content', visible: true, locked: false, objectIds: [] });
   return id;
 }
 
 export function updateLayer(doc: ProjectDoc, id: string, patch: Partial<Pick<Layer, 'name' | 'visible' | 'locked'>>): void {
   const l = layerById(doc, id);
-  if (l) Object.assign(l, patch);
+  if (l) Object.assign(l, patch.name === undefined ? patch : { ...patch, name: patch.name.slice(0, MAX_LAYER_NAME) });
 }
 
 /** Deletes a layer; its objects move to `moveTo` (or the nearest content layer). */

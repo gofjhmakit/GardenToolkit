@@ -63,8 +63,8 @@ export function SettingsView() {
           )}
         </Field>
         <div className="grid2">
-          <Field label="Country">{(id) => <TextInput id={id} value={loc.country ?? ''} onChange={(v) => setLoc({ country: v || null }, 'Edit location', 'loc-country')} />}</Field>
-          <Field label="Region / municipality">{(id) => <TextInput id={id} value={loc.region ?? ''} onChange={(v) => setLoc({ region: v || null }, 'Edit location', 'loc-region')} />}</Field>
+          <Field label="Country">{(id) => <TextInput id={id} value={loc.country ?? ''} maxLength={80} onChange={(v) => setLoc({ country: v || null }, 'Edit location', 'loc-country')} />}</Field>
+          <Field label="Region / municipality">{(id) => <TextInput id={id} value={loc.region ?? ''} maxLength={120} onChange={(v) => setLoc({ region: v || null }, 'Edit location', 'loc-region')} />}</Field>
           <Field label="Climate zone system">
             {(id) => <Select id={id} value={loc.climateSystem ?? ''} emptyLabel="None" options={[{ value: 'finnish-zone', label: 'Finnish growing zones (I–VIII)' }, { value: 'usda', label: 'USDA hardiness zones' }, { value: 'other', label: 'Other' }]} onChange={(v) => setLoc({ climateSystem: v })} />}
           </Field>

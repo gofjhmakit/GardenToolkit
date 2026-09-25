@@ -15,7 +15,16 @@ export function parseIso(iso: string): number {
 
 export function isValidIsoDate(s: string | null | undefined): s is string {
   if (!s || !/^\d{4}-\d{2}-\d{2}/.test(s)) return false;
-  return Number.isFinite(parseIso(s));
+  const t = parseIso(s);
+  // Round-trip so impossible dates such as 2026-13-45 or 2026-02-30 are rejected
+  // instead of silently rolling over into another month.
+  return Number.isFinite(t) && fromTime(t) === s.slice(0, 10);
+}
+
+/** True for a real recurring "MM-DD" date (29 February allowed). */
+export function isValidMonthDay(md: string | null | undefined): md is string {
+  if (!md || !/^\d{2}-\d{2}$/.test(md)) return false;
+  return isValidIsoDate(`2000-${md}`);
 }
 
 export function fromTime(t: number): string {

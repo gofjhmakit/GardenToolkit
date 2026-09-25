@@ -28,7 +28,7 @@ export function LayersPanel() {
           title="Add layer"
           aria-label="Add layer"
           onClick={async () => {
-            const name = await promptAsync({ title: 'New layer', label: 'Layer name', value: 'New layer', confirmLabel: 'Add layer' });
+            const name = await promptAsync({ title: 'New layer', label: 'Layer name', value: 'New layer', confirmLabel: 'Add layer', maxLength: 100 });
             if (name) s().commit('Add layer', (d) => void addLayer(d, name));
           }}
         >
@@ -60,7 +60,7 @@ export function LayersPanel() {
                     {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                   </button>
                   <span className={`label ${layer.visible ? '' : 'dimmed'}`} onDoubleClick={async () => {
-                    const name = await promptAsync({ title: 'Rename layer', label: 'Layer name', value: layer.name, confirmLabel: 'Rename' });
+                    const name = await promptAsync({ title: 'Rename layer', label: 'Layer name', value: layer.name, confirmLabel: 'Rename', maxLength: 100 });
                     if (name) s().commit('Rename layer', (d) => updateLayer(d, layer.id, { name }));
                   }}>
                     {layer.name} <span className="code">{count}</span>
@@ -97,7 +97,7 @@ export function LayersPanel() {
                     {!isBg && (
                       <>
                         <button className="icon-btn sm" title="Rename layer" aria-label={`Rename layer ${layer.name}`} onClick={async () => {
-                          const name = await promptAsync({ title: 'Rename layer', label: 'Layer name', value: layer.name, confirmLabel: 'Rename' });
+                          const name = await promptAsync({ title: 'Rename layer', label: 'Layer name', value: layer.name, confirmLabel: 'Rename', maxLength: 100 });
                           if (name) s().commit('Rename layer', (d) => updateLayer(d, layer.id, { name }));
                         }}>
                           <Pencil size={12} />

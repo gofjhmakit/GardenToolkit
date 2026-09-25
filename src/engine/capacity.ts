@@ -188,6 +188,9 @@ function unrotate(p: Vec, swap: boolean): Vec {
 
 const fmtL = (mm: number) => formatLength(mm);
 
+/** Upper bound of lattice stations evaluated per spacing variant before falling back to an estimate. */
+export const MAX_LAYOUT_STATIONS = 400_000;
+
 export function resolveRowAxis(region: Vec[], rowAxis: 'x' | 'y' | 'auto' = 'auto'): 'x' | 'y' {
   if (rowAxis !== 'auto') return rowAxis;
   const b = boundsOfPoints(region);
@@ -272,7 +275,7 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
   const along = axis === 'x' ? b.maxX - b.minX : b.maxY - b.minY;
   const across = axis === 'x' ? b.maxY - b.minY : b.maxX - b.minX;
 
-  if (region.length < 3 || areaMm2 <= 0) {
+  if (region.length < 3 || !(areaMm2 > 0) || !Number.isFinite(areaMm2) || !Number.isFinite(along) || !Number.isFinite(across)) {
     result.warnings.push('The area has no measurable size.');
     return result;
   }
@@ -328,6 +331,24 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
   if (rules.rowMm && !isGrid) rowR = rules.rowMm;
   else if (pattern === 'triangular') rowR = { min: (inRow.min * Math.sqrt(3)) / 2, max: (inRow.max * Math.sqrt(3)) / 2 };
   else rowR = inRow;
+
+  // Laying out every station is linear in the plant count and runs on the main thread.
+  // Beyond a field-sized area, fall back to an area ÷ spacing estimate so a typo such as
+  // "3000 m" (or a hostile imported file) cannot freeze the app.
+  const stationsUpperBound = (along / inRow.min + 1) * (across / rowR.min + 1);
+  if (!(stationsUpperBound <= MAX_LAYOUT_STATIONS)) {
+    const perArea = (sIn: number, sRow: number) => Math.floor(areaMm2 / (sIn * sRow));
+    result.inRowMm = midpoint(inRow);
+    result.rowMm = midpoint(rowR);
+    result.plants = perArea(result.inRowMm, result.rowMm);
+    result.plantsRange = { min: perArea(inRow.max, rowR.max), max: perArea(inRow.min, rowR.min) };
+    ex.push(
+      `The area is too large for a plant-by-plant layout; the quantity is estimated as area ÷ (${fmtL(result.inRowMm)} × ${fmtL(result.rowMm)}) ≈ ${result.plants.toLocaleString('en-US')} plants, without edge margins.`,
+    );
+    result.warnings.push('Very large area: the quantity is a rough area-based estimate and plant markers are not drawn. Check the object size if this is unexpected.');
+    seedEstimate(rules, result.plantsRange, null, result);
+    return result;
+  }
 
   const poly = rotatePoly(region, axis === 'y');
   const compute = (sIn: number, sRow: number, maxPos: number) => {
