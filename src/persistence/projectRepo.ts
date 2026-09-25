@@ -180,3 +180,25 @@ export async function kvGet<T>(key: string, fallback: T): Promise<T> {
 export async function kvSet(key: string, value: unknown): Promise<void> {
   await getDb().kv.put({ key, value });
 }
+
+/**
+ * Recovery: replaces a project's (e.g. corrupted) document with a snapshot.
+ * The current document is kept as a snapshot first, so recovery is reversible.
+ */
+export async function recoverFromSnapshot(projectId: string, snapshotId: string): Promise<boolean> {
+  const db = getDb();
+  const snap = await db.snapshots.get(snapshotId);
+  if (!snap || snap.projectId !== projectId) return false;
+  const parsed = parseStoredDoc(snap.doc);
+  if (!parsed.ok) return false;
+  const doc = { ...parsed.doc, id: projectId, meta: { ...parsed.doc.meta, updatedAt: new Date().toISOString() } };
+  await db.transaction('rw', [db.projects, db.docs, db.snapshots], async () => {
+    const current = await db.docs.get(projectId);
+    if (current) {
+      await db.snapshots.put({ id: newId('snap'), projectId, createdAt: new Date().toISOString(), label: 'Before recovery (unreadable)', auto: false, doc: current.doc });
+    }
+    await db.docs.put({ id: projectId, doc });
+    await db.projects.put(metaFor(doc));
+  });
+  return true;
+}

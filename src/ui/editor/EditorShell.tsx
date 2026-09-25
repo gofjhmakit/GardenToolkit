@@ -49,6 +49,7 @@ import { RotationView } from '../views/RotationView';
 import { PlantDatabaseView } from '../views/PlantDatabaseView';
 import { ReportsView } from '../views/ReportsView';
 import { SettingsView } from '../views/SettingsView';
+import { TabGuardBanner } from './TabGuardBanner';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
   { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
@@ -212,6 +213,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
           </button>
         ))}
       </nav>
+      <TabGuardBanner />
       <main className="workspace" id="main-canvas">
         {workspace === 'design' ? (
           <>

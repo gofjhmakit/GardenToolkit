@@ -8,6 +8,7 @@ import { usePlants } from './app/plantStore';
 import { usePrefs } from './app/prefs';
 import { startAutosave } from './app/autosave';
 import { UpdatePrompt } from './ui/UpdatePrompt';
+import { RecoveryPanel } from './ui/RecoveryPanel';
 
 function parseRoute(): { page: 'home' } | { page: 'project'; id: string } {
   const m = /^#\/p\/([\w-]+)$/.exec(location.hash);
@@ -65,7 +66,8 @@ export function App() {
               <h2>This project could not be opened</h2>
               <p>{error.message}</p>
               {error.details.length > 0 && <pre className="small" style={{ textAlign: 'left', whiteSpace: 'pre-wrap' }}>{error.details.join('\n')}</pre>}
-              <p className="small muted">Your data has not been changed. You may be able to restore an earlier version, or import a backup file.</p>
+              <p className="small muted">Your data has not been changed. You can restore an earlier version below, or import a backup file.</p>
+              <RecoveryPanel projectId={route.id} onRecovered={() => { setError(null); setRoute({ ...route }); }} />
               <button className="btn primary" onClick={() => navigate('#/')}>Back to projects</button>
             </div>
           </div>

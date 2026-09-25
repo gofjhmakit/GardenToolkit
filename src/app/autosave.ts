@@ -6,6 +6,7 @@
 import type { ProjectDoc } from '../domain/project';
 import { useEditor } from '../editor/store';
 import { createSnapshot, listSnapshots, saveProject } from '../persistence/projectRepo';
+import { announceSaved } from './tabGuard';
 
 const DEBOUNCE_MS = 700;
 const AUTO_SNAPSHOT_MS = 15 * 60 * 1000;
@@ -31,6 +32,7 @@ async function doSave(): Promise<void> {
   try {
     await saveProject(doc);
     lastSaved = doc;
+    announceSaved(doc.id);
     if (useEditor.getState().doc === doc) useEditor.getState().setSaveStatus('saved');
     if (Date.now() - lastSnapshotAt > AUTO_SNAPSHOT_MS) {
       lastSnapshotAt = Date.now();

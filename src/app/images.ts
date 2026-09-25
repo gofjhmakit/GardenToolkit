@@ -54,8 +54,10 @@ async function downscale(bitmap: ImageBitmap, mime: ImageMime): Promise<{ blob: 
 }
 
 async function renderPdfFirstPage(file: Blob): Promise<Blob> {
-  const pdfjs = await import('pdfjs-dist');
-  const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+  // The legacy build bundles polyfills for newer JS features (e.g. Map.getOrInsertComputed)
+  // that current Safari/Chromium releases do not all have yet.
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const worker = await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url');
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
   const data = new Uint8Array(await file.arrayBuffer());
   // Scripting is disabled by default in pdf.js; the PDF is only rasterised.

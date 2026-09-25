@@ -24,6 +24,7 @@ import { useAssetUrls } from './assets';
 import { usePlants } from './plantStore';
 import { makeLookup } from './lookup';
 import { prepareBlueprint } from './images';
+import { announceClosed, announceOpen } from './tabGuard';
 import { toast } from '../ui/components/feedback';
 
 export function navigate(hash: string): void {
@@ -42,6 +43,7 @@ export async function openProjectById(id: string): Promise<{ ok: true } | { ok: 
     await saveProject(res.doc);
   }
   await resetAutosave(res.doc);
+  announceOpen(res.doc.id);
   void requestPersistentStorage();
   requestAnimationFrame(() => editorApi.getState().fitToContent());
   return { ok: true };
@@ -55,6 +57,7 @@ export async function createNewProject(name: string, location: Partial<LocationS
 
 export async function closeProject(): Promise<void> {
   await flushSave();
+  announceClosed();
   editorApi.getState().close();
   useAssetUrls.getState().clear();
 }
