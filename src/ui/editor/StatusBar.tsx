@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Magnet } from 'lucide-react';
 import { shapeArea } from '../../domain/geometry';
 import { formatArea, formatLength } from '../../domain/units';
 import { useEditor, zoomPercent } from '../../editor/store';
 
 export function StatusBar() {
+  const { t } = useTranslation();
   const doc = useEditor((s) => s.doc);
   const view = useEditor((s) => s.view);
   const cursor = useEditor((s) => s.cursorWorld);
@@ -25,7 +27,7 @@ export function StatusBar() {
   const selArea = selection.reduce((s, id) => s + (doc.objects[id] ? shapeArea(doc.objects[id].shape) : 0), 0);
   const uncalibrated = doc.backgrounds.length > 0 && doc.backgrounds.every((b) => !b.calibration);
   const saveText =
-    saveStatus === 'saved' ? 'Saved locally' : saveStatus === 'saving' ? 'Saving…' : saveStatus === 'pending' ? 'Unsaved changes' : `Save failed: ${saveError ?? ''}`;
+    saveStatus === 'saved' ? t('Saved locally') : saveStatus === 'saving' ? 'Saving…' : saveStatus === 'pending' ? 'Unsaved changes' : `Save failed: ${saveError ?? ''}`;
   return (
     <footer className="statusbar" aria-label="Status">
       <span role="status" aria-live="polite" title={saveStatus === 'error' ? saveError ?? '' : 'Your project is stored in this browser (IndexedDB)'}>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, ChevronUp, Eye, EyeOff, Image as ImageIcon, Lock, LockOpen, Plus, Trash2, Pencil, Group } from 'lucide-react';
 import { useEditor } from '../../editor/store';
 import { kindInfo } from '../../domain/objectKinds';
@@ -6,6 +7,7 @@ import { addLayer, deleteLayer, moveLayer, updateLayer, updateBackground } from 
 import { promptAsync, confirmAsync } from '../components/feedback';
 
 export function LayersPanel() {
+  const { t } = useTranslation();
   const doc = useEditor((s) => s.doc)!;
   const selection = useEditor((s) => s.selection);
   const selectedBg = useEditor((s) => s.selectedBackgroundId);
@@ -19,7 +21,7 @@ export function LayersPanel() {
   return (
     <aside className="side" aria-label="Layers and objects">
       <div className="side-header">
-        <h2>Layers</h2>
+        <h2>{t('Layers')}</h2>
         <span className="spacer" />
         <button
           className="icon-btn sm"

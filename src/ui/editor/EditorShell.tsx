@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   CalendarDays,
@@ -93,6 +94,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
   const workspace = useEditor((s) => s.workspace);
   const showLeft = usePrefs((s) => s.showLeftPanel);
   const showRight = usePrefs((s) => s.showRightPanel);
+  const { t } = useTranslation();
   const [helpOpen, setHelpOpen] = useState(false);
   const [addPlantsFor, setAddPlantsFor] = useState<string[] | null>(null);
   const onHelp = useCallback(() => setHelpOpen(true), []);
@@ -201,7 +203,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
         {WORKSPACES.map((w) => (
           <button key={w.id} role="tab" aria-selected={workspace === w.id} onClick={() => useEditor.getState().setWorkspace(w.id)}>
             {w.icon}
-            {w.label}
+            {t(w.label)}
           </button>
         ))}
       </nav>
@@ -248,6 +250,7 @@ function ToolButton({ active, label, shortcut, onClick, children }: { active: bo
 }
 
 function AddPlantsButton() {
+  const { t } = useTranslation();
   const doc = useEditor((s) => s.doc);
   const selection = useEditor((s) => s.selection);
   const plantable = doc ? selection.filter((id) => doc.objects[id] && kindInfo(doc.objects[id].kind).plantable) : [];
@@ -259,7 +262,7 @@ function AddPlantsButton() {
       onClick={() => window.dispatchEvent(new CustomEvent('gtk:add-plants', { detail: { ids: plantable } }))}
     >
       <Sprout size={14} />
-      Add plants{plantable.length > 1 ? ` (${plantable.length})` : ''}
+      {t('Add plants')}{plantable.length > 1 ? ` (${plantable.length})` : ''}
     </button>
   );
 }

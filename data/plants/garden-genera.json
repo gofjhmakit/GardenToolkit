@@ -1,0 +1,18 @@
+{
+  "_comment": "Genus -> Garden Toolkit category, used by scripts/import-wikidata.mjs to import CC0 names for garden-relevant species. Extend freely.",
+  "vegetable": ["Allium", "Beta", "Brassica", "Capsicum", "Cucumis", "Cucurbita", "Daucus", "Lactuca", "Pastinaca", "Phaseolus", "Pisum", "Raphanus", "Solanum", "Spinacia", "Vicia", "Zea", "Apium", "Cichorium", "Asparagus", "Rheum", "Cynara", "Scorzonera", "Tragopogon", "Valerianella", "Eruca", "Lepidium", "Atriplex", "Tetragonia"],
+  "herb": ["Ocimum", "Petroselinum", "Anethum", "Coriandrum", "Mentha", "Thymus", "Origanum", "Salvia", "Levisticum", "Artemisia", "Melissa", "Anthriscus", "Rumex", "Satureja", "Borago", "Matricaria", "Hyssopus", "Foeniculum", "Tanacetum", "Agastache", "Monarda", "Armoracia"],
+  "berry": ["Fragaria", "Rubus", "Ribes", "Vaccinium", "Lonicera", "Hippophae", "Aronia", "Amelanchier", "Sambucus", "Actinidia"],
+  "fruit-tree": ["Malus", "Pyrus", "Prunus", "Cydonia", "Morus", "Juglans"],
+  "nut": ["Corylus", "Castanea"],
+  "tree": ["Acer", "Betula", "Sorbus", "Tilia", "Quercus", "Fagus", "Picea", "Pinus", "Larix", "Abies", "Fraxinus", "Salix", "Populus", "Alnus", "Carpinus", "Magnolia", "Cercidiphyllum"],
+  "shrub": ["Syringa", "Hydrangea", "Spiraea", "Juniperus", "Cotoneaster", "Physocarpus", "Philadelphus", "Rosa", "Viburnum", "Cornus", "Forsythia", "Weigela", "Potentilla", "Rhododendron", "Buxus", "Taxus", "Thuja", "Berberis", "Chaenomeles", "Deutzia", "Euonymus"],
+  "perennial": ["Paeonia", "Hosta", "Hemerocallis", "Echinacea", "Nepeta", "Lamprocapnos", "Achillea", "Astilbe", "Geranium", "Alchemilla", "Phlox", "Delphinium", "Aquilegia", "Campanula", "Heuchera", "Rudbeckia", "Sedum", "Hylotelephium", "Leucanthemum", "Primula", "Brunnera", "Pulmonaria", "Iris", "Aster", "Symphyotrichum", "Veronica", "Salvia", "Papaver", "Lupinus", "Dianthus", "Bergenia", "Ligularia", "Filipendula", "Helenium", "Coreopsis", "Gaillardia", "Kniphofia", "Persicaria", "Polemonium", "Trollius"],
+  "flower": ["Calendula", "Tagetes", "Tropaeolum", "Helianthus", "Lathyrus", "Cosmos", "Zinnia", "Lobularia", "Centaurea", "Antirrhinum", "Petunia", "Viola", "Nicotiana", "Nigella", "Eschscholzia", "Lobelia", "Impatiens", "Begonia", "Pelargonium", "Dahlia", "Verbena", "Ageratum", "Salvia", "Cleome", "Amaranthus"],
+  "bulb": ["Tulipa", "Narcissus", "Crocus", "Hyacinthus", "Muscari", "Galanthus", "Scilla", "Lilium", "Fritillaria", "Gladiolus", "Allium", "Chionodoxa", "Anemone"],
+  "vine": ["Clematis", "Humulus", "Vitis", "Parthenocissus", "Hedera", "Wisteria", "Aristolochia"],
+  "grass": ["Festuca", "Poa", "Calamagrostis", "Miscanthus", "Molinia", "Deschampsia", "Carex", "Pennisetum"],
+  "groundcover": ["Vinca", "Ajuga", "Pachysandra", "Waldsteinia", "Lamium", "Thymus"],
+  "green-manure": ["Phacelia", "Fagopyrum", "Trifolium", "Medicago", "Secale", "Sinapis", "Lupinus"],
+  "aquatic": ["Nymphaea", "Caltha", "Menyanthes", "Typha"]
+}

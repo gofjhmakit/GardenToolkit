@@ -1246,6 +1246,25 @@ kbd {
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
+/* icon + count pairs ("12 objects", "30 plantings") */
+.project-card .row > span:not(.name) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.project-card .row > span svg {
+  color: var(--muted);
+}
+.project-card .icon-btn {
+  margin: -4px -6px -4px 0;
+  opacity: 0.6;
+}
+.project-card:hover .icon-btn,
+.project-card:focus-within .icon-btn,
+.project-card .icon-btn[aria-expanded='true'] {
+  opacity: 1;
+}
 /* NEW (optional): plan thumbnail well — paper with a faint grid; put an <svg>/<img> inside */
 .project-thumb {
   aspect-ratio: 16 / 9;
@@ -1926,28 +1945,23 @@ kbd {
   letter-spacing: 0.02em;
   font-weight: 400;
 }
-/* Row actions: hidden until hover/focus, but state flags (hidden/locked) always show */
+/* Row actions: hidden until the row is hovered/focused (so labels get the full
+   width); buttons carrying a state flag (hidden/locked) always stay visible. */
 .tree-row .row-actions {
   display: flex;
   gap: 0;
+  flex: none;
 }
-.tree-row .row-actions .icon-btn {
+.tree-row .row-actions > button {
   width: 22px;
   height: 22px;
-  opacity: 0;
-  transition: opacity var(--dur-1) var(--ease);
 }
-.tree-row:hover .row-actions .icon-btn,
-.tree-row:focus-within .row-actions .icon-btn,
-.tree-row .row-actions .icon-btn[aria-pressed='true'],
-.tree-row .row-actions .icon-btn:has(.active-flag) {
-  opacity: 1;
+.tree-row .row-actions > button:not(:has(.active-flag)) {
+  display: none;
 }
-.tree-row .row-actions .icon-btn:disabled {
-  opacity: 0;
-}
-.tree-row:hover .row-actions .icon-btn:disabled {
-  opacity: 0.3;
+.tree-row:hover .row-actions > button,
+.tree-row:focus-within .row-actions > button {
+  display: inline-flex;
 }
 /* A toggled flag in a row is state, not a mode — no green pill */
 .tree-row .row-actions .icon-btn[aria-pressed='true'] {
@@ -2422,8 +2436,9 @@ kbd {
   .tree-row {
     height: 34px;
   }
-  .tree-row .row-actions .icon-btn {
-    opacity: 0.7;
+  /* no hover on touch: always show row actions */
+  .tree-row .row-actions > button {
+    display: inline-flex;
     width: 30px;
     height: 30px;
   }

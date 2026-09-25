@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy, FileUp, Layers, Leaf, MoreHorizontal, Plus, Sprout, Trash2, WifiOff, Calculator, CalendarDays, FileDown, ShieldCheck, Pencil } from 'lucide-react';
 import { deleteProject, duplicateProject, listProjects, loadProject, renameProject } from '../../persistence/projectRepo';
 import type { ProjectMeta } from '../../persistence/db';
@@ -11,6 +12,7 @@ import { CLIMATE_PRESETS } from '../../engine/climate';
 import { Field, Select, TextInput } from '../components/Fields';
 
 export function HomeScreen() {
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<ProjectMeta[] | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [menu, setMenu] = useState<{ p: ProjectMeta; x: number; y: number } | null>(null);
@@ -32,10 +34,10 @@ export function HomeScreen() {
             Garden Toolkit
           </div>
           <span className="spacer" />
-          <button className="btn" onClick={onImport}><FileUp size={14} /> Import project</button>
-          <button className="btn primary" onClick={() => setCreateOpen(true)}><Plus size={14} /> New garden</button>
+          <button className="btn" onClick={onImport}><FileUp size={14} /> {t('Import project')}</button>
+          <button className="btn primary" onClick={() => setCreateOpen(true)}><Plus size={14} /> {t('New garden')}</button>
         </header>
-        <h1 style={{ marginBottom: 4 }}>Your gardens</h1>
+        <h1 style={{ marginBottom: 4 }}>{t('Your gardens')}</h1>
         <p className="muted" style={{ marginBottom: 18 }}>Plans are saved automatically in this browser. Nothing is uploaded.</p>
         {projects === null ? (
           <p className="muted">Loading…</p>
