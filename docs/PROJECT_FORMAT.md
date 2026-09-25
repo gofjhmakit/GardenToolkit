@@ -81,8 +81,8 @@ inside the project (`embeddedPlants`) and are **never** merged into the global p
 
 ## Import validation
 
-- File size, `project.json` size, per-asset size and ZIP entry count are checked before
-  decompression.
+- File size, `project.json` size, per-asset size, ZIP entry count and the total uncompressed
+  size of all extracted entries are checked before decompression.
 - Only `project.json` and `assets/<safe-name>.<png|jpg|jpeg|webp>` are extracted.
 - JSON is parsed defensively, migrated and schema-validated. Error messages list the offending
   paths.

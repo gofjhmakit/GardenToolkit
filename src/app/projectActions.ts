@@ -14,6 +14,7 @@ import {
   getSnapshot,
   listProjects,
   loadProject,
+  pruneAssets,
   putAsset,
   saveProject,
   storeImportedProject,
@@ -25,7 +26,7 @@ import { useAssetUrls } from './assets';
 import { usePlants } from './plantStore';
 import { makeLookup } from './lookup';
 import { prepareBlueprint } from './images';
-import { announceClosed, announceOpen } from './tabGuard';
+import { announceClosed, announceOpen, useTabGuard } from './tabGuard';
 import { toast } from '../ui/components/feedback';
 
 export function navigate(hash: string): void {
@@ -56,11 +57,23 @@ export async function createNewProject(name: string, location: Partial<LocationS
   return doc.id;
 }
 
+/** Images younger than this are never pruned (another tab may not have saved yet). */
+const PRUNE_MIN_AGE_MS = 10 * 60 * 1000;
+
 export async function closeProject(): Promise<void> {
   await flushSave();
+  const closing = editorApi.getState().doc;
+  // With the project open elsewhere, that tab's undo history may still need the images.
+  const sharedWithOtherTab = useTabGuard.getState().otherTabs;
   announceClosed();
   editorApi.getState().close();
   useAssetUrls.getState().clear();
+  // The undo history is gone now, so images no saved state references can be freed.
+  if (closing && !sharedWithOtherTab) {
+    void pruneAssets(closing.id, { minAgeMs: PRUNE_MIN_AGE_MS }).catch(() => {
+      /* best effort: leftover images only cost space */
+    });
+  }
 }
 
 /** File types accepted by project import (packages, JSON and multi-project backups). */

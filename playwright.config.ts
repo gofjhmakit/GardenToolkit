@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// The "Desktop Chrome" profile claims to be Windows. The app picks Ctrl or ⌘ from the reported
+// platform while the tests pick it from the host OS, so keep the browser's real user agent.
+const { userAgent: _windowsUserAgent, ...desktopChrome } = devices['Desktop Chrome'];
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
@@ -13,7 +17,7 @@ export default defineConfig({
     acceptDownloads: true,
     launchOptions: process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_BROWSERS_PATH ? { executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium' } : {},
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } }],
+  projects: [{ name: 'chromium', use: { ...desktopChrome, viewport: { width: 1440, height: 900 } } }],
   webServer: {
     command: 'npm run build && npx vite preview --port 4173 --strictPort',
     port: 4173,

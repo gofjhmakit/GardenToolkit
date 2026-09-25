@@ -3,6 +3,25 @@ import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { drawRectMm, focusCanvas, mod, newGarden, objects, state, toPage } from './helpers';
 
+/** The favourites list as stored in IndexedDB (not the in-memory copy). */
+async function storedFavourites(page: any): Promise<string[]> {
+  return page.evaluate(
+    () =>
+      new Promise<string[]>((resolve, reject) => {
+        const open = indexedDB.open('garden-toolkit');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const get = open.result.transaction('kv').objectStore('kv').get('favourites');
+          get.onsuccess = () => {
+            resolve(get.result?.value ?? []);
+            open.result.close();
+          };
+          get.onerror = () => reject(get.error);
+        };
+      }),
+  );
+}
+
 async function plantIn(page: any, x: number, y: number, query: string, name: RegExp) {
   const c = await toPage(page, x, y);
   await page.mouse.click(c.x, c.y);
@@ -119,6 +138,8 @@ test.describe('planting workflow & views', () => {
     await page.getByRole('button', { name: 'Add to favourites' }).click();
     await expect(page.getByRole('heading', { name: 'Data source' })).toBeVisible();
     await expect(page.getByText('Garden Toolkit editorial seed data')).toBeVisible();
+    // Favourites are written to IndexedDB asynchronously; reload only once the write landed.
+    await expect.poll(() => storedFavourites(page)).toHaveLength(1);
     await page.reload();
     await page.getByRole('tab', { name: 'Plant database' }).click();
     await page.getByLabel(/Favourites only/).check();
@@ -158,9 +179,10 @@ test.describe('planting workflow & views', () => {
     await page.getByRole('tab', { name: 'Garden settings' }).click();
     await page.getByRole('row', { name: /Saved version/ }).getByRole('button', { name: 'Restore' }).click();
     await page.getByRole('button', { name: 'Restore', exact: true }).last().click();
-    expect(await objects(page)).toHaveLength(2);
+    // Restoring reads the snapshot from IndexedDB, so the document changes asynchronously.
+    await expect.poll(async () => (await objects(page)).length).toBe(2);
     await page.keyboard.press(`${mod}+z`);
-    expect(await objects(page)).toHaveLength(3);
+    await expect.poll(async () => (await objects(page)).length).toBe(3);
   });
 
   test('undo history labels appear in the Edit menu', async ({ page }) => {
@@ -170,15 +192,21 @@ test.describe('planting workflow & views', () => {
 });
 
 test.describe('exports', () => {
-  test('SVG, PNG, CSV, iCal, JSON exports and all PDFs', async ({ page }) => {
+  // Chromium silently drops the 11th download from one page (multiple-download throttling),
+  // so data exports and PDFs run in separate tests with fewer than 10 downloads each.
+  async function exportGarden(page: any) {
     await newGarden(page, 'Export garden');
     await drawRectMm(page, 1000, 1000, 4000, 2000);
     await plantIn(page, 2500, 1500, 'carrot', /^Add Carrot to 1 area/);
     await page.getByRole('tab', { name: 'Reports & export' }).click();
-    const grab = async (button: RegExp, root = page) => {
+    return async (button: RegExp, root = page) => {
       const [d] = await Promise.all([page.waitForEvent('download'), root.getByRole('button', { name: button }).click()]);
       return { name: d.suggestedFilename(), buf: readFileSync((await d.path())!) };
     };
+  }
+
+  test('SVG, PNG, CSV, iCal and JSON exports', async ({ page }) => {
+    const grab = await exportGarden(page);
     const svg = await grab(/Scaled plan \(SVG/);
     expect(svg.buf.toString()).toContain('<svg');
     expect(svg.buf.toString()).not.toContain('<script');
@@ -191,6 +219,10 @@ test.describe('exports', () => {
     expect((await grab(/Calendar \(iCal\)/)).buf.toString()).toContain('BEGIN:VEVENT');
     const json = await grab(/Single JSON file/);
     expect(JSON.parse(json.buf.toString())).toMatchObject({ format: 'garden-toolkit-project', schemaVersion: 1 });
+  });
+
+  test('all PDF documents', async ({ page }) => {
+    const grab = await exportGarden(page);
     for (const title of ['Planting plan', 'Garden design', 'Care guide', 'Planting calendar', 'Harvest plan', 'Complete garden information']) {
       const card = page.locator('.card').filter({ has: page.getByText(title, { exact: true }) });
       const pdf = await grab(/Download PDF/, card as any);

@@ -109,7 +109,7 @@ IndexedDB database `garden-toolkit` (Dexie), schema version 1:
 | --- | --- |
 | `projects` | Lightweight metadata for the project list |
 | `docs` | One full `ProjectDoc` per project (structured clone, no JSON stringify) |
-| `assets` | Blueprint images as **Blobs**, shown via object URLs (never base64 in normal use) |
+| `assets` | Blueprint images as **Blobs**, shown via object URLs (never base64 in normal use). Images no saved document or snapshot references are deleted when the project is closed (not while it is open in another tab, and never within 10 minutes of being added) |
 | `snapshots` | Version snapshots: automatic (on open, every 15 min of editing; latest 20 kept) and manual (Ctrl/⌘+S) |
 | `userPlants` | "My plants" |
 | `kv` | Favourites, recently used plants |

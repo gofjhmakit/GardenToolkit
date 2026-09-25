@@ -124,16 +124,26 @@ export async function assetsForProject(projectId: string): Promise<AssetRecord[]
   return getDb().assets.where('projectId').equals(projectId).toArray();
 }
 
-/** Removes assets that no longer have a referencing background. */
-export async function pruneAssets(doc: ProjectDoc): Promise<number> {
-  const used = new Set(doc.backgrounds.map((b) => b.assetId));
-  // Snapshots may still reference older images; keep those too.
-  const snaps = await getDb().snapshots.where('projectId').equals(doc.id).toArray();
-  for (const s of snaps) for (const b of s.doc.backgrounds) used.add(b.assetId);
-  const assets = await assetsForProject(doc.id);
-  const stale = assets.filter((a) => !used.has(a.id)).map((a) => a.id);
-  if (stale.length) await getDb().assets.bulkDelete(stale);
-  return stale.length;
+/**
+ * Removes images that neither the saved document nor any of its snapshots
+ * reference (e.g. a deleted blueprint). Images stored within `minAgeMs` are
+ * kept: another tab may have just imported one whose document is not saved yet.
+ */
+export async function pruneAssets(projectId: string, opts: { minAgeMs?: number; now?: Date } = {}): Promise<number> {
+  const db = getDb();
+  const cutoff = (opts.now ?? new Date()).getTime() - (opts.minAgeMs ?? 0);
+  return db.transaction('rw', [db.docs, db.assets, db.snapshots], async () => {
+    // Read the stored document rather than an in-memory one, so only saved state counts.
+    const rec = await db.docs.get(projectId);
+    if (!rec) return 0;
+    const used = new Set((rec.doc.backgrounds ?? []).map((b) => b.assetId));
+    const snaps = await db.snapshots.where('projectId').equals(projectId).toArray();
+    for (const s of snaps) for (const b of s.doc?.backgrounds ?? []) used.add(b.assetId);
+    const assets = await db.assets.where('projectId').equals(projectId).toArray();
+    const stale = assets.filter((a) => !used.has(a.id) && !(Date.parse(a.createdAt) > cutoff)).map((a) => a.id);
+    if (stale.length) await db.assets.bulkDelete(stale);
+    return stale.length;
+  });
 }
 
 // --- Snapshots ------------------------------------------------------------

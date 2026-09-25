@@ -11,7 +11,7 @@ import { createProject, makeObject } from '../domain/projectFactory';
 import { addLayer, addObjects, assignPlant, copySelection, pasteObjects, updateLayer } from '../editor/commands';
 import { loadCoreCatalog } from '../test/fixtures';
 import { openDatabase, setDb } from './db';
-import { createSnapshot, deleteProject, duplicateProject, listProjects, listSnapshots, loadProject, saveProject, storeImportedProject } from './projectRepo';
+import { assetsForProject, createSnapshot, deleteProject, duplicateProject, listProjects, listSnapshots, loadProject, pruneAssets, putAsset, saveProject, storeImportedProject } from './projectRepo';
 import { buildProjectPackage, importProjectFile } from './projectPackage';
 
 const catalog = loadCoreCatalog();
@@ -106,5 +106,37 @@ describe('project lifecycle as a user sees it', () => {
     expect(await listSnapshots(doc.id)).toEqual([]);
     expect(await listSnapshots(other.id)).toHaveLength(1);
     expect(await loadProject(doc.id)).toBeNull();
+  });
+});
+
+describe('freeing space from removed blueprint images', () => {
+  const png = new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0])], { type: 'image/png' });
+  const asset = (id: string, projectId: string, createdAt: string) => ({ id, projectId, name: `${id}.png`, mimeType: 'image/png', byteSize: 8, width: 1, height: 1, blob: png, createdAt });
+  const background = (id: string, assetId: string) => ({ id, assetId, name: 'plan', transform: { x: 0, y: 0, rotation: 0 }, mmPerPx: 1, naturalWidth: 1, naturalHeight: 1, crop: null, opacity: 1, visible: true, locked: true, calibration: null });
+
+  it('deletes only images that no saved state references and that are old enough', async () => {
+    const doc = createProject('Blueprints');
+    const old = '2026-01-01T00:00:00.000Z';
+    doc.backgrounds.push(background('bg-current', 'in-use'));
+    await saveProject(doc);
+    // A version snapshot still shows an older blueprint, so its image must stay restorable.
+    await createSnapshot({ ...doc, backgrounds: [background('bg-old', 'in-snapshot')] }, 'Before', false);
+    for (const id of ['in-use', 'in-snapshot', 'orphan']) await putAsset(asset(id, doc.id, old));
+    await putAsset(asset('just-imported', doc.id, '2026-06-01T11:59:00.000Z'));
+    const other = createProject('Other');
+    await saveProject(other);
+    await putAsset(asset('other-orphan', other.id, old));
+
+    const removed = await pruneAssets(doc.id, { minAgeMs: 10 * 60 * 1000, now: new Date('2026-06-01T12:00:00Z') });
+    expect(removed).toBe(1);
+    expect((await assetsForProject(doc.id)).map((a) => a.id).sort()).toEqual(['in-snapshot', 'in-use', 'just-imported']);
+    // Other projects are never touched.
+    expect(await assetsForProject(other.id)).toHaveLength(1);
+  });
+
+  it('does nothing for a project that is not stored', async () => {
+    await putAsset(asset('x', 'prj_missing', '2020-01-01T00:00:00.000Z'));
+    expect(await pruneAssets('prj_missing')).toBe(0);
+    expect(await assetsForProject('prj_missing')).toHaveLength(1);
   });
 });

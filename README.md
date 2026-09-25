@@ -114,5 +114,5 @@ security issues privately to the maintainer rather than in a public issue.
 
 ## Licence
 
-Code: MIT. Bundled plant seed data: CC0-1.0 (see `docs/PLANT_DATA.md` for how it was compiled
+Code: MIT (see [LICENSE](LICENSE)). Bundled plant seed data: CC0-1.0 (see `docs/PLANT_DATA.md` for how it was compiled
 and its limits).

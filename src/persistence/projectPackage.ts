@@ -30,6 +30,11 @@ export const LIMITS = {
   maxJsonBytes: 60 * 1024 * 1024,
   maxAssetBytes: 60 * 1024 * 1024,
   maxEntries: 200,
+  /**
+   * Total uncompressed bytes extracted from one ZIP (package or backup). fflate never
+   * inflates an entry beyond its declared size, so summing declared sizes bounds memory.
+   */
+  maxExtractedBytes: 600 * 1024 * 1024,
 };
 
 export type ImageMime = 'image/png' | 'image/jpeg' | 'image/webp';
@@ -177,7 +182,16 @@ export async function importProjectFile(
     const binaryAssets = new Map<string, Uint8Array>();
     if (isZip) {
       let entryCount = 0;
+      let extracted = 0;
       let rejectReason: string | null = null;
+      const accept = (size: number) => {
+        extracted += size;
+        if (extracted > LIMITS.maxExtractedBytes) {
+          rejectReason = 'The package is too large to import.';
+          return false;
+        }
+        return true;
+      };
       const files = await unzipAsync(bytes, (f) => {
         entryCount++;
         if (entryCount > LIMITS.maxEntries) {
@@ -189,14 +203,14 @@ export async function importProjectFile(
             rejectReason = 'project.json is too large.';
             return false;
           }
-          return true;
+          return accept(f.originalSize);
         }
         if (/^assets\/[A-Za-z0-9_.-]+\.(png|jpe?g|webp)$/i.test(f.name)) {
           if (f.originalSize > LIMITS.maxAssetBytes) {
             rejectReason = `Asset ${f.name} is too large.`;
             return false;
           }
-          return true;
+          return accept(f.originalSize);
         }
         return false; // ignore everything else
       });
@@ -338,6 +352,7 @@ export async function importAnyFile(input: Blob, name: string, knownPlant: (id: 
     const isZip = head.length === 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
     if (!isZip) return [{ source: name, result: await importProjectFile(input, knownPlant) }];
     let entries = 0;
+    let extracted = 0;
     let hasProjectJson = false;
     let rejectReason: string | null = null;
     const files = await unzipAsync(new Uint8Array(await input.arrayBuffer()), (f) => {
@@ -351,6 +366,11 @@ export async function importAnyFile(input: Blob, name: string, knownPlant: (id: 
       if (/^projects\/[^/]+\.gtkproject$/.test(f.name)) {
         if (f.originalSize > LIMITS.maxFileBytes) {
           rejectReason = `${f.name} is too large.`;
+          return false;
+        }
+        extracted += f.originalSize;
+        if (extracted > LIMITS.maxExtractedBytes) {
+          rejectReason = 'The backup is too large to import in one go. Import its projects separately.';
           return false;
         }
         return true;

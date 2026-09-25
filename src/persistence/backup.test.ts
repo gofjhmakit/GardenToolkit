@@ -91,3 +91,27 @@ describe('multi-project backups', () => {
     expect(r3[0].result.ok).toBe(false);
   });
 });
+
+describe('total extraction limit', () => {
+  it('rejects packages and backups whose contents add up to more than the limit', async () => {
+    const { doc, assets } = project('Big', true);
+    const pkg = await buildProjectPackage(doc, assets, lookup);
+    const backup = await buildBackupArchive([{ doc, assets }, project('Second', true)], lookup);
+    const orig = LIMITS.maxExtractedBytes;
+    try {
+      // Each entry is below its own limit; only the total exceeds the cap.
+      LIMITS.maxExtractedBytes = 200;
+      const r1 = await importAnyFile(pkg, 'big.gtkproject', known);
+      expect(r1[0].result.ok).toBe(false);
+      if (!r1[0].result.ok) expect(r1[0].result.error).toMatch(/too large/);
+      const r2 = await importAnyFile(backup, 'all.gtkbackup', known);
+      expect(r2).toHaveLength(1);
+      expect(r2[0].result.ok).toBe(false);
+      if (!r2[0].result.ok) expect(r2[0].result.error).toMatch(/too large/);
+    } finally {
+      LIMITS.maxExtractedBytes = orig;
+    }
+    // Normal-sized files are unaffected.
+    expect((await importAnyFile(backup, 'all.gtkbackup', known)).every((r) => r.result.ok)).toBe(true);
+  });
+});
