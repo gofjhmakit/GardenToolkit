@@ -14,6 +14,7 @@ import { AnnotationLayer, Backgrounds, Grid, Rulers, ScaleBar, RULER } from './L
 import { CanvasInteraction, HANDLE_PX, rotateHandleScreen, vertexPoints, type OverlayState } from './interaction';
 import { frameCorners, handleWorld, selectionFrame } from './frame';
 import { CalibrateDialog } from './CalibrateDialog';
+import { requestTextFocus } from '../panels/ObjectInspector';
 
 const TOOL_HINTS: Record<string, string> = {
   select: 'Click to select · Shift/Ctrl-click to add · Drag to move (Alt-drag duplicates) · Double-click a polygon to edit points',
@@ -63,7 +64,7 @@ export function Canvas() {
         setOverlay,
         getOverlay: () => overlayRef.current,
         requestCalibration: (bgId, a, b) => setCalib({ bgId, a, b }),
-        onTextCreated: (id) => window.dispatchEvent(new CustomEvent('gtk:edit-text', { detail: { id } })),
+        onTextCreated: (id) => requestTextFocus(id),
         isSpaceDown: () => spaceDown.current,
       }),
     [setOverlay],

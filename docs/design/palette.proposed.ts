@@ -11,7 +11,7 @@
  * Design rules (verified with WCAG 2.x relative luminance, see DESIGN.md):
  *   - Paper is #F6F4EE (light theme) / #D7D2C5 (dark theme "dimmed paper").
  *   - Every object STROKE is ≥ 3.2:1 on both papers (non-text contrast, WCAG 1.4.11).
- *   - Every stroke is ≥ 2.9:1 against its own fill, so outlines stay crisp on textures.
+ *   - Every stroke is ≥ 3.2:1 against its own fill, so outlines stay crisp on textures.
  *   - Fills are low-chroma "botanical survey" tints: earth for beds, sage/moss for
  *     planting, cool slate-teal for water/glass, warm greys for hardscape. Kinds that
  *     share a hue family are separated by LIGHTNESS and PATTERN, not hue alone —

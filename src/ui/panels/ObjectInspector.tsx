@@ -37,6 +37,13 @@ export const IRRIGATION_LABELS: Record<(typeof IRRIGATION_TYPES)[number], string
   'self-watering': 'Self-watering',
 };
 
+/** Text object that should receive focus once its inspector mounts (set when a label is created). */
+let pendingTextFocus: string | null = null;
+export function requestTextFocus(id: string): void {
+  pendingTextFocus = id;
+  window.dispatchEvent(new CustomEvent('gtk:edit-text', { detail: { id } }));
+}
+
 export function ObjectInspector({ id }: { id: string }) {
   const doc = useEditor((s) => s.doc)!;
   const o = doc.objects[id];
@@ -44,13 +51,20 @@ export function ObjectInspector({ id }: { id: string }) {
   const catalogCompanions = usePlants((s) => s.catalog.companions);
   const textRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    const focusText = () =>
+      requestAnimationFrame(() => {
+        const el = document.getElementById('obj-text') as HTMLInputElement | null;
+        el?.focus();
+        el?.select();
+      });
+    if (pendingTextFocus === id) {
+      pendingTextFocus = null;
+      focusText();
+    }
     const on = (e: Event) => {
       if ((e as CustomEvent<{ id: string }>).detail.id === id) {
-        requestAnimationFrame(() => {
-          const el = document.getElementById('obj-text') as HTMLInputElement | null;
-          el?.focus();
-          el?.select();
-        });
+        pendingTextFocus = null;
+        focusText();
       }
     };
     window.addEventListener('gtk:edit-text', on);
