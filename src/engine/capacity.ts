@@ -332,7 +332,9 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
   const poly = rotatePoly(region, axis === 'y');
   const compute = (sIn: number, sRow: number, maxPos: number) => {
     const mAlong = rules.edgeMarginMm ?? sIn / 2;
-    const mAcross = rules.edgeMarginMm ?? sRow / 2;
+    // Grid plants need half their spacing of clearance in every direction, even when
+    // a triangular pattern packs the rows closer than the plant spacing.
+    const mAcross = rules.edgeMarginMm ?? (isGrid ? sIn / 2 : sRow / 2);
     return { lat: countLattice(poly, sIn, sRow, mAlong, mAcross, pattern, maxPos), mAlong, mAcross };
   };
 
