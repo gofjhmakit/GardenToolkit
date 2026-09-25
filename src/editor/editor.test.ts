@@ -232,6 +232,22 @@ describe('editor store', () => {
     expect(s().selection).toHaveLength(2);
   });
 
+  it('duplicates, copies and pastes inside store commits (immer drafts)', () => {
+    const s = useEditor.getState;
+    const [a] = Object.keys(s().doc!.objects);
+    let created: string[] = [];
+    s().commit('Duplicate', (d) => {
+      created = duplicateObjects(d, [a], { x: 100, y: 100 });
+    });
+    expect(created).toHaveLength(1);
+    expect(Object.keys(s().doc!.objects)).toHaveLength(4);
+    s().commit('Copy+paste', (d) => {
+      const payload = copySelection(d, [a])!;
+      pasteObjects(d, payload, { x: 0, y: 500 });
+    });
+    expect(Object.keys(s().doc!.objects)).toHaveLength(5);
+  });
+
   it('keeps zoom independent of stored dimensions', () => {
     const s = useEditor.getState;
     const id = Object.keys(s().doc!.objects)[0];

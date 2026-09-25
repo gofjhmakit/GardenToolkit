@@ -6,6 +6,7 @@
  * they can be unit-tested directly. The store wraps them in history entries.
  */
 import { z } from 'zod';
+import { current, isDraft } from 'immer';
 import { newId } from '../lib/ids';
 import {
   add,
@@ -332,7 +333,9 @@ export const ClipboardSchema = z.object({
 });
 export type ClipboardPayload = z.infer<typeof ClipboardSchema>;
 
-export function copySelection(doc: ProjectDoc, ids: readonly string[]): ClipboardPayload | null {
+export function copySelection(draftOrDoc: ProjectDoc, ids: readonly string[]): ClipboardPayload | null {
+  // Works on plain documents and on immer drafts (structuredClone cannot clone draft proxies).
+  const doc = isDraft(draftOrDoc) ? current(draftOrDoc) : draftOrDoc;
   // Preserve paint order so pasted objects stack the same way.
   const set = new Set(ids);
   const ordered: GardenObject[] = [];
