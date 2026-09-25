@@ -21,10 +21,12 @@ export function Menu({ entries, anchor, onClose, label }: MenuProps) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const r = el.getBoundingClientRect();
+    // offsetWidth/Height ignore the pop-in scale animation; the bounding box would be too small.
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
     setPos({
-      x: Math.max(4, Math.min(anchor.x, window.innerWidth - r.width - 4)),
-      y: Math.max(4, Math.min(anchor.y, window.innerHeight - r.height - 4)),
+      x: Math.max(4, Math.min(anchor.x, window.innerWidth - w - 4)),
+      y: Math.max(4, Math.min(anchor.y, window.innerHeight - h - 4)),
     });
     const first = el.querySelector<HTMLButtonElement>('button:not(:disabled)');
     first?.focus();

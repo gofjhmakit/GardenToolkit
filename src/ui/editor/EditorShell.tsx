@@ -26,6 +26,11 @@ import {
   Download,
   ClipboardList,
   Flower2,
+  Layers as LayersIcon,
+  PanelBottomOpen,
+  Undo2,
+  Redo2,
+  X,
 } from 'lucide-react';
 import { OBJECT_KINDS_INFO, kindInfo } from '../../domain/objectKinds';
 import type { ObjectKind } from '../../domain/project';
@@ -53,6 +58,7 @@ const SettingsView = lazy(() => import('../views/SettingsView').then((m) => ({ d
 import { TabGuardBanner } from './TabGuardBanner';
 import { MenuButton } from '../components/Menu';
 import { exportProjectJson, exportProjectPackage } from '../../app/projectActions';
+import { useCompact } from '../useCompact';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
   { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
@@ -101,6 +107,8 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
   const { t } = useTranslation();
   const [helpOpen, setHelpOpen] = useState(false);
   const [addPlantsFor, setAddPlantsFor] = useState<string[] | null>(null);
+  const compact = useCompact();
+  const [sheet, setSheet] = useState<'layers' | 'details' | null>(null);
   const onHelp = useCallback(() => setHelpOpen(true), []);
   useShortcuts({ onHelp, enabled: !addPlantsFor && !helpOpen });
 
@@ -134,8 +142,63 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
     kinds: Object.values(OBJECT_KINDS_INFO).filter((k) => k.group === g && k.kind !== 'line'),
   }));
 
+  const toolbar = (
+    <div className="tools" role="toolbar" aria-label="Drawing tools">
+      <div className="tool-group" role="group" aria-label="Selection">
+        {TOOLS.map((t) => (
+          <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
+            {t.icon}
+          </ToolButton>
+        ))}
+      </div>
+      <div className="tool-group" role="group" aria-label="Shapes">
+        <select
+          className="select kind-select"
+          aria-label="Object type to draw"
+          title="Object type for the shape tools"
+          value={drawKind}
+          onChange={(e) => {
+            const k = e.target.value as ObjectKind;
+            const shape = kindInfo(k).defaultShape;
+            const t: ToolId = shape === 'rect' ? 'rect' : shape === 'ellipse' ? 'ellipse' : shape === 'polyline' ? 'polyline' : 'polygon';
+            useEditor.getState().setTool(workspaceToolFor(tool, t), k);
+          }}
+        >
+          {kindGroups.map((g) => (
+            <optgroup key={g.group} label={g.group}>
+              {g.kinds.map((k) => (
+                <option key={k.kind} value={k.kind}>
+                  {k.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        {DRAW_TOOLS.map((t) => (
+          <ToolButton key={t.id} active={tool === t.id} label={`${t.label} — draws: ${kindInfo(drawKind).label}`} shortcut={t.key} onClick={() => setTool(t.id)}>
+            {t.icon}
+          </ToolButton>
+        ))}
+      </div>
+      <div className="tool-group" role="group" aria-label="Plant symbols">
+        {SYMBOL_TOOLS.map((t) => (
+          <ToolButton key={t.id} active={tool === t.id} label={t.label} onClick={() => setTool(t.id)}>
+            {t.icon}
+          </ToolButton>
+        ))}
+      </div>
+      <div className="tool-group" role="group" aria-label="Annotation and measuring">
+        {ANNOT_TOOLS.map((t) => (
+          <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
+            {t.icon}
+          </ToolButton>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="editor">
+    <div className={compact ? 'editor compact' : 'editor'}>
       <a href="#main-canvas" className="skip-link">
         Skip to canvas
       </a>
@@ -148,66 +211,16 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
         <span className="project-name" title={doc.meta.name}>
           {doc.meta.name}
         </span>
-        <MenuBar onHome={onHome} onHelp={onHelp} />
-        <span className="tool-sep" />
-        <div className="tools" role="toolbar" aria-label="Drawing tools">
-          <div className="tool-group" role="group" aria-label="Selection">
-            {TOOLS.map((t) => (
-              <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
-                {t.icon}
-              </ToolButton>
-            ))}
-          </div>
-          <div className="tool-group" role="group" aria-label="Shapes">
-            <select
-              className="select kind-select"
-              aria-label="Object type to draw"
-              title="Object type for the shape tools"
-              value={drawKind}
-              onChange={(e) => {
-                const k = e.target.value as ObjectKind;
-                const shape = kindInfo(k).defaultShape;
-                const t: ToolId = shape === 'rect' ? 'rect' : shape === 'ellipse' ? 'ellipse' : shape === 'polyline' ? 'polyline' : 'polygon';
-                useEditor.getState().setTool(workspaceToolFor(tool, t), k);
-              }}
-            >
-              {kindGroups.map((g) => (
-                <optgroup key={g.group} label={g.group}>
-                  {g.kinds.map((k) => (
-                    <option key={k.kind} value={k.kind}>
-                      {k.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            {DRAW_TOOLS.map((t) => (
-              <ToolButton key={t.id} active={tool === t.id} label={`${t.label} — draws: ${kindInfo(drawKind).label}`} shortcut={t.key} onClick={() => setTool(t.id)}>
-                {t.icon}
-              </ToolButton>
-            ))}
-          </div>
-          <div className="tool-group" role="group" aria-label="Plant symbols">
-            {SYMBOL_TOOLS.map((t) => (
-              <ToolButton key={t.id} active={tool === t.id} label={t.label} onClick={() => setTool(t.id)}>
-                {t.icon}
-              </ToolButton>
-            ))}
-          </div>
-          <div className="tool-group" role="group" aria-label="Annotation and measuring">
-            {ANNOT_TOOLS.map((t) => (
-              <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
-                {t.icon}
-              </ToolButton>
-            ))}
-          </div>
-        </div>
+        <MenuBar onHome={onHome} onHelp={onHelp} compact={compact} />
+        {!compact && <span className="tool-sep" />}
+        {!compact && toolbar}
         <span className="spacer" />
+        {compact && <UndoRedo />}
         <button className="icon-btn" aria-label="Import blueprint image or PDF" title="Import blueprint image or PDF" onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
           <ImagePlus size={16} strokeWidth={1.75} absoluteStrokeWidth />
         </button>
-        <ExportButton />
-        <AddPlantsButton />
+        <ExportButton iconOnly={compact} />
+        <AddPlantsButton iconOnly={compact} />
       </header>
       <nav className="worktabs" role="tablist" aria-label="Workspaces">
         {WORKSPACES.map((w) => (
@@ -219,7 +232,26 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
       </nav>
       <TabGuardBanner />
       <main className="workspace" id="main-canvas">
-        {workspace === 'design' ? (
+        {workspace === 'design' && compact ? (
+          <div className="mobile-design">
+            <div className="mobile-canvas">
+              <Canvas />
+              {sheet && (
+                <BottomSheet label={sheet === 'layers' ? 'Layers' : 'Details'} onClose={() => setSheet(null)}>
+                  {sheet === 'layers' ? <LayersPanel /> : <Inspector />}
+                </BottomSheet>
+              )}
+            </div>
+            <div className="mobile-tools">
+              <button className="btn sm mobile-sheet-btn" aria-pressed={sheet === 'layers'} onClick={() => setSheet(sheet === 'layers' ? null : 'layers')}>
+                <LayersIcon size={16} strokeWidth={1.75} />
+                <span>Layers</span>
+              </button>
+              <div className="mobile-tools-scroll">{toolbar}</div>
+              <DetailsButton active={sheet === 'details'} onClick={() => setSheet(sheet === 'details' ? null : 'details')} />
+            </div>
+          </div>
+        ) : workspace === 'design' ? (
           <>
             {showLeft ? <LayersPanel /> : <div />}
             <Canvas />
@@ -262,7 +294,7 @@ function ToolButton({ active, label, shortcut, onClick, children }: { active: bo
   );
 }
 
-function AddPlantsButton() {
+function AddPlantsButton({ iconOnly = false }: { iconOnly?: boolean }) {
   const { t } = useTranslation();
   const doc = useEditor((s) => s.doc);
   const selection = useEditor((s) => s.selection);
@@ -270,25 +302,26 @@ function AddPlantsButton() {
   return (
     <button
       className="btn primary sm"
+      aria-label={iconOnly ? t('Add plants') : undefined}
       disabled={!plantable.length}
       title={plantable.length ? `Add plants to ${plantable.length} selected area(s)` : 'Select one or more beds or areas to add plants'}
       onClick={() => window.dispatchEvent(new CustomEvent('gtk:add-plants', { detail: { ids: plantable } }))}
     >
       <Sprout size={14} />
-      {t('Add plants')}{plantable.length > 1 ? ` (${plantable.length})` : ''}
+      {iconOnly ? (plantable.length > 1 ? plantable.length : null) : <>{t('Add plants')}{plantable.length > 1 ? ` (${plantable.length})` : ''}</>}
     </button>
   );
 }
 
 
 /** Always-visible export entry point (a project backup is the way to move a garden to another device). */
-function ExportButton() {
+function ExportButton({ iconOnly = false }: { iconOnly?: boolean }) {
   const doc = useEditor((s) => s.doc);
   if (!doc) return null;
   return (
     <MenuButton
       label="Export"
-      className="btn sm"
+      className={iconOnly ? 'icon-btn' : 'btn sm'}
       entries={() => [
         { type: 'label', label: 'Project backup (re-importable)' },
         { label: 'Project package (.gtkproject)', onSelect: () => void exportProjectPackage(useEditor.getState().doc!) },
@@ -297,8 +330,54 @@ function ExportButton() {
         { label: 'PDF documents, plans & CSV…', onSelect: () => useEditor.getState().setWorkspace('reports') },
       ]}
     >
-      <Download size={14} strokeWidth={1.75} />
-      Export
+      <Download size={iconOnly ? 16 : 14} strokeWidth={1.75} />
+      {iconOnly ? <span className="sr-only">Export</span> : 'Export'}
     </MenuButton>
+  );
+}
+
+function UndoRedo() {
+  const canUndo = useEditor((s) => s.past.length > 0);
+  const canRedo = useEditor((s) => s.future.length > 0);
+  return (
+    <>
+      <button className="icon-btn" aria-label="Undo" title="Undo" disabled={!canUndo} onClick={() => useEditor.getState().undo()}>
+        <Undo2 size={16} strokeWidth={1.75} absoluteStrokeWidth />
+      </button>
+      <button className="icon-btn" aria-label="Redo" title="Redo" disabled={!canRedo} onClick={() => useEditor.getState().redo()}>
+        <Redo2 size={16} strokeWidth={1.75} absoluteStrokeWidth />
+      </button>
+    </>
+  );
+}
+
+/** Opens the inspector sheet on phones; shows how many objects are selected. */
+function DetailsButton({ active, onClick }: { active: boolean; onClick: () => void }) {
+  const count = useEditor((s) => s.selection.length);
+  return (
+    <button className={count ? 'btn sm mobile-sheet-btn has-selection' : 'btn sm mobile-sheet-btn'} aria-pressed={active} onClick={onClick}>
+      <PanelBottomOpen size={16} strokeWidth={1.75} />
+      <span>{count ? `Details (${count})` : 'Details'}</span>
+    </button>
+  );
+}
+
+/** Phone bottom sheet holding a side panel over the lower part of the canvas. */
+function BottomSheet({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <section className="bottom-sheet" role="region" aria-label={label}>
+      <div className="bottom-sheet-grip" aria-hidden="true" />
+      <button className="icon-btn bottom-sheet-close" aria-label={`Close ${label.toLowerCase()}`} onClick={onClose}>
+        <X size={18} strokeWidth={1.75} />
+      </button>
+      {children}
+    </section>
   );
 }

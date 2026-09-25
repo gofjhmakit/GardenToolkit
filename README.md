@@ -13,6 +13,9 @@ editor, plant database, planting calculator, planting calendar and garden docume
   care guide, crop rotation and companion notes labelled by evidence level.
 - **Export** a planting plan, garden design, care guide, calendar, harvest plan and a complete
   report as PDF, plus SVG/PNG plans, CSV, iCal and full project backups.
+- **Works on phones and tablets.** On screens up to 900 px wide (and phones held sideways) the
+  canvas takes the full width, tools sit in a strip at the bottom, and Layers and Details open
+  as sheets. Pinch to zoom, drag empty space to pan, long-press for the object menu.
 - **Private and offline.** No account, no server and no tracking. Data lives in IndexedDB in
   your browser, and the app works offline once installed/loaded.
 - **Portable.** Export a project (`.gtkproject` or JSON) from the editor's Export button or its

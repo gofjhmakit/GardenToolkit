@@ -17,7 +17,15 @@ export default defineConfig({
     acceptDownloads: true,
     launchOptions: process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_BROWSERS_PATH ? { executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium' } : {},
   },
-  projects: [{ name: 'chromium', use: { ...desktopChrome, viewport: { width: 1440, height: 900 } } }],
+  projects: [
+    { name: 'chromium', testIgnore: /mobile\.spec\.ts/, use: { ...desktopChrome, viewport: { width: 1440, height: 900 } } },
+    // iPhone 17 Pro-sized viewport (402 × 874 CSS px) with touch input, rendered by Chromium.
+    {
+      name: 'phone',
+      testMatch: /mobile\.spec\.ts/,
+      use: { ...desktopChrome, viewport: { width: 402, height: 874 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    },
+  ],
   webServer: {
     command: 'npm run build && npx vite preview --port 4173 --strictPort',
     port: 4173,

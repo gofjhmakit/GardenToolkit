@@ -15,9 +15,9 @@ export function PlantDatabaseView() {
   void version;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div className="row" style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--panel)' }}>
+      <div className="row pdb-header" style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--panel)' }}>
         <h2 style={{ fontSize: 15 }}>Plant database</h2>
-        <span className="muted small">{catalog.plants.size.toLocaleString()} plants · reference data is read-only and shared by all projects; your garden never changes it.</span>
+        <span className="muted small pdb-blurb">{catalog.plants.size.toLocaleString()} plants · reference data is read-only and shared by all projects; your garden never changes it.</span>
         <span className="spacer" />
         {sel?.dataset === 'user' && (
           <button className="btn sm danger" onClick={async () => {

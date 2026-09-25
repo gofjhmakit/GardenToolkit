@@ -15,6 +15,23 @@ import { CanvasInteraction, HANDLE_PX, rotateHandleScreen, vertexPoints, type Ov
 import { frameCorners, handleWorld, selectionFrame } from './frame';
 import { CalibrateDialog } from './CalibrateDialog';
 import { requestTextFocus } from '../panels/ObjectInspector';
+import { TouchController } from './touch';
+import { useCoarsePointer } from '../useCompact';
+
+/** Shorter hints for touch screens (no keyboard, no hover). */
+const TOUCH_HINTS: Record<string, string> = {
+  select: 'Tap to select · Drag to move · Two fingers to pan & zoom · Long-press for actions',
+  hand: 'Drag to pan · Pinch to zoom',
+  rect: 'Drag to draw · Tap for default size',
+  ellipse: 'Drag to draw',
+  polygon: 'Tap to add points · Tap the first point or Finish to close',
+  polyline: 'Tap to add points · Double-tap or Finish to end',
+  text: 'Tap to place a text label',
+  dimension: 'Tap the start and end points',
+  tree: 'Tap to place a tree · Drag to set the canopy',
+  shrub: 'Tap to place a shrub · Drag to set its width',
+  calibrate: 'Tap two points whose real distance you know',
+};
 
 const TOOL_HINTS: Record<string, string> = {
   select: 'Click to select · Shift/Ctrl-click to add · Drag to move (Alt-drag duplicates) · Double-click a polygon to edit points',
@@ -43,6 +60,7 @@ export function Canvas() {
   const selectedBackgroundId = useEditor((s) => s.selectedBackgroundId);
   const lookup = usePlantLookup();
   const wheelMode = usePrefs((s) => s.wheel);
+  const coarse = useCoarsePointer();
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -69,6 +87,9 @@ export function Canvas() {
       }),
     [setOverlay],
   );
+
+  const touch = useMemo(() => new TouchController(interaction, () => svgRef.current!.getBoundingClientRect()), [interaction]);
+  useEffect(() => () => touch.dispose(), [touch]);
 
   // Viewport size.
   useEffect(() => {
@@ -145,15 +166,27 @@ export function Canvas() {
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     svgRef.current?.focus({ preventScroll: true });
+    if (e.pointerType === 'touch') {
+      touch.down(e.nativeEvent);
+      return;
+    }
     interaction.pointerDown(e.nativeEvent);
     setCursor(interaction.cursorFor(e));
   };
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'touch') {
+      touch.move(e.nativeEvent);
+      return;
+    }
     interaction.pointerMove(e.nativeEvent);
     const c = interaction.cursorFor(e);
     if (c !== cursor) setCursor(c);
   };
   const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'touch') {
+      touch.up(e.nativeEvent);
+      return;
+    }
     interaction.pointerUp(e.nativeEvent);
     setCursor(interaction.cursorFor(e));
   };
@@ -162,7 +195,8 @@ export function Canvas() {
   const worldTransform = `matrix(${view.scale} 0 0 ${view.scale} ${view.x} ${view.y})`;
   // The welcome card only shows with the Select tool so it never blocks drawing.
   const isEmpty = Object.keys(doc.objects).length === 0 && doc.backgrounds.length === 0 && tool === 'select';
-  const hint = TOOL_HINTS[tool];
+  const hint = (coarse ? TOUCH_HINTS[tool] : undefined) ?? TOOL_HINTS[tool];
+  const pendingMulti = (tool === 'polygon' || tool === 'polyline') && overlay.draft?.kind === 'polygon' && interaction.hasPendingDrawing();
 
   return (
     <div className="canvas-wrap" ref={wrapRef}>
@@ -221,7 +255,17 @@ export function Canvas() {
           </div>
         </div>
       )}
-      {hint && !isEmpty && <div className="canvas-hint">{hint}</div>}
+      {hint && !isEmpty && !pendingMulti && <div className="canvas-hint">{hint}</div>}
+      {pendingMulti && (
+        <div className="draw-actions" role="group" aria-label="Drawing">
+          <button className="btn sm" onClick={() => interaction.reset()}>
+            Cancel
+          </button>
+          <button className="btn primary sm" onClick={() => interaction.finishPolygon()}>
+            Finish shape
+          </button>
+        </div>
+      )}
       <div className="zoom-controls" role="group" aria-label="Zoom">
         <button className="icon-btn sm" title="Zoom out" aria-label="Zoom out" onClick={() => useEditor.getState().zoomAt(1 / 1.25, { x: viewport.width / 2, y: viewport.height / 2 })}>
           <Minus size={14} />

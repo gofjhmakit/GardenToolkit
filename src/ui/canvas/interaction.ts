@@ -40,6 +40,8 @@ import { handleWorld, resizeFromHandle, selectionFrame, type Frame } from './fra
 import { scaleShape } from '../../domain/geometry';
 
 export const HANDLE_PX = 8;
+/** Fingers are less precise than a mouse: hit areas grow by this factor for touch input. */
+const TOUCH_HIT_SCALE = 2.2;
 export const ROTATE_HANDLE_OFFSET_PX = 26;
 const HIT_TOLERANCE_PX = 5;
 const CLICK_PX = 4;
@@ -111,6 +113,8 @@ export class CanvasInteraction {
   private calib: { a: Vec; bgId: string } | null = null;
   private downScreen: Vec = { x: 0, y: 0 };
   private lastClick = { time: 0, p: { x: 0, y: 0 } };
+  /** True while the current pointer is a finger. */
+  private touch = false;
   constructor(private ctx: InteractionContext) {}
 
   // --- helpers -------------------------------------------------------------
@@ -126,6 +130,15 @@ export class CanvasInteraction {
 
   private tol(px = HIT_TOLERANCE_PX): number {
     return px / st().view.scale;
+  }
+
+  /** Hit-test tolerance in world units, widened for touch. */
+  private hitTol(px = HIT_TOLERANCE_PX): number {
+    return this.tol(this.touch ? px * TOUCH_HIT_SCALE : px);
+  }
+
+  private get handlePx(): number {
+    return this.touch ? HANDLE_PX * TOUCH_HIT_SCALE : HANDLE_PX;
   }
 
   private snapEnabled(e: { ctrlKey: boolean; metaKey: boolean }): boolean {
@@ -164,7 +177,7 @@ export class CanvasInteraction {
     const doc = st().doc;
     if (!doc) return null;
     const objs = objectsInPaintOrder(doc);
-    const tol = this.tol();
+    const tol = this.hitTol();
     for (let i = objs.length - 1; i >= 0; i--) {
       const o = objs[i];
       if (!isObjectVisible(doc, o)) continue;
@@ -204,10 +217,10 @@ export class CanvasInteraction {
     if (single && (st().vertexEditId === single.id || single.shape.type === 'dimension' || (single.shape.type === 'polyline' && single.shape.points.length === 2))) return null;
     const toScreen = (w: Vec) => ({ x: w.x * view.scale + view.x, y: w.y * view.scale + view.y });
     const rh = rotateHandleScreen(frame, view);
-    if (dist(screen, rh) <= HANDLE_PX) return 8;
+    if (dist(screen, rh) <= this.handlePx) return 8;
     for (let i = 0; i < 8; i++) {
       const hs = toScreen(handleWorld(frame, i));
-      if (Math.abs(hs.x - screen.x) <= HANDLE_PX && Math.abs(hs.y - screen.y) <= HANDLE_PX) return i;
+      if (Math.abs(hs.x - screen.x) <= this.handlePx && Math.abs(hs.y - screen.y) <= this.handlePx) return i;
     }
     return null;
   }
@@ -224,7 +237,7 @@ export class CanvasInteraction {
     for (let i = 0; i < pts.length; i++) {
       const w = localToWorld(o.transform, pts[i]);
       const s = { x: w.x * view.scale + view.x, y: w.y * view.scale + view.y };
-      if (dist(s, screen) <= HANDLE_PX + 1) return { id, index: i };
+      if (dist(s, screen) <= this.handlePx + 1) return { id, index: i };
     }
     return null;
   }
@@ -250,6 +263,7 @@ export class CanvasInteraction {
     const state = st();
     const doc = state.doc;
     if (!doc) return;
+    this.touch = e.pointerType === 'touch';
     const screen = this.screenPoint(e);
     this.downScreen = screen;
     const p = this.world(e);
@@ -388,6 +402,13 @@ export class CanvasInteraction {
         return;
       }
     }
+    if (this.touch) {
+      // Phones: dragging empty canvas pans (a tap still clears the selection).
+      state.setSelection([]);
+      state.setVertexEdit(null);
+      this.gesture = { type: 'pan', startScreen: screen, startView: { x: state.view.x, y: state.view.y } };
+      return;
+    }
     this.gesture = { type: 'marquee', start: p, additive: e.shiftKey || e.ctrlKey || e.metaKey, startScreen: screen };
     if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
       state.setSelection([]);
@@ -404,7 +425,7 @@ export class CanvasInteraction {
     const n = pts.length;
     const segs = s.type === 'polygon' ? n : n - 1;
     let best = -1;
-    let bestD = this.tol(8);
+    let bestD = this.hitTol(8);
     for (let i = 0; i < segs; i++) {
       const a = pts[i];
       const b = pts[(i + 1) % n];
@@ -440,7 +461,7 @@ export class CanvasInteraction {
         this.finishPolygon();
         return;
       }
-      if (!open && pts.length >= 3 && dist(constrained, first) <= this.tol(10)) {
+      if (!open && pts.length >= 3 && dist(constrained, first) <= this.hitTol(10)) {
         this.finishPolygon();
         return;
       }
@@ -793,6 +814,23 @@ export class CanvasInteraction {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Drops the gesture in progress without committing it (a second finger turned it into a
+   * pinch). Multi-click drawings (polygon points, calibration) are kept.
+   */
+  abortGesture(): void {
+    if (this.gesture.type === 'none') return;
+    this.gesture = { type: 'none' };
+    pendingSelection = null;
+    st().cancelGesture();
+    this.ctx.setOverlay({ guides: [], snapPoint: null, ...(this.polygon ? {} : { draft: null }) });
+  }
+
+  /** True when the pointer went down and has not moved beyond a tap. */
+  isStill(e: { clientX: number; clientY: number }, px = 8): boolean {
+    return dist(this.screenPoint(e), this.downScreen) <= px;
   }
 
   hasPendingDrawing(): boolean {

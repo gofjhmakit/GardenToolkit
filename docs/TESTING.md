@@ -3,6 +3,7 @@
 ```bash
 npm test            # all unit/component/persistence tests (Vitest, jsdom + fake-indexeddb)
 npm run test:e2e    # end-to-end tests in Chromium (Playwright) against the production build
+npx playwright test --project=phone   # only the phone/touch tests
 ```
 
 ## Layers of tests
@@ -15,6 +16,7 @@ npm run test:e2e    # end-to-end tests in Chromium (Playwright) against the prod
 | Persistence | `src/persistence/*.test.ts` | Create/list/load/save/duplicate/delete, snapshots, reload, migrations, reference repair, package/JSON round trips, corrupted & hostile imports (prototype-named ids, impossible dates, absurd geometry, lying ZIP headers), save → reopen contract at every UI text limit |
 | Reports | `src/reports/*.test.ts` | Report builders for every document type, CSV escaping/injection, PDF text sanitising, iCal escaping, line folding and all-day end dates |
 | Components | `src/ui/**/*.test.tsx` | Inputs (units, validation), dialogs (including prompt length limits), error boundary, inspector editing, plant browser keyboard navigation |
+| Phone & touch | `tests/e2e/mobile.spec.ts` (Playwright project `phone`) | iPhone 17 Pro viewport (402 × 874) with real multi-touch through the DevTools protocol: no horizontal overflow on any screen, draw/select/move with a finger, pinch-zoom and pan never edit the plan, long-press menu, polygon Finish button, bottom sheets, add-plants flow, plant database panes, landscape, Pro Max and portrait iPads |
 | End-to-end | `tests/e2e/*.spec.ts` | Full workflows in a real browser: create → draw → select → plant → undo/redo → copy/paste → reload; blueprint import & calibration; export/import round trip; corrupted import; PDFs; drawing tools; layers; keyboard shortcuts; views; offline; accessibility checks |
 
 Calculation logic is tested without the UI, and UI behaviour is tested against the real

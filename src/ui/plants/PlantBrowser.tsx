@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Search, Star } from 'lucide-react';
+import { ChevronLeft, Search, SlidersHorizontal, Star } from 'lucide-react';
 import { usePlants } from '../../app/plantStore';
 import { useEditor } from '../../editor/store';
 import { EMPTY_FILTER, filterPlants, isFilterActive, type PlantFilter } from '../../plants/filter';
@@ -13,6 +13,7 @@ import { formatRange } from '../../domain/range';
 import { MONTH_NAMES } from '../../lib/dates';
 import { PlantDetail } from './PlantDetail';
 import { Select, Checkbox } from '../components/Fields';
+import { useCompact } from '../useCompact';
 
 interface Props {
   selectedId: string | null;
@@ -58,6 +59,13 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
   const selected = selectedId ? catalog.get(selectedId) : undefined;
   const set = (patch: Partial<PlantFilter>) => setFilter((f) => ({ ...f, ...patch }));
   const idx = results.findIndex((p) => p.id === selectedId);
+  // Phones show one pane at a time: filters, the list, or a plant's details.
+  const compact = useCompact();
+  const [pane, setPane] = useState<'list' | 'detail' | 'filters'>('list');
+  const pick = (id: string) => {
+    onSelect(id);
+    if (compact) setPane('detail');
+  };
 
   const onListKey = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -77,8 +85,13 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
   };
 
   return (
-    <div className="plant-browser">
+    <div className={compact ? `plant-browser phone show-${pane}` : 'plant-browser'}>
       <div className="pb-filters" aria-label="Plant filters">
+        {compact && (
+          <button type="button" className="btn sm pb-back" onClick={() => setPane('list')}>
+            <ChevronLeft size={16} /> Show {results.length.toLocaleString()} plants
+          </button>
+        )}
         <div className="col" style={{ gap: 4 }}>
           <span className="field-label">Category</span>
           <div className="row wrap" style={{ gap: 4 }}>
@@ -145,6 +158,11 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
               onKeyDown={onListKey}
             />
           </label>
+          {compact && (
+            <button type="button" className="btn sm pb-filter-toggle" aria-pressed={isFilterActive(filter)} onClick={() => setPane('filters')}>
+              <SlidersHorizontal size={14} /> Filters{isFilterActive(filter) ? ' (on)' : ''}
+            </button>
+          )}
           <div className="tiny muted" aria-live="polite">
             {status === 'loading' ? 'Loading plant database…' : `${results.length.toLocaleString()} of ${catalog.plants.size.toLocaleString()} plants`}
           </div>
@@ -152,7 +170,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
             <div className="row wrap" style={{ gap: 4 }}>
               <span className="tiny muted">Recent:</span>
               {recentPlants.map((p) => (
-                <button key={p.id} className="chip" style={{ height: 20, fontSize: 11 }} onClick={() => onSelect(p.id)}>
+                <button key={p.id} className="chip" style={{ height: 20, fontSize: 11 }} onClick={() => pick(p.id)}>
                   {plantDisplayName(p)}
                 </button>
               ))}
@@ -169,8 +187,9 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
                     plant={p}
                     selected={p.id === selectedId}
                     favourite={favourites.has(p.id)}
-                    onSelect={() => onSelect(p.id)}
-                    onActivate={onActivate ? () => onActivate(p.id) : undefined}
+                    onSelect={() => pick(p.id)}
+                    // Phones use the detail pane's button; a stray double-tap must not add a plant.
+                    onActivate={onActivate && !compact ? () => onActivate(p.id) : undefined}
                     onFavourite={() => toggleFavourite(p.id)}
                     harvest={formatMonthSpan(plantSeasons(p, anchors).harvest)}
                   />
@@ -183,6 +202,11 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
       </div>
 
       <div className="pb-detail" aria-label="Plant details">
+        {compact && (
+          <button type="button" className="btn sm pb-back" onClick={() => setPane('list')}>
+            <ChevronLeft size={16} /> All plants
+          </button>
+        )}
         {renderSide ? renderSide(selected) : selected ? <PlantDetail plant={selected} /> : <p className="muted">Select a plant to see its details.</p>}
       </div>
     </div>

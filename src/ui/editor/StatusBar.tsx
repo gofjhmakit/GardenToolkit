@@ -34,16 +34,16 @@ export function StatusBar() {
         <span className={`save-dot ${saveStatus}`} />
         {saveText}
       </span>
-      <span className="status-sep" />
-      <span className="num" title="Cursor position in real-world units (origin at the red cross)">
+      <span className="status-sep st-optional" />
+      <span className="num st-optional" title="Cursor position in real-world units (origin at the red cross)">
         {cursor ? `X ${formatLength(cursor.x, units, units === 'metric' ? 'm' : undefined)}  Y ${formatLength(cursor.y, units, units === 'metric' ? 'm' : undefined)}` : 'X —  Y —'}
       </span>
       <span className="status-sep" />
       <span className="num" title="Zoom never changes object dimensions; 100% = 1 m per 100 screen pixels">
-        Zoom {zoomPercent(view)}% · 1 m = {(view.scale * 1000).toFixed(view.scale * 1000 < 10 ? 1 : 0)} px
+        Zoom {zoomPercent(view)}%<span className="st-optional"> · 1 m = {(view.scale * 1000).toFixed(view.scale * 1000 < 10 ? 1 : 0)} px</span>
       </span>
-      <span className="status-sep" />
-      <span title={`All dimensions are real-world measurements (${units === 'metric' ? 'metres, centimetres, square metres' : 'feet, inches, square feet'})`}>{units === 'metric' ? 'Metric' : 'Imperial'}</span>
+      <span className="status-sep st-optional" />
+      <span className="st-optional" title={`All dimensions are real-world measurements (${units === 'metric' ? 'metres, centimetres, square metres' : 'feet, inches, square feet'})`}>{units === 'metric' ? 'Metric' : 'Imperial'}</span>
       {uncalibrated && (
         <span className="badge warn dot" title="Use the Calibrate tool (K) to set the blueprint's real scale">
           Scale not calibrated
@@ -64,7 +64,7 @@ export function StatusBar() {
       >
         <Magnet size={11} style={{ verticalAlign: -1 }} /> Snap {snapping ? 'on' : 'off'}
       </button>
-      <span className="num">Grid {formatLength(doc.settings.gridSizeMm, units)}</span>
+      <span className="num st-optional">Grid {formatLength(doc.settings.gridSizeMm, units)}</span>
     </footer>
   );
 }

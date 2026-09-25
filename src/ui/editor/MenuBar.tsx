@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Menu as MenuIcon } from 'lucide-react';
 import { Menu, type MenuEntry } from '../components/Menu';
 import { useEditor } from '../../editor/store';
 import { usePrefs } from '../../app/prefs';
@@ -38,8 +39,8 @@ import { makeLookup } from '../../app/lookup';
 
 type MenuId = 'file' | 'edit' | 'view' | 'arrange' | 'help';
 
-export function MenuBar({ onHome, onHelp }: { onHome: () => void; onHelp: () => void }) {
-  const [open, setOpen] = useState<{ id: MenuId; x: number; y: number } | null>(null);
+export function MenuBar({ onHome, onHelp, compact = false }: { onHome: () => void; onHelp: () => void; compact?: boolean }) {
+  const [open, setOpen] = useState<{ id: MenuId | 'all'; x: number; y: number } | null>(null);
   const s = useEditor();
   const prefs = usePrefs();
   const doc = s.doc!;
@@ -171,6 +172,30 @@ export function MenuBar({ onHome, onHelp }: { onHome: () => void; onHelp: () => 
     ['arrange', 'Arrange'],
     ['help', 'Help'],
   ];
+  if (compact) {
+    // Phones: one button, every menu as a labelled section of a single list.
+    const all = (): MenuEntry[] =>
+      labels.flatMap(([id, label], i) => [...(i ? [{ type: 'separator' as const }] : []), { type: 'label' as const, label }, ...menus[id]()]);
+    return (
+      <nav className="menubar compact" aria-label="Main menu">
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Menu"
+          title="Menu"
+          aria-haspopup="menu"
+          aria-expanded={open?.id === 'all'}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setOpen(open ? null : { id: 'all', x: r.left, y: r.bottom + 2 });
+          }}
+        >
+          <MenuIcon size={18} strokeWidth={1.75} />
+        </button>
+        {open && <Menu label="Menu" entries={all()} anchor={{ x: open.x, y: open.y }} onClose={() => setOpen(null)} />}
+      </nav>
+    );
+  }
   return (
     <nav className="menubar" aria-label="Main menu">
       {labels.map(([id, label]) => (
@@ -193,7 +218,7 @@ export function MenuBar({ onHome, onHelp }: { onHome: () => void; onHelp: () => 
           {label}
         </button>
       ))}
-      {open && <Menu label={labels.find((l) => l[0] === open.id)![1]} entries={menus[open.id]()} anchor={{ x: open.x, y: open.y }} onClose={() => setOpen(null)} />}
+      {open && <Menu label={labels.find((l) => l[0] === open.id)![1]} entries={menus[open.id as MenuId]()} anchor={{ x: open.x, y: open.y }} onClose={() => setOpen(null)} />}
     </nav>
   );
 }
