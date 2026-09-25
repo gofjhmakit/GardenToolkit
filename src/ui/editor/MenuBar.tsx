@@ -31,7 +31,6 @@ import {
   ungroupSelection,
   zOrder,
 } from './actions';
-import { exportPlanPng, exportPlanSvg } from '../../reports/planExport';
 import { usePlants } from '../../app/plantStore';
 import { makeLookup } from '../../app/lookup';
 
@@ -80,10 +79,12 @@ export function MenuBar({ onHome, onHelp }: { onHome: () => void; onHelp: () => 
       { label: 'Export project as JSON (images embedded)', onSelect: () => void exportProjectJson(doc, true) },
       { label: 'Export plan as SVG', onSelect: async () => {
         const lookup = makeLookup(usePlants.getState().catalog, doc);
+        const { exportPlanSvg } = await import('../../reports/planExport');
         downloadBlob(await exportPlanSvg(doc, lookup), `${safeFileName(doc.meta.name)}-plan.svg`);
       } },
       { label: 'Export plan as PNG', onSelect: async () => {
         const lookup = makeLookup(usePlants.getState().catalog, doc);
+        const { exportPlanPng } = await import('../../reports/planExport');
         downloadBlob(await exportPlanPng(doc, lookup, 3000), `${safeFileName(doc.meta.name)}-plan.png`);
       } },
       { label: 'Reports & PDF documents…', onSelect: () => s.setWorkspace('reports') },

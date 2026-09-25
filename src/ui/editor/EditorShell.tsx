@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
@@ -41,14 +41,14 @@ import { useShortcuts } from './useShortcuts';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { ContextMenuHost } from './ContextMenuHost';
 import { AddPlantsDialog } from '../plants/AddPlantsDialog';
-import { PlantingsView } from '../views/PlantingsView';
-import { CalendarView } from '../views/CalendarView';
-import { HarvestView } from '../views/HarvestView';
-import { CareView } from '../views/CareView';
-import { RotationView } from '../views/RotationView';
-import { PlantDatabaseView } from '../views/PlantDatabaseView';
-import { ReportsView } from '../views/ReportsView';
-import { SettingsView } from '../views/SettingsView';
+const PlantingsView = lazy(() => import('../views/PlantingsView').then((m) => ({ default: m.PlantingsView })));
+const CalendarView = lazy(() => import('../views/CalendarView').then((m) => ({ default: m.CalendarView })));
+const HarvestView = lazy(() => import('../views/HarvestView').then((m) => ({ default: m.HarvestView })));
+const CareView = lazy(() => import('../views/CareView').then((m) => ({ default: m.CareView })));
+const RotationView = lazy(() => import('../views/RotationView').then((m) => ({ default: m.RotationView })));
+const PlantDatabaseView = lazy(() => import('../views/PlantDatabaseView').then((m) => ({ default: m.PlantDatabaseView })));
+const ReportsView = lazy(() => import('../views/ReportsView').then((m) => ({ default: m.ReportsView })));
+const SettingsView = lazy(() => import('../views/SettingsView').then((m) => ({ default: m.SettingsView })));
 import { TabGuardBanner } from './TabGuardBanner';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
@@ -223,6 +223,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
           </>
         ) : (
           <div className="view" role="tabpanel">
+            <Suspense fallback={<div className="view-inner muted">Loading…</div>}>
             {workspace === 'plantings' && <PlantingsView />}
             {workspace === 'calendar' && <CalendarView />}
             {workspace === 'harvest' && <HarvestView />}
@@ -231,6 +232,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
             {workspace === 'plants' && <PlantDatabaseView />}
             {workspace === 'reports' && <ReportsView />}
             {workspace === 'settings' && <SettingsView />}
+            </Suspense>
           </div>
         )}
       </main>
