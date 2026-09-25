@@ -1027,7 +1027,7 @@ dialog.dialog[open]::backdrop {
   letter-spacing: -0.01em;
 }
 .dialog-body {
-  padding: 18px;
+  padding: 16px; /* keep 16: PlantBrowser in AddPlantsDialog uses margin:-16 to bleed */
   overflow: auto;
   flex: 1;
   min-height: 0;

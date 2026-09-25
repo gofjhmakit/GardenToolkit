@@ -141,7 +141,9 @@ export function countLattice(
     const shift = pattern === 'triangular' && r % 2 === 1 ? inRow / 2 : 0;
     let rowHasPlants = false;
     let rowCountHere = 0;
-    for (const [x0, x1] of scanlineIntervals(poly, c)) {
+    // Rows lying exactly on the outline (zero margin) are evaluated just inside it.
+    const cEval = Math.min(Math.max(c, b.minY + 1e-6), b.maxY - 1e-6);
+    for (const [x0, x1] of scanlineIntervals(poly, cEval)) {
       const s0 = x0 + marginAlong;
       const s1 = x1 - marginAlong;
       if (s1 < s0 - 1e-9) continue;
