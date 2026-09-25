@@ -14,6 +14,8 @@ test.describe('blueprints', () => {
     await page.getByRole('button', { name: 'Import blueprint image or PDF' }).click();
     await (await chooser).setFiles(fixture(f));
     await expect(page.getByText('Blueprint imported')).toBeVisible();
+    // Wait until the imported background is in the editor state before reading it.
+    await expect.poll(() => state<number>(page, '(s) => s.doc.backgrounds.length')).toBe(1);
   }
 
   test('PDF blueprints are rendered to an image', async ({ page }) => {

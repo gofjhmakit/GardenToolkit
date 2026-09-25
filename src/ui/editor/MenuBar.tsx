@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Menu, type MenuEntry } from '../components/Menu';
 import { useEditor } from '../../editor/store';
 import { usePrefs } from '../../app/prefs';
-import { pickFile, downloadBlob, safeFileName } from '../../lib/download';
+import { pickFile, pickFiles, downloadBlob, safeFileName } from '../../lib/download';
 import {
   closeProject,
+  exportAllProjects,
   exportProjectJson,
   exportProjectPackage,
   importBlueprint,
-  importProjectFromFile,
+  importProjectFiles,
+  PROJECT_FILE_ACCEPT,
   navigate,
   saveProjectAs,
 } from '../../app/projectActions';
@@ -68,15 +70,16 @@ export function MenuBar({ onHome, onHelp }: { onHome: () => void; onHelp: () => 
         const f = await pickFile('image/png,image/jpeg,image/webp,application/pdf');
         if (f) await importBlueprint(f);
       } },
-      { label: 'Import project file…', onSelect: async () => {
-        const f = await pickFile('.gtkproject,.zip,.json,application/json,application/zip');
-        if (!f) return;
-        const id = await importProjectFromFile(f);
-        if (id) navigate(`#/p/${id}`);
+      { label: 'Import project files…', onSelect: async () => {
+        const files = await pickFiles(PROJECT_FILE_ACCEPT);
+        const ids = await importProjectFiles(files);
+        if (ids.length === 1) navigate(`#/p/${ids[0]}`);
+        else if (ids.length > 1) toast('info', 'The imported projects are listed under All projects.');
       } },
       { type: 'separator' },
       { label: 'Export project package (.gtkproject)', onSelect: () => void exportProjectPackage(doc) },
       { label: 'Export project as JSON (images embedded)', onSelect: () => void exportProjectJson(doc, true) },
+      { label: 'Export all projects (.gtkbackup)', onSelect: () => void exportAllProjects() },
       { label: 'Export plan as SVG', onSelect: async () => {
         const lookup = makeLookup(usePlants.getState().catalog, doc);
         const { exportPlanSvg } = await import('../../reports/planExport');

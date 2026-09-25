@@ -16,7 +16,7 @@ import type { ProjectDoc } from '../domain/project';
 import type { Plant } from '../plants/schema';
 import type { AssetRecord } from './db';
 import {
-  extensionFor,
+  assetPath,
   fromProjectFile,
   migrateProjectFile,
   ProjectFileSchema,
@@ -103,7 +103,7 @@ export async function buildProjectPackage(
   for (const a of assets) {
     if (!used.has(a.id)) continue;
     // Images are already compressed; store them without deflate.
-    entries[`assets/${a.id}.${extensionFor(a.mimeType)}`] = await blobBytes(a.blob);
+    entries[assetPath(a.id, a.mimeType)] = await blobBytes(a.blob);
   }
   const zipped = zipSync(
     Object.fromEntries(
@@ -281,5 +281,94 @@ export async function importProjectFile(
     return { ok: true, doc, assets, warnings: [...warnings, ...mapWarnings] };
   } catch (e) {
     return fail('The file could not be read.', [e instanceof Error ? e.message : String(e)]);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-project backups ("Export all")
+// ---------------------------------------------------------------------------
+
+export const BACKUP_FORMAT = 'garden-toolkit-backup';
+
+export interface BackupEntry {
+  doc: ProjectDoc;
+  assets: AssetRecord[];
+}
+
+/**
+ * Builds one ZIP containing a `.gtkproject` package per project plus a
+ * `backup.json` manifest. Each inner package is the normal, documented
+ * project format, so a backup can also be unpacked by hand.
+ */
+export async function buildBackupArchive(entries: BackupEntry[], lookupPlant: (id: string) => Plant | undefined, now = new Date()): Promise<Blob> {
+  const files: Record<string, [Uint8Array, { level: 0 | 6 }]> = {};
+  const used = new Set<string>();
+  const manifest: { format: string; schemaVersion: 1; exportedAt: string; projects: { name: string; file: string; updatedAt: string }[] } = {
+    format: BACKUP_FORMAT,
+    schemaVersion: 1,
+    exportedAt: now.toISOString(),
+    projects: [],
+  };
+  for (const e of entries) {
+    const base = e.doc.meta.name.normalize('NFKD').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'garden';
+    let name = `${base}.gtkproject`;
+    for (let n = 2; used.has(name); n++) name = `${base}-${n}.gtkproject`;
+    used.add(name);
+    const pkg = await buildProjectPackage(e.doc, e.assets, lookupPlant);
+    files[`projects/${name}`] = [new Uint8Array(await pkg.arrayBuffer()), { level: 0 }];
+    manifest.projects.push({ name: e.doc.meta.name, file: `projects/${name}`, updatedAt: e.doc.meta.updatedAt });
+  }
+  files['backup.json'] = [strToU8(JSON.stringify(manifest, null, 2)), { level: 6 }];
+  return new Blob([zipSync(files as Parameters<typeof zipSync>[0]) as BlobPart], { type: 'application/zip' });
+}
+
+export interface NamedImportResult {
+  source: string;
+  result: ImportResult;
+}
+
+/**
+ * Imports any supported file: a single project (package or JSON) or a
+ * multi-project backup. Never throws; returns one result per project found.
+ */
+export async function importAnyFile(input: Blob, name: string, knownPlant: (id: string) => boolean): Promise<NamedImportResult[]> {
+  try {
+    if (input.size > LIMITS.maxFileBytes) return [{ source: name, result: fail('The file is too large to import.') }];
+    const head = new Uint8Array(await input.slice(0, 4).arrayBuffer());
+    const isZip = head.length === 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
+    if (!isZip) return [{ source: name, result: await importProjectFile(input, knownPlant) }];
+    let entries = 0;
+    let hasProjectJson = false;
+    let rejectReason: string | null = null;
+    const files = await unzipAsync(new Uint8Array(await input.arrayBuffer()), (f) => {
+      entries++;
+      if (entries > LIMITS.maxEntries) {
+        rejectReason = 'The archive contains too many files.';
+        return false;
+      }
+      if (f.name === 'project.json') hasProjectJson = true;
+      // Only nested project packages are read from backups; everything else is ignored.
+      if (/^projects\/[^/]+\.gtkproject$/.test(f.name)) {
+        if (f.originalSize > LIMITS.maxFileBytes) {
+          rejectReason = `${f.name} is too large.`;
+          return false;
+        }
+        return true;
+      }
+      return false;
+    });
+    if (rejectReason) return [{ source: name, result: fail(rejectReason) }];
+    if (hasProjectJson) return [{ source: name, result: await importProjectFile(input, knownPlant) }];
+    const inner = Object.entries(files);
+    if (!inner.length) {
+      return [{ source: name, result: fail('This ZIP file is not a Garden Toolkit project or backup.') }];
+    }
+    const out: NamedImportResult[] = [];
+    for (const [path, data] of inner.sort(([a], [b]) => a.localeCompare(b))) {
+      out.push({ source: path.slice('projects/'.length), result: await importProjectFile(new Blob([data as BlobPart]), knownPlant) });
+    }
+    return out;
+  } catch (e) {
+    return [{ source: name, result: fail('The file could not be read.', [e instanceof Error ? e.message : String(e)]) }];
   }
 }

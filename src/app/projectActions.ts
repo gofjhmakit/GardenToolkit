@@ -12,12 +12,13 @@ import {
   assetsForProject,
   duplicateProject,
   getSnapshot,
+  listProjects,
   loadProject,
   putAsset,
   saveProject,
   storeImportedProject,
 } from '../persistence/projectRepo';
-import { buildProjectJson, buildProjectPackage, importProjectFile } from '../persistence/projectPackage';
+import { buildBackupArchive, buildProjectJson, buildProjectPackage, importAnyFile } from '../persistence/projectPackage';
 import { requestPersistentStorage } from '../persistence/db';
 import { flushSave, markLoaded, resetAutosave } from './autosave';
 import { useAssetUrls } from './assets';
@@ -62,17 +63,78 @@ export async function closeProject(): Promise<void> {
   useAssetUrls.getState().clear();
 }
 
-export async function importProjectFromFile(file: File): Promise<string | null> {
+/** File types accepted by project import (packages, JSON and multi-project backups). */
+export const PROJECT_FILE_ACCEPT = '.gtkproject,.gtkbackup,.zip,.json,application/json,application/zip';
+
+/**
+ * Imports one or more files (single projects or multi-project backups).
+ * Returns the ids of the imported projects; problems are reported as toasts.
+ */
+export async function importProjectFiles(files: File[]): Promise<string[]> {
   const catalog = usePlants.getState().catalog;
-  const res = await importProjectFile(file, (id) => catalog.plants.has(id));
-  if (!res.ok) {
-    toast('error', `Import failed: ${res.error}`, res.details);
-    return null;
+  const ids: string[] = [];
+  const failures: string[] = [];
+  const warnings: string[] = [];
+  for (const file of files) {
+    const results = await importAnyFile(file, file.name, (id) => catalog.plants.has(id));
+    for (const { source, result } of results) {
+      if (!result.ok) {
+        failures.push(`${source}: ${result.error}${result.details.length ? ` (${result.details[0]})` : ''}`);
+        continue;
+      }
+      await storeImportedProject(result.doc, result.assets);
+      ids.push(result.doc.id);
+      warnings.push(...result.warnings.map((w) => `${result.doc.meta.name}: ${w}`));
+    }
   }
-  await storeImportedProject(res.doc, res.assets);
-  if (res.warnings.length) toast('info', `Imported "${res.doc.meta.name}" with warnings`, res.warnings);
-  else toast('ok', `Imported "${res.doc.meta.name}"`);
-  return res.doc.id;
+  if (ids.length) {
+    toast(warnings.length ? 'info' : 'ok', ids.length === 1 ? `Imported 1 project${warnings.length ? ' with warnings' : ''}` : `Imported ${ids.length} projects${warnings.length ? ' with warnings' : ''}`, warnings);
+  }
+  if (failures.length) toast('error', failures.length === 1 && !ids.length ? 'Import failed' : `${failures.length} file(s) could not be imported`, failures);
+  return ids;
+}
+
+/** Imports a single file; kept for callers that expect one project. */
+export async function importProjectFromFile(file: File): Promise<string | null> {
+  const ids = await importProjectFiles([file]);
+  return ids[0] ?? null;
+}
+
+/** Exports a stored project without opening it (used by the project list). */
+export async function exportStoredProject(id: string, format: 'package' | 'json'): Promise<boolean> {
+  if (editorApi.getState().doc?.id === id) await flushSave();
+  const res = await loadProject(id);
+  if (!res?.ok) {
+    toast('error', 'This project could not be read for export.');
+    return false;
+  }
+  if (format === 'package') await exportProjectPackage(res.doc);
+  else await exportProjectJson(res.doc, true);
+  return true;
+}
+
+/** Exports every project in this browser into one backup file. */
+export async function exportAllProjects(): Promise<number> {
+  await flushSave();
+  const metas = await listProjects();
+  const entries = [];
+  const skipped: string[] = [];
+  for (const m of metas) {
+    const res = await loadProject(m.id);
+    if (res?.ok) entries.push({ doc: res.doc, assets: await assetsForProject(m.id) });
+    else skipped.push(m.name);
+  }
+  if (!entries.length) {
+    toast('info', 'There are no projects to export yet.');
+    return 0;
+  }
+  const catalog = usePlants.getState().catalog;
+  const blob = await buildBackupArchive(entries, (id) => catalog.get(id));
+  const stamp = new Date().toISOString().slice(0, 10);
+  downloadBlob(blob, `garden-toolkit-backup-${stamp}.gtkbackup`);
+  if (skipped.length) toast('error', `${skipped.length} unreadable project(s) were not included`, skipped);
+  else toast('ok', `Exported ${entries.length} project${entries.length === 1 ? '' : 's'} to one backup file`);
+  return entries.length;
 }
 
 function currentLookup(doc: ProjectDoc) {

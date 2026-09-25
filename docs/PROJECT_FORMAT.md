@@ -12,6 +12,12 @@ is deliberately separate from the internal IndexedDB document, and explicit mapp
 | --- | --- | --- |
 | Project package (preferred) | `.gtkproject` | ZIP: `project.json`, `assets/<id>.<png|jpg|webp>`, `README.txt` |
 | Single JSON file | `.json` | Same document; images embedded in `assets[].data` as base64 |
+| Multi-project backup ("Export all") | `.gtkbackup` | ZIP: `backup.json` manifest (`format: "garden-toolkit-backup"`, `schemaVersion: 1`, list of projects) + one `projects/<name>.gtkproject` package per project |
+
+All three can be imported from the project list ("Import project", several files at once, or by
+dropping files onto the page) or from **File → Import project files…** in the editor. Each
+project in a backup is validated independently, so one damaged project does not stop the others
+from importing.
 
 ## Conventions
 

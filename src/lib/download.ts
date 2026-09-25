@@ -43,3 +43,24 @@ export function pickFile(accept: string): Promise<File | null> {
     input.click();
   });
 }
+
+/** Opens a file picker allowing several files. Resolves with [] when cancelled. */
+export function pickFiles(accept: string): Promise<File[]> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.multiple = true;
+    input.style.display = 'none';
+    input.addEventListener('change', () => {
+      resolve([...(input.files ?? [])]);
+      input.remove();
+    });
+    input.addEventListener('cancel', () => {
+      resolve([]);
+      input.remove();
+    });
+    document.body.appendChild(input);
+    input.click();
+  });
+}

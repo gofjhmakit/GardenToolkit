@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, FileUp, Layers, Leaf, MoreHorizontal, Plus, Sprout, Trash2, WifiOff, Calculator, CalendarDays, FileDown, ShieldCheck, Pencil } from 'lucide-react';
+import { Copy, Download, FileDown as FileDownIcon, FileJson, FileUp, Upload, Layers, Leaf, MoreHorizontal, Plus, Sprout, Trash2, WifiOff, Calculator, CalendarDays, FileDown, ShieldCheck, Pencil } from 'lucide-react';
 import { deleteProject, duplicateProject, listProjects, loadProject, renameProject } from '../../persistence/projectRepo';
 import type { ProjectMeta } from '../../persistence/db';
-import { createNewProject, importProjectFromFile, navigate } from '../../app/projectActions';
-import { pickFile } from '../../lib/download';
+import { createNewProject, exportAllProjects, exportStoredProject, importProjectFiles, navigate, PROJECT_FILE_ACCEPT } from '../../app/projectActions';
+import { pickFiles } from '../../lib/download';
 import { Dialog } from '../components/Dialog';
 import { Menu } from '../components/Menu';
 import { confirmAsync, promptAsync, toast } from '../components/feedback';
@@ -19,15 +19,54 @@ export function HomeScreen() {
   const [menu, setMenu] = useState<{ p: ProjectMeta; x: number; y: number } | null>(null);
   const refresh = () => void listProjects().then(setProjects).catch(() => setProjects([]));
   useEffect(refresh, []);
-  const onImport = async () => {
-    const f = await pickFile('.gtkproject,.zip,.json,application/json,application/zip');
-    if (!f) return;
-    const id = await importProjectFromFile(f);
-    if (id) navigate(`#/p/${id}`);
-    refresh();
+  const [dragging, setDragging] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const importFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setBusy(true);
+    try {
+      const ids = await importProjectFiles(files);
+      // A single imported project opens directly; several stay in the list.
+      if (ids.length === 1) navigate(`#/p/${ids[0]}`);
+    } finally {
+      setBusy(false);
+      refresh();
+    }
+  };
+  const onImport = async () => importFiles(await pickFiles(PROJECT_FILE_ACCEPT));
+  const onExportAll = async () => {
+    setBusy(true);
+    try {
+      await exportAllProjects();
+    } finally {
+      setBusy(false);
+    }
   };
   return (
-    <div className="home">
+    <div
+      className={`home ${dragging ? 'drop-active' : ''}`}
+      onDragOver={(e) => {
+        if (![...e.dataTransfer.types].includes('Files')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        if (!dragging) setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        void importFiles([...e.dataTransfer.files]);
+      }}
+    >
+      {dragging && (
+        <div className="drop-overlay" aria-hidden="true">
+          <Upload size={28} />
+          <strong>Drop project files to import</strong>
+          <span>.gtkproject, .json or a .gtkbackup of several projects</span>
+        </div>
+      )}
       <div className="home-inner">
         <header className="home-header">
           <div className="brand">
@@ -35,11 +74,14 @@ export function HomeScreen() {
             Garden Toolkit
           </div>
           <span className="spacer" />
-          <button className="btn" onClick={onImport}><FileUp size={14} /> {t('Import project')}</button>
+          <button className="btn" onClick={onImport} disabled={busy} title="Import .gtkproject, .json or .gtkbackup files (you can also drop files here)"><FileUp size={14} /> {t('Import project')}</button>
+          {projects && projects.length > 0 && (
+            <button className="btn" onClick={onExportAll} disabled={busy} title="Download all projects in one backup file"><Download size={14} /> Export all</button>
+          )}
           <button className="btn primary" onClick={() => setCreateOpen(true)}><Plus size={14} /> {t('New garden')}</button>
         </header>
         <h1 style={{ marginBottom: 4 }}>{t('Your gardens')}</h1>
-        <p className="muted" style={{ marginBottom: 18 }}>Plans are saved automatically in this browser. Nothing is uploaded.</p>
+        <p className="muted" style={{ marginBottom: 18 }}>Plans are saved automatically in this browser. Nothing is uploaded. Export a project to move it to another browser or device, or drop project files here to import them.</p>
         {projects === null ? (
           <p className="muted">Loading…</p>
         ) : projects.length === 0 ? (
@@ -101,6 +143,10 @@ export function HomeScreen() {
               const name = await promptAsync({ title: 'Rename project', label: 'Name', value: menu.p.name, confirmLabel: 'Rename' });
               if (name) { await renameProject(menu.p.id, name); refresh(); }
             } },
+            { type: 'separator' },
+            { label: 'Export backup (.gtkproject)', icon: <FileDownIcon size={13} />, onSelect: () => void exportStoredProject(menu.p.id, 'package') },
+            { label: 'Export as JSON', icon: <FileJson size={13} />, onSelect: () => void exportStoredProject(menu.p.id, 'json') },
+            { type: 'separator' },
             { label: 'Duplicate', icon: <Copy size={13} />, onSelect: async () => {
               const res = await loadProject(menu.p.id);
               if (res?.ok) { await duplicateProject(res.doc, `${res.doc.meta.name} (copy)`); refresh(); }

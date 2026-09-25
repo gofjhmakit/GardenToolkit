@@ -94,7 +94,7 @@ test('export a project package and import it again', async ({ page }) => {
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Import project' }).click();
   await (await chooser).setFiles({ name: 'backup.gtkproject', mimeType: 'application/zip', buffer: readFileSync(path!) });
-  await expect(page.getByText(/Imported "Roundtrip garden"/)).toBeVisible();
+  await expect(page.getByText(/Imported 1 project/)).toBeVisible();
   await expect(bedRows(page)).toHaveCount(1);
 });
 

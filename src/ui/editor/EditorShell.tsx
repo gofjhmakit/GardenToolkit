@@ -23,6 +23,7 @@ import {
   MoveHorizontal,
   Repeat,
   Wheat,
+  Download,
   ClipboardList,
   Flower2,
 } from 'lucide-react';
@@ -50,6 +51,8 @@ const PlantDatabaseView = lazy(() => import('../views/PlantDatabaseView').then((
 const ReportsView = lazy(() => import('../views/ReportsView').then((m) => ({ default: m.ReportsView })));
 const SettingsView = lazy(() => import('../views/SettingsView').then((m) => ({ default: m.SettingsView })));
 import { TabGuardBanner } from './TabGuardBanner';
+import { MenuButton } from '../components/Menu';
+import { exportProjectJson, exportProjectPackage } from '../../app/projectActions';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
   { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
@@ -203,6 +206,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
         <button className="icon-btn" aria-label="Import blueprint image or PDF" title="Import blueprint image or PDF" onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
           <ImagePlus size={16} strokeWidth={1.75} absoluteStrokeWidth />
         </button>
+        <ExportButton />
         <AddPlantsButton />
       </header>
       <nav className="worktabs" role="tablist" aria-label="Workspaces">
@@ -276,3 +280,25 @@ function AddPlantsButton() {
   );
 }
 
+
+/** Always-visible export entry point (a project backup is the way to move a garden to another device). */
+function ExportButton() {
+  const doc = useEditor((s) => s.doc);
+  if (!doc) return null;
+  return (
+    <MenuButton
+      label="Export"
+      className="btn sm"
+      entries={() => [
+        { type: 'label', label: 'Project backup (re-importable)' },
+        { label: 'Project package (.gtkproject)', onSelect: () => void exportProjectPackage(useEditor.getState().doc!) },
+        { label: 'Single JSON file', onSelect: () => void exportProjectJson(useEditor.getState().doc!, true) },
+        { type: 'separator' },
+        { label: 'PDF documents, plans & CSV…', onSelect: () => useEditor.getState().setWorkspace('reports') },
+      ]}
+    >
+      <Download size={14} strokeWidth={1.75} />
+      Export
+    </MenuButton>
+  );
+}

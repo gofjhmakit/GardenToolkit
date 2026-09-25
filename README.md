@@ -15,6 +15,9 @@ editor, plant database, planting calculator, planting calendar and garden docume
   report as PDF, plus SVG/PNG plans, CSV, iCal and full project backups.
 - **Private and offline.** No account, no server and no tracking. Data lives in IndexedDB in
   your browser, and the app works offline once installed/loaded.
+- **Portable.** Export a project (`.gtkproject` or JSON) from the editor's Export button or its
+  card on the home screen, or "Export all" into one `.gtkbackup`. Import on any browser or
+  device, several files at once or by drag and drop.
 
 ## Quick start
 

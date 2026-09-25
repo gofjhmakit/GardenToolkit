@@ -139,6 +139,11 @@ export interface AssetInfo {
   name: string;
 }
 
+/** ZIP entry name for an asset; ids are reduced to a safe character set. */
+export function assetPath(id: string, mime: string): string {
+  return `assets/${id.replace(/[^A-Za-z0-9_.-]/g, '_')}.${extensionFor(mime)}`;
+}
+
 export function extensionFor(mime: string): string {
   return mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
 }
@@ -215,7 +220,7 @@ export function toProjectFile(
     plants,
     assets: assets
       .filter((a) => usedAssets.has(a.id))
-      .map((a) => ({ ...a, path: `assets/${a.id}.${extensionFor(a.mimeType)}` })),
+      .map((a) => ({ ...a, path: assetPath(a.id, a.mimeType) })),
   };
 }
 
