@@ -35,7 +35,7 @@ import { repairReferences } from './migrations';
 
 export const PROJECT_FILE_FORMAT = 'garden-toolkit-project';
 export const PROJECT_FILE_VERSION = 1;
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '1.0.0';
 
 const AssetEntrySchema = z.object({
   id: z.string().min(1).max(100),

@@ -1,7 +1,7 @@
 {
   "name": "garden-toolkit",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Local-first, offline-capable garden planning and design tool.",
   "license": "MIT",
