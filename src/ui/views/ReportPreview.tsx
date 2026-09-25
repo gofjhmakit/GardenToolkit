@@ -6,14 +6,14 @@ export function ReportPreview({ report, planUrl }: { report: ReportDoc; planUrl:
   return (
     <div className="doc-preview">
       <h1>{report.title}</h1>
-      <div style={{ color: '#666' }}>{report.subtitle}</div>
+      <div style={{ color: '#6B665C' }}>{report.subtitle}</div>
       {report.blocks.map((b, i) => {
         switch (b.type) {
           case 'heading':
             return b.level === 1 ? <h1 key={i}>{b.text}</h1> : b.level === 2 ? <h2 key={i}>{b.text}</h2> : <h3 key={i}>{b.text}</h3>;
           case 'paragraph':
             return (
-              <p key={i} style={{ color: b.style === 'muted' ? '#777' : b.style === 'warning' ? '#9a4d16' : undefined, fontStyle: b.style === 'note' ? 'italic' : undefined }}>
+              <p key={i} style={{ color: b.style === 'muted' ? '#6B665C' : b.style === 'warning' ? '#9a4d16' : undefined, fontStyle: b.style === 'note' ? 'italic' : undefined }}>
                 {b.style === 'warning' ? '⚠ ' : ''}
                 {b.text}
               </p>
@@ -64,10 +64,10 @@ export function ReportPreview({ report, planUrl }: { report: ReportDoc; planUrl:
             return (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: `repeat(${b.items.length}, 1fr)`, gap: 8, margin: '12px 0' }}>
                 {b.items.map((s) => (
-                  <div key={s.label} style={{ background: '#f4f2ec', border: '1px solid #ddd', borderRadius: 4, padding: 8 }}>
-                    <div style={{ fontSize: 10, color: '#777' }}>{s.label}</div>
+                  <div key={s.label} style={{ background: '#F2F0EA', border: '1px solid #ddd', borderRadius: 4, padding: 8 }}>
+                    <div style={{ fontSize: 10, color: '#6B665C' }}>{s.label}</div>
                     <div style={{ fontSize: 15, fontWeight: 700 }}>{s.value}</div>
-                    {s.sub && <div style={{ fontSize: 10, color: '#777' }}>{s.sub}</div>}
+                    {s.sub && <div style={{ fontSize: 10, color: '#6B665C' }}>{s.sub}</div>}
                   </div>
                 ))}
               </div>
@@ -76,10 +76,10 @@ export function ReportPreview({ report, planUrl }: { report: ReportDoc; planUrl:
             return planUrl ? (
               <figure key={i} style={{ margin: 0 }}>
                 <img className="plan-img" src={planUrl} alt="Scaled garden plan" />
-                {b.caption && <figcaption style={{ fontSize: 11, color: '#777' }}>{b.caption}</figcaption>}
+                {b.caption && <figcaption style={{ fontSize: 11, color: '#6B665C' }}>{b.caption}</figcaption>}
               </figure>
             ) : (
-              <p key={i} style={{ color: '#777' }}>
+              <p key={i} style={{ color: '#6B665C' }}>
                 Rendering plan…
               </p>
             );

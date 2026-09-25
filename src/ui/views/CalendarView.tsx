@@ -10,14 +10,14 @@ import { downloadText, safeFileName } from '../../lib/download';
 import { Checkbox } from '../components/Fields';
 
 export const EVENT_COLORS: Record<CalendarEvent['type'], string> = {
-  prepare: '#8a6a3a',
-  'sow-indoors': '#6a7ac0',
-  'direct-sow': '#3f8a4a',
-  transplant: '#2f7a8a',
-  'plant-out': '#2f7a8a',
-  succession: '#7aa04a',
-  harvest: '#c0692f',
-  custom: '#8a5ac0',
+  prepare: '#7A4F2A',
+  'sow-indoors': '#455689',
+  'direct-sow': '#1E7A4C',
+  transplant: '#1A727B',
+  'plant-out': '#1A727B',
+  succession: '#4F9A43',
+  harvest: '#C66A38',
+  custom: '#814AAB',
 };
 
 const TYPE_LABELS: Record<CalendarEvent['type'], string> = {

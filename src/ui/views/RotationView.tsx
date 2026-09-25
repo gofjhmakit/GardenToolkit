@@ -10,15 +10,15 @@ import { newId } from '../../lib/ids';
 import { Select } from '../components/Fields';
 
 const GROUP_COLORS: Record<RotationGroup, string> = {
-  legumes: '#5a9a4a',
-  brassicas: '#4a7aa0',
-  alliums: '#a07ac0',
-  solanaceae: '#c0692f',
-  roots: '#b5652b',
-  cucurbits: '#c0a02a',
-  leafy: '#6caa5a',
-  perennial: '#777',
-  other: '#999',
+  legumes: '#2F6E3B',
+  brassicas: '#35607F',
+  alliums: '#7A4A9E',
+  solanaceae: '#A9401A',
+  roots: '#8A5A1E',
+  cucurbits: '#7E6A0C',
+  leafy: '#3E7A2E',
+  perennial: '#5E5A52',
+  other: '#6B665C',
 };
 
 export function RotationView() {
@@ -42,7 +42,7 @@ export function RotationView() {
           <p className="muted">Crop groups per bed over the years. Plantings from each season are included automatically; add earlier years manually below.</p>
         </div>
       </div>
-      <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+      <div className="card flush">
         <table className="table" style={{ minWidth: 700 }}>
           <thead>
             <tr>

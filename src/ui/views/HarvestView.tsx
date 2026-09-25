@@ -52,7 +52,7 @@ export function HarvestView() {
       {list.length === 0 ? (
         <div className="empty-state">No plantings yet.</div>
       ) : (
-        <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+        <div className="card flush">
           <table className="table" style={{ minWidth: 820 }}>
             <thead>
               <tr>

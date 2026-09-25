@@ -45,8 +45,8 @@ export const useFeedback = create<FeedbackState>()((set, get) => ({
   promptReq: null,
   toast(kind, title, details) {
     const id = seq++;
-    set({ toasts: [...get().toasts, { id, kind, title, details }] });
-    setTimeout(() => get().dismiss(id), kind === 'error' ? 12000 : 5000);
+    set({ toasts: [...get().toasts, { id, kind, title, details }].slice(-3) });
+    setTimeout(() => get().dismiss(id), kind === 'error' ? 12000 : 3500);
   },
   dismiss(id) {
     set({ toasts: get().toasts.filter((t) => t.id !== id) });
@@ -109,7 +109,7 @@ function ConfirmDialog({ req }: { req: ConfirmReq }) {
           <button id="confirm-cancel" className="btn" onClick={() => close(false)}>
             Cancel
           </button>
-          <button className={`btn ${req.danger ? 'danger' : 'primary'}`} onClick={() => close(true)}>
+          <button className={`btn ${req.danger ? 'danger solid' : 'primary'}`} onClick={() => close(true)}>
             {req.confirmLabel ?? 'OK'}
           </button>
         </>

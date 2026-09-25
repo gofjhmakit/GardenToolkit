@@ -1,22 +1,22 @@
 import type { PlantCategory } from '../plants/schema';
 
 export const CATEGORY_COLORS: Record<PlantCategory, string> = {
-  vegetable: '#3f8a4a',
-  herb: '#6c9a2e',
-  fruit: '#c0492f',
-  berry: '#8e3a6b',
-  'fruit-tree': '#b5652b',
-  nut: '#8a6a3a',
-  tree: '#2f6a45',
-  shrub: '#4f8a6a',
-  flower: '#c05a8a',
-  perennial: '#8a5ac0',
-  bulb: '#c0a02a',
-  vine: '#5a7ac0',
-  grass: '#7a9a4a',
-  groundcover: '#5a9a7a',
-  'green-manure': '#9aa83a',
-  aquatic: '#3a8ab0',
+  vegetable: '#1E7A4C',
+  herb: '#4F9A43',
+  fruit: '#B83C0C',
+  berry: '#753753',
+  'fruit-tree': '#C66A38',
+  nut: '#7A4F2A',
+  tree: '#1A4F33',
+  shrub: '#3C8467',
+  flower: '#BD609A',
+  perennial: '#814AAB',
+  bulb: '#A87F0A',
+  vine: '#455689',
+  grass: '#809160',
+  groundcover: '#1A727B',
+  'green-manure': '#6A741C',
+  aquatic: '#2F86C8',
 };
 
 export const CATEGORY_LABELS: Record<PlantCategory, string> = {

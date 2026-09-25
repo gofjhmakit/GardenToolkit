@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronRight, ChevronUp, Eye, EyeOff, Image as ImageIcon, Lock, LockOpen, Plus, Trash2, Pencil, Group } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, ChevronUp, Eye, EyeOff, Image as ImageIcon, Lock, LockOpen, Plus, Trash2, Pencil, Group } from 'lucide-react';
 import { useEditor } from '../../editor/store';
 import { kindInfo } from '../../domain/objectKinds';
 import { addLayer, deleteLayer, moveLayer, updateLayer, updateBackground } from '../../editor/commands';
@@ -35,8 +35,11 @@ export function LayersPanel() {
           <Plus size={14} />
         </button>
       </div>
-      <div style={{ padding: 8, borderBottom: '1px solid var(--border)' }}>
-        <input className="input sm" placeholder="Filter objects…" aria-label="Filter objects" value={filter} onChange={(e) => setFilter(e.target.value)} />
+      <div className="side-toolbar">
+        <label className="search-field">
+          <Search size={13} aria-hidden="true" />
+          <input className="input sm" placeholder="Filter objects…" aria-label="Filter objects" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        </label>
       </div>
       <div className="side-body">
         <ul className="tree" role="tree" aria-label="Layers">
@@ -60,7 +63,7 @@ export function LayersPanel() {
                     const name = await promptAsync({ title: 'Rename layer', label: 'Layer name', value: layer.name, confirmLabel: 'Rename' });
                     if (name) s().commit('Rename layer', (d) => updateLayer(d, layer.id, { name }));
                   }}>
-                    {layer.name} <span className="muted tiny">({count})</span>
+                    {layer.name} <span className="code">{count}</span>
                   </span>
                   <span className="row-actions">
                     {!isBg && (
@@ -116,15 +119,15 @@ export function LayersPanel() {
                         <li key={bg.id} role="treeitem" aria-selected={selectedBg === bg.id}>
                           <div className={`tree-row ${selectedBg === bg.id ? 'selected' : ''}`} style={{ paddingLeft: 28 }}>
                             <ImageIcon size={13} />
-                            <button className="label" style={{ border: 0, background: 'none', textAlign: 'left', cursor: 'pointer', padding: 0 }} onClick={() => s().selectBackground(bg.id)}>
+                            <button className="label" onClick={() => s().selectBackground(bg.id)}>
                               <span className={bg.visible ? '' : 'dimmed'}>{bg.name}</span>
                               {!bg.calibration && <span className="badge warn" style={{ marginLeft: 6 }}>uncalibrated</span>}
                             </button>
                             <span className="row-actions">
-                              <button className="icon-btn sm" aria-label={bg.visible ? 'Hide image' : 'Show image'} onClick={() => s().commit('Toggle blueprint', (d) => updateBackground(d, bg.id, { visible: !bg.visible }))}>
+                              <button className="icon-btn sm" aria-pressed={!bg.visible} aria-label={bg.visible ? 'Hide image' : 'Show image'} onClick={() => s().commit('Toggle blueprint', (d) => updateBackground(d, bg.id, { visible: !bg.visible }))}>
                                 {bg.visible ? <Eye size={13} /> : <EyeOff size={13} className="active-flag" />}
                               </button>
-                              <button className="icon-btn sm" aria-label={bg.locked ? 'Unlock image' : 'Lock image'} onClick={() => s().commit(bg.locked ? 'Unlock blueprint' : 'Lock blueprint', (d) => updateBackground(d, bg.id, { locked: !bg.locked }))}>
+                              <button className="icon-btn sm" aria-pressed={bg.locked} aria-label={bg.locked ? 'Unlock image' : 'Lock image'} onClick={() => s().commit(bg.locked ? 'Unlock blueprint' : 'Lock blueprint', (d) => updateBackground(d, bg.id, { locked: !bg.locked }))}>
                                 {bg.locked ? <Lock size={13} className="active-flag" /> : <LockOpen size={13} />}
                               </button>
                             </span>
@@ -145,7 +148,6 @@ export function LayersPanel() {
                             <span className="swatch" style={{ background: o.style.fill ?? (info.fill === 'none' ? info.stroke : info.fill) }} aria-hidden="true" />
                             <button
                               className="label"
-                              style={{ border: 0, background: 'none', textAlign: 'left', cursor: 'pointer', padding: 0 }}
                               title={`${info.label}${o.locked ? ' (locked)' : ''}`}
                               onClick={(e) => s().setSelection([o.id], e.shiftKey || e.ctrlKey || e.metaKey ? 'toggle' : 'replace')}
                               onDoubleClick={() => s().zoomToSelection()}
@@ -155,10 +157,10 @@ export function LayersPanel() {
                             {o.groupId && <Group size={11} aria-label="grouped" className="muted" />}
                             <span className="code">{o.code}</span>
                             <span className="row-actions">
-                              <button className="icon-btn sm" aria-label={o.hidden ? `Show ${o.name}` : `Hide ${o.name}`} onClick={() => s().commit(o.hidden ? 'Show' : 'Hide', (d) => void (d.objects[o.id].hidden = !o.hidden))}>
+                              <button className="icon-btn sm" aria-pressed={o.hidden} aria-label={o.hidden ? `Show ${o.name}` : `Hide ${o.name}`} onClick={() => s().commit(o.hidden ? 'Show' : 'Hide', (d) => void (d.objects[o.id].hidden = !o.hidden))}>
                                 {o.hidden ? <EyeOff size={13} className="active-flag" /> : <Eye size={13} />}
                               </button>
-                              <button className="icon-btn sm" aria-label={o.locked ? `Unlock ${o.name}` : `Lock ${o.name}`} onClick={() => s().commit(o.locked ? 'Unlock' : 'Lock', (d) => void (d.objects[o.id].locked = !o.locked))}>
+                              <button className="icon-btn sm" aria-pressed={o.locked} aria-label={o.locked ? `Unlock ${o.name}` : `Lock ${o.name}`} onClick={() => s().commit(o.locked ? 'Unlock' : 'Lock', (d) => void (d.objects[o.id].locked = !o.locked))}>
                                 {o.locked ? <Lock size={13} className="active-flag" /> : <LockOpen size={13} />}
                               </button>
                             </span>

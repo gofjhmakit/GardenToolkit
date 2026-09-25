@@ -51,37 +51,37 @@ import { ReportsView } from '../views/ReportsView';
 import { SettingsView } from '../views/SettingsView';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
-  { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={17} /> },
-  { id: 'hand', label: 'Pan', key: 'H', icon: <Hand size={17} /> },
+  { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'hand', label: 'Pan', key: 'H', icon: <Hand size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 const DRAW_TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode }[] = [
-  { id: 'rect', label: 'Rectangle', key: 'R', icon: <Square size={17} /> },
-  { id: 'ellipse', label: 'Ellipse / circle', key: 'O', icon: <Circle size={17} /> },
-  { id: 'polygon', label: 'Polygon', key: 'P', icon: <Hexagon size={17} /> },
-  { id: 'freehand', label: 'Freehand area', key: 'F', icon: <Pencil size={17} /> },
-  { id: 'polyline', label: 'Line / path', key: 'L', icon: <Spline size={17} /> },
+  { id: 'rect', label: 'Rectangle', key: 'R', icon: <Square size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'ellipse', label: 'Ellipse / circle', key: 'O', icon: <Circle size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'polygon', label: 'Polygon', key: 'P', icon: <Hexagon size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'freehand', label: 'Freehand area', key: 'F', icon: <Pencil size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'polyline', label: 'Line / path', key: 'L', icon: <Spline size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 const SYMBOL_TOOLS: { id: ToolId; label: string; icon: React.ReactNode }[] = [
-  { id: 'tree', label: 'Tree', icon: <TreeDeciduous size={17} /> },
-  { id: 'shrub', label: 'Shrub / bush', icon: <Flower2 size={17} /> },
+  { id: 'tree', label: 'Tree', icon: <TreeDeciduous size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'shrub', label: 'Shrub / bush', icon: <Flower2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 const ANNOT_TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode }[] = [
-  { id: 'text', label: 'Text label', key: 'T', icon: <Type size={17} /> },
-  { id: 'dimension', label: 'Dimension line', key: 'D', icon: <MoveHorizontal size={17} /> },
-  { id: 'measure', label: 'Measure distance', key: 'M', icon: <Ruler size={17} /> },
-  { id: 'calibrate', label: 'Calibrate blueprint scale', key: 'K', icon: <Scale size={17} /> },
+  { id: 'text', label: 'Text label', key: 'T', icon: <Type size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'dimension', label: 'Dimension line', key: 'D', icon: <MoveHorizontal size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'measure', label: 'Measure distance', key: 'M', icon: <Ruler size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'calibrate', label: 'Calibrate blueprint scale', key: 'K', icon: <Scale size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 
 const WORKSPACES: { id: Workspace; label: string; icon: React.ReactNode }[] = [
-  { id: 'design', label: 'Design', icon: <MapIcon size={14} /> },
-  { id: 'plantings', label: 'Plantings', icon: <Sprout size={14} /> },
-  { id: 'calendar', label: 'Calendar', icon: <CalendarDays size={14} /> },
-  { id: 'harvest', label: 'Harvest', icon: <Wheat size={14} /> },
-  { id: 'care', label: 'Care guide', icon: <ClipboardList size={14} /> },
-  { id: 'rotation', label: 'Crop rotation', icon: <Repeat size={14} /> },
-  { id: 'plants', label: 'Plant database', icon: <BookOpen size={14} /> },
-  { id: 'reports', label: 'Reports & export', icon: <FileDown size={14} /> },
-  { id: 'settings', label: 'Garden settings', icon: <Settings size={14} /> },
+  { id: 'design', label: 'Design', icon: <MapIcon size={14} strokeWidth={1.75} /> },
+  { id: 'plantings', label: 'Plantings', icon: <Sprout size={14} strokeWidth={1.75} /> },
+  { id: 'calendar', label: 'Calendar', icon: <CalendarDays size={14} strokeWidth={1.75} /> },
+  { id: 'harvest', label: 'Harvest', icon: <Wheat size={14} strokeWidth={1.75} /> },
+  { id: 'care', label: 'Care guide', icon: <ClipboardList size={14} strokeWidth={1.75} /> },
+  { id: 'rotation', label: 'Crop rotation', icon: <Repeat size={14} strokeWidth={1.75} /> },
+  { id: 'plants', label: 'Plant database', icon: <BookOpen size={14} strokeWidth={1.75} /> },
+  { id: 'reports', label: 'Reports & export', icon: <FileDown size={14} strokeWidth={1.75} /> },
+  { id: 'settings', label: 'Garden settings', icon: <Settings size={14} strokeWidth={1.75} /> },
 ];
 
 /** Kinds offered in the "Draw as" selector, grouped. */
@@ -147,56 +147,61 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
         <MenuBar onHome={onHome} onHelp={onHelp} />
         <span className="tool-sep" />
         <div className="tools" role="toolbar" aria-label="Drawing tools">
-          {TOOLS.map((t) => (
-            <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
-              {t.icon}
-            </ToolButton>
-          ))}
-          <span className="tool-sep" />
-          <select
-            className="select kind-select"
-            aria-label="Object type to draw"
-            title="Object type for the shape tools"
-            value={drawKind}
-            onChange={(e) => {
-              const k = e.target.value as ObjectKind;
-              const shape = kindInfo(k).defaultShape;
-              const t: ToolId = shape === 'rect' ? 'rect' : shape === 'ellipse' ? 'ellipse' : shape === 'polyline' ? 'polyline' : 'polygon';
-              useEditor.getState().setTool(workspaceToolFor(tool, t), k);
-            }}
-          >
-            {kindGroups.map((g) => (
-              <optgroup key={g.group} label={g.group}>
-                {g.kinds.map((k) => (
-                  <option key={k.kind} value={k.kind}>
-                    {k.label}
-                  </option>
-                ))}
-              </optgroup>
+          <div className="tool-group" role="group" aria-label="Selection">
+            {TOOLS.map((t) => (
+              <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
+                {t.icon}
+              </ToolButton>
             ))}
-          </select>
-          {DRAW_TOOLS.map((t) => (
-            <ToolButton key={t.id} active={tool === t.id} label={`${t.label} — draws: ${kindInfo(drawKind).label}`} shortcut={t.key} onClick={() => setTool(t.id)}>
-              {t.icon}
-            </ToolButton>
-          ))}
-          <span className="tool-sep" />
-          {SYMBOL_TOOLS.map((t) => (
-            <ToolButton key={t.id} active={tool === t.id} label={t.label} onClick={() => setTool(t.id)}>
-              {t.icon}
-            </ToolButton>
-          ))}
-          <span className="tool-sep" />
-          {ANNOT_TOOLS.map((t) => (
-            <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
-              {t.icon}
-            </ToolButton>
-          ))}
-          <ToolButton active={false} label="Import blueprint image or PDF" onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
-            <ImagePlus size={17} />
-          </ToolButton>
+          </div>
+          <div className="tool-group" role="group" aria-label="Shapes">
+            <select
+              className="select kind-select"
+              aria-label="Object type to draw"
+              title="Object type for the shape tools"
+              value={drawKind}
+              onChange={(e) => {
+                const k = e.target.value as ObjectKind;
+                const shape = kindInfo(k).defaultShape;
+                const t: ToolId = shape === 'rect' ? 'rect' : shape === 'ellipse' ? 'ellipse' : shape === 'polyline' ? 'polyline' : 'polygon';
+                useEditor.getState().setTool(workspaceToolFor(tool, t), k);
+              }}
+            >
+              {kindGroups.map((g) => (
+                <optgroup key={g.group} label={g.group}>
+                  {g.kinds.map((k) => (
+                    <option key={k.kind} value={k.kind}>
+                      {k.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            {DRAW_TOOLS.map((t) => (
+              <ToolButton key={t.id} active={tool === t.id} label={`${t.label} — draws: ${kindInfo(drawKind).label}`} shortcut={t.key} onClick={() => setTool(t.id)}>
+                {t.icon}
+              </ToolButton>
+            ))}
+          </div>
+          <div className="tool-group" role="group" aria-label="Plant symbols">
+            {SYMBOL_TOOLS.map((t) => (
+              <ToolButton key={t.id} active={tool === t.id} label={t.label} onClick={() => setTool(t.id)}>
+                {t.icon}
+              </ToolButton>
+            ))}
+          </div>
+          <div className="tool-group" role="group" aria-label="Annotation and measuring">
+            {ANNOT_TOOLS.map((t) => (
+              <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
+                {t.icon}
+              </ToolButton>
+            ))}
+          </div>
         </div>
         <span className="spacer" />
+        <button className="icon-btn" aria-label="Import blueprint image or PDF" title="Import blueprint image or PDF" onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
+          <ImagePlus size={16} strokeWidth={1.75} absoluteStrokeWidth />
+        </button>
         <AddPlantsButton />
       </header>
       <nav className="worktabs" role="tablist" aria-label="Workspaces">
@@ -243,7 +248,7 @@ function workspaceToolFor(current: ToolId, suggested: ToolId): ToolId {
 
 function ToolButton({ active, label, shortcut, onClick, children }: { active: boolean; label: string; shortcut?: string; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button className="icon-btn" aria-pressed={active} aria-label={label} title={shortcut ? `${label} (${shortcut})` : label} onClick={onClick}>
+    <button className="icon-btn" aria-pressed={active} aria-label={label} aria-keyshortcuts={shortcut} title={shortcut ? `${label} (${shortcut})` : label} onClick={onClick}>
       {children}
     </button>
   );

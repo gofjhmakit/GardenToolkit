@@ -20,6 +20,7 @@ export function SettingsView() {
   const presetId = CLIMATE_PRESETS.find((p) => p.zone === loc.climateZone && p.climateSystem === loc.climateSystem && p.lastFrost === loc.lastFrost && p.firstFrost === loc.firstFrost)?.id ?? '';
   const ffd = frostFreeDays(loc);
   const lang = usePrefs((s) => s.language);
+  const theme = usePrefs((s) => s.theme);
   return (
     <div className="view-inner" style={{ maxWidth: 900 }}>
       <h1>Garden settings</h1>
@@ -31,6 +32,9 @@ export function SettingsView() {
         </div>
         <Field label="Description">{(id) => <TextInput id={id} multiline maxLength={5000} value={doc.meta.description} onChange={(v) => commit('Edit description', (d) => void (d.meta.description = v), 'project-desc')} />}</Field>
         <div className="grid3">
+          <Field label="Theme">
+            {(id) => <Select<'system' | 'light' | 'dark'> id={id} value={theme} options={[{ value: 'system', label: 'Match system' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} onChange={(v) => v && usePrefs.getState().set({ theme: v })} />}
+          </Field>
           <Field label="Units">
             {(id) => <Select<'metric' | 'imperial'> id={id} value={doc.settings.unitSystem} options={[{ value: 'metric', label: 'Metric (m, cm, m²)' }, { value: 'imperial', label: 'Imperial (ft, in, ft²)' }]} onChange={(v) => v && commit('Units', (d) => void (d.settings.unitSystem = v))} />}
           </Field>

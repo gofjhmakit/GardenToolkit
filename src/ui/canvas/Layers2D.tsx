@@ -3,7 +3,7 @@
  * (dimensions and labels drawn at constant screen size).
  */
 import { memo } from 'react';
-import { add, dimensionNormal, dist, localToWorld, scale as vscale, shapeDimensions, worldBounds, type Vec } from '../../domain/geometry';
+import { add, dimensionNormal, dist, localToWorld, scale as vscale, worldBounds, type Vec } from '../../domain/geometry';
 import type { BackgroundImage, ProjectDoc } from '../../domain/project';
 import { isObjectVisible } from '../../domain/projectFactory';
 import { kindInfo } from '../../domain/objectKinds';
@@ -60,9 +60,9 @@ export const Grid = memo(function Grid({ view, width, height, gridMm }: { view: 
   const oy = view.y;
   return (
     <g pointerEvents="none" aria-hidden="true">
-      <path d={minor} stroke="#8b8674" strokeOpacity={0.14} strokeWidth={1} />
-      <path d={majorD} stroke="#8b8674" strokeOpacity={0.3} strokeWidth={1} />
-      <path d={`M${ox - 6} ${oy}H${ox + 6}M${ox} ${oy - 6}V${oy + 6}`} stroke="#b0442a" strokeWidth={1.5} />
+      <path d={minor} stroke="var(--cv-grid-ink)" strokeOpacity={0.14} strokeWidth={1} />
+      <path d={majorD} stroke="var(--cv-grid-ink)" strokeOpacity={0.3} strokeWidth={1} />
+      <path d={`M${ox - 6} ${oy}H${ox + 6}M${ox} ${oy - 6}V${oy + 6}`} stroke="var(--cv-origin)" strokeWidth={1.5} />
     </g>
   );
 });
@@ -86,11 +86,11 @@ export const Rulers = memo(function Rulers({ view, width, height, cursor }: { vi
         const label = formatLength(v, 'metric', step >= 1000 ? 'm' : step >= 10 ? 'cm' : 'mm').replace(' ', '');
         els.push(
           horizontal ? (
-            <text key={v} x={pos + 3} y={10} fontSize={9} fill="#6b6a62">
+            <text key={v} x={pos + 3} y={10} fontSize={9} fill="var(--cv-ruler-text)">
               {label}
             </text>
           ) : (
-            <text key={v} x={10} y={pos - 3} fontSize={9} fill="#6b6a62" transform={`rotate(-90 10 ${pos - 3})`}>
+            <text key={v} x={10} y={pos - 3} fontSize={9} fill="var(--cv-ruler-text)" transform={`rotate(-90 10 ${pos - 3})`}>
               {label}
             </text>
           ),
@@ -107,12 +107,12 @@ export const Rulers = memo(function Rulers({ view, width, height, cursor }: { vi
       <rect x={0} y={0} width={width} height={RULER} fill="var(--panel)" fillOpacity={0.94} />
       <rect x={0} y={0} width={RULER} height={height} fill="var(--panel)" fillOpacity={0.94} />
       <path d={`M0 ${RULER + 0.5}H${width}M${RULER + 0.5} 0V${height}`} stroke="var(--border-strong)" />
-      <path d={h.d + v.d} stroke="#8a887c" strokeWidth={1} />
+      <path d={h.d + v.d} stroke="var(--cv-ruler-tick)" strokeWidth={1} />
       {h.els}
       {v.els}
-      {cs && <path d={`M${cs.x} 0v${RULER}M0 ${cs.y}h${RULER}`} stroke="#b0442a" />}
+      {cs && <path d={`M${cs.x} 0v${RULER}M0 ${cs.y}h${RULER}`} stroke="var(--cv-origin)" />}
       <rect x={0} y={0} width={RULER} height={RULER} fill="var(--panel)" />
-      <text x={4} y={13} fontSize={8} fill="#6b6a62">
+      <text x={4} y={13} fontSize={8} fill="var(--cv-ruler-text)">
         m
       </text>
     </g>
@@ -128,9 +128,9 @@ export const ScaleBar = memo(function ScaleBar({ view, height }: { view: View; h
   return (
     <g pointerEvents="none" aria-hidden="true">
       <rect x={x - 6} y={y - 16} width={px + 12 + 60} height={24} rx={4} fill="var(--panel)" fillOpacity={0.9} />
-      <path d={`M${x} ${y - 5}v5h${px}v-5`} fill="none" stroke="#33332e" strokeWidth={1.5} />
-      <path d={`M${x} ${y}h${px / 2}`} stroke="#33332e" strokeWidth={4} />
-      <text x={x + px + 6} y={y} fontSize={11} fill="#33332e">
+      <path d={`M${x} ${y - 5}v5h${px}v-5`} fill="none" stroke="var(--text)" strokeWidth={1.5} />
+      <path d={`M${x} ${y}h${px / 2}`} stroke="var(--text)" strokeWidth={4} />
+      <text x={x + px + 6} y={y} fontSize={11} fill="var(--text)">
         {formatLength(len)}
       </text>
     </g>
@@ -194,7 +194,7 @@ export function AnnotationLayer({ doc, view, lookup, selection }: { doc: Project
         if (ang > 90) ang -= 180;
         if (ang < -90) ang += 180;
         const label = formatLength(dist(s.a, s.b), doc.settings.unitSystem);
-        const color = selection.has(o.id) ? '#2767c2' : kindInfo(o.kind).stroke;
+        const color = selection.has(o.id) ? 'var(--cv-select)' : kindInfo(o.kind).stroke;
         out.push(
           <g key={id} pointerEvents="none">
             <path d={`M${a0.x} ${a0.y}L${a.x} ${a.y}M${b0.x} ${b0.y}L${b.x} ${b.y}`} stroke={color} strokeOpacity={0.5} strokeDasharray="3 3" />
@@ -221,15 +221,18 @@ export function AnnotationLayer({ doc, view, lookup, selection }: { doc: Project
       if (wpx > 90 && hpx > 34) lines.push(o.name);
       if (info.plantable && wpx > 90 && hpx > 48) {
         const comps = objectPlantingsCached(doc, o, lookup);
-        const names = comps.map((cp) => {
+        const names = comps.filter((cp) => !cp.plant || plantDisplayName(cp.plant) !== o.name).map((cp) => {
           const nm = cp.plant ? plantDisplayName(cp.plant) : cp.planting.plantId;
           return cp.quantity != null && o.kind !== 'tree' && o.kind !== 'shrub' ? `${nm} ×${cp.quantity}` : nm;
         });
-        if (names.length) lines.push(names.slice(0, 3).join(', ') + (names.length > 3 ? ` +${names.length - 3}` : ''));
-      }
-      if (o.kind === 'path' && wpx > 90) {
-        const dims = shapeDimensions(o.shape);
-        void dims;
+        if (names.length) {
+          const full = names.join(', ');
+          // Fall back to a summary when the list does not fit the shape.
+          if (full.length * 6 > wpx - 8 && names.length > 1) {
+            const total = comps.reduce((sum, cp) => sum + (cp.quantity ?? 0), 0);
+            lines.push(`${names.length} crops${total ? ` · ${total} plants` : ''}`);
+          } else lines.push(full);
+        }
       }
       if (!lines.length) continue;
       const startY = c.y - ((lines.length - 1) * 13) / 2;
@@ -244,8 +247,8 @@ export function AnnotationLayer({ doc, view, lookup, selection }: { doc: Project
               dominantBaseline="central"
               fontSize={i === 0 ? 11 : 10.5}
               fontWeight={i === 0 ? 700 : 500}
-              fill="#23241f"
-              stroke="#ffffff"
+              fill="var(--cv-ink)"
+              stroke="var(--cv-halo)"
               strokeOpacity={0.75}
               strokeWidth={3}
               paintOrder="stroke"

@@ -121,7 +121,7 @@ function CropDialog({ bg, onClose }: { bg: BackgroundImage; onClose: () => void 
               <image href={url} width={W} height={H} clipPath="url(#crop-prev)" />
             </>
           )}
-          <rect x={crop.x} y={crop.y} width={crop.width} height={crop.height} fill="none" stroke="#b0442a" strokeWidth={Math.max(1, 2 / k)} />
+          <rect x={crop.x} y={crop.y} width={crop.width} height={crop.height} fill="none" stroke="var(--cv-origin)" strokeWidth={Math.max(1, 2 / k)} />
         </svg>
         <div className="grid2">
           <Field label="Left (px)">{(fid) => <NumberInput id={fid} integer value={crop.x} min={0} max={W - 1} onCommit={(v) => set({ x: v ?? 0 })} />}</Field>

@@ -128,12 +128,11 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
 
       <div className="pb-list">
         <div className="pb-search">
-          <div className="row" style={{ position: 'relative' }}>
-            <Search size={14} style={{ position: 'absolute', left: 8, color: 'var(--muted)' }} aria-hidden="true" />
+          <label className="search-field">
+            <Search size={14} aria-hidden="true" />
             <input
               ref={searchRef}
               className="input"
-              style={{ paddingLeft: 28 }}
               type="search"
               placeholder="Search name, scientific name, family, tag…"
               aria-label="Search plants"
@@ -142,7 +141,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
               onChange={(e) => set({ query: e.target.value })}
               onKeyDown={onListKey}
             />
-          </div>
+          </label>
           <div className="tiny muted" aria-live="polite">
             {status === 'loading' ? 'Loading plant database…' : `${results.length.toLocaleString()} of ${catalog.plants.size.toLocaleString()} plants`}
           </div>

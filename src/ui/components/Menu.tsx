@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Check } from 'lucide-react';
 import { shortcutLabel } from './platform';
 
 export type MenuEntry =
@@ -74,7 +75,7 @@ export function Menu({ entries, anchor, onClose, label }: MenuProps) {
               e.onSelect();
             }}
           >
-            <span style={{ width: 16, display: 'inline-flex' }}>{e.checked ? '✓' : e.icon}</span>
+            <span style={{ width: 16, display: 'inline-flex' }}>{e.checked ? <Check size={14} /> : e.icon}</span>
             <span>{e.label}</span>
             {e.shortcut && <span className="kbd">{shortcutLabel(e.shortcut)}</span>}
           </button>

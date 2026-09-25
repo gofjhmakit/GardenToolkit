@@ -53,7 +53,7 @@ export function PlantingsView() {
           <button className="btn primary" onClick={() => useEditor.getState().setWorkspace('design')}>Go to design</button>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+        <div className="card flush">
           <table className="table">
             <thead>
               <tr>

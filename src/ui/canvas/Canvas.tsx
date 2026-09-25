@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Maximize, Minus, Plus, Scan } from 'lucide-react';
+import { ImagePlus, Maximize, Minus, Plus, Scan } from 'lucide-react';
 import { add, dimensionNormal, dist, localToWorld, rotate, scale as vscale, shapeOutline, type Vec } from '../../domain/geometry';
 import { kindInfo } from '../../domain/objectKinds';
 import { isObjectLocked } from '../../domain/projectFactory';
@@ -202,6 +202,9 @@ export function Canvas() {
       {isEmpty && (
         <div className="canvas-empty">
           <div className="card col">
+            <div className="empty-state-icon" style={{ alignSelf: 'center' }}>
+              <ImagePlus size={20} />
+            </div>
             <h2>Start your garden plan</h2>
             <p className="muted">Import a site plan or aerial photo and calibrate its scale, or start drawing beds directly — everything is measured in real-world units.</p>
             <div className="row" style={{ justifyContent: 'center' }}>
@@ -212,6 +215,9 @@ export function Canvas() {
                 Draw a bed
               </button>
             </div>
+            <button className="btn ghost sm" style={{ alignSelf: 'center' }} onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: '?' }))}>
+              Keyboard shortcuts (?)
+            </button>
           </div>
         </div>
       )}
@@ -263,8 +269,8 @@ function SelectionOverlay({ view, hoverId, vertexEditId, selectedBackgroundId }:
       <polyline key={`o-${id}`} points={pts(outlinePts)} fill="none" stroke={color} strokeWidth={width} strokeDasharray={dash} />
     );
   };
-  if (hoverId && !selection.includes(hoverId)) els.push(outline(hoverId, '#2767c2', 1));
-  for (const id of selection) els.push(outline(id, '#2767c2', 1.5));
+  if (hoverId && !selection.includes(hoverId)) els.push(outline(hoverId, 'var(--cv-select)', 1));
+  for (const id of selection) els.push(outline(id, 'var(--cv-select)', 1.5));
 
   // Background selection frame
   if (selectedBackgroundId) {
@@ -277,7 +283,7 @@ function SelectionOverlay({ view, hoverId, vertexEditId, selectedBackgroundId }:
         { x: c.x + c.width, y: c.y + c.height },
         { x: c.x, y: c.y + c.height },
       ].map((p) => imagePxToWorld(bg, p));
-      els.push(<polygon key="bg-frame" points={pts(corners)} fill="none" stroke="#b0442a" strokeWidth={1.5} strokeDasharray={bg.locked ? '6 4' : undefined} />);
+      els.push(<polygon key="bg-frame" points={pts(corners)} fill="none" stroke="var(--cv-origin)" strokeWidth={1.5} strokeDasharray={bg.locked ? '6 4' : undefined} />);
     }
   }
 
@@ -287,16 +293,16 @@ function SelectionOverlay({ view, hoverId, vertexEditId, selectedBackgroundId }:
   const vertexMode = single && (vertexEditId === single.id || single.shape.type === 'dimension' || (single.shape.type === 'polyline' && single.shape.points.length === 2));
   if (frame && !vertexMode) {
     if (selection.length > 1 || single?.shape.type === 'text' || gesture) {
-      els.push(<polygon key="frame" points={pts(frameCorners(frame))} fill="none" stroke="#2767c2" strokeWidth={1} strokeDasharray="4 3" />);
+      els.push(<polygon key="frame" points={pts(frameCorners(frame))} fill="none" stroke="var(--cv-select)" strokeWidth={1} strokeDasharray="4 3" />);
     }
     if (!locked) {
       const top = toS(handleWorld(frame, 1));
       const rh = rotateHandleScreen(frame, view);
-      els.push(<line key="rot-line" x1={top.x} y1={top.y} x2={rh.x} y2={rh.y} stroke="#2767c2" />);
-      els.push(<circle key="rot" cx={rh.x} cy={rh.y} r={HANDLE_PX / 2 + 1} fill="#fff" stroke="#2767c2" strokeWidth={1.5} />);
+      els.push(<line key="rot-line" x1={top.x} y1={top.y} x2={rh.x} y2={rh.y} stroke="var(--cv-select)" />);
+      els.push(<circle key="rot" cx={rh.x} cy={rh.y} r={HANDLE_PX / 2 + 1} fill="var(--cv-halo)" stroke="var(--cv-select)" strokeWidth={1.5} />);
       for (let i = 0; i < 8; i++) {
         const s = toS(handleWorld(frame, i));
-        els.push(<rect key={`h${i}`} x={s.x - HANDLE_PX / 2} y={s.y - HANDLE_PX / 2} width={HANDLE_PX} height={HANDLE_PX} fill="#fff" stroke="#2767c2" strokeWidth={1.5} />);
+        els.push(<rect key={`h${i}`} x={s.x - HANDLE_PX / 2} y={s.y - HANDLE_PX / 2} width={HANDLE_PX} height={HANDLE_PX} fill="var(--cv-halo)" stroke="var(--cv-select)" strokeWidth={1.5} />);
       }
     }
     // Live dimensions while transforming or for a single selection
@@ -308,8 +314,8 @@ function SelectionOverlay({ view, hoverId, vertexEditId, selectedBackgroundId }:
       const off = rotate({ x: 0, y: 16 }, frame.rotation);
       els.push(
         <g key="dims" transform={`translate(${bottom.x + off.x} ${bottom.y + off.y})`}>
-          <rect x={-label.length * 3.3 - 6} y={-9} width={label.length * 6.6 + 12} height={18} rx={9} fill="#2767c2" />
-          <text textAnchor="middle" dominantBaseline="central" fontSize={11} fill="#fff" fontWeight={600}>
+          <rect x={-label.length * 3.3 - 6} y={-9} width={label.length * 6.6 + 12} height={18} rx={9} fill="var(--cv-select)" />
+          <text textAnchor="middle" dominantBaseline="central" fontSize={11} fill="var(--cv-halo)" fontWeight={600}>
             {label}
           </text>
         </g>,
@@ -320,7 +326,7 @@ function SelectionOverlay({ view, hoverId, vertexEditId, selectedBackgroundId }:
     const pts2 = vertexPoints(single, vertexEditId === single.id);
     pts2.forEach((p, i) => {
       const s = toS(localToWorld(single.transform, p));
-      els.push(<rect key={`v${i}`} x={s.x - 4.5} y={s.y - 4.5} width={9} height={9} rx={2} fill="#fff" stroke="#b0442a" strokeWidth={1.5} />);
+      els.push(<rect key={`v${i}`} x={s.x - 4.5} y={s.y - 4.5} width={9} height={9} rx={2} fill="var(--cv-halo)" stroke="var(--cv-origin)" strokeWidth={1.5} />);
     });
   }
   return <g pointerEvents="none">{els}</g>;
@@ -334,7 +340,7 @@ function DraftOverlay({ overlay, view }: { overlay: OverlayState; view: View }) 
   if (d?.kind === 'marquee') {
     const a = toS(d.a);
     const b = toS(d.b);
-    els.push(<rect key="m" x={Math.min(a.x, b.x)} y={Math.min(a.y, b.y)} width={Math.abs(b.x - a.x)} height={Math.abs(b.y - a.y)} fill="rgba(39,103,194,0.08)" stroke="#2767c2" strokeDasharray="4 3" />);
+    els.push(<rect key="m" x={Math.min(a.x, b.x)} y={Math.min(a.y, b.y)} width={Math.abs(b.x - a.x)} height={Math.abs(b.y - a.y)} fill="var(--cv-select-fill)" stroke="var(--cv-select)" strokeDasharray="4 3" />);
   }
   if (d?.kind === 'shape') {
     const info = kindInfo(d.objKind);
@@ -358,7 +364,7 @@ function DraftOverlay({ overlay, view }: { overlay: OverlayState; view: View }) 
     if (d.closed && s.length > 2) els.push(<line key="close" x1={s[s.length - 1].x} y1={s[s.length - 1].y} x2={s[0].x} y2={s[0].y} stroke="#999" strokeDasharray="3 3" />);
     d.points.forEach((p, i) => {
       const q = toS(p);
-      els.push(<circle key={`pt${i}`} cx={q.x} cy={q.y} r={i === 0 ? 5 : 3} fill="#fff" stroke="#2767c2" strokeWidth={1.5} />);
+      els.push(<circle key={`pt${i}`} cx={q.x} cy={q.y} r={i === 0 ? 5 : 3} fill="var(--cv-halo)" stroke="var(--cv-select)" strokeWidth={1.5} />);
     });
     if (d.cursor && d.points.length) {
       const last = d.points[d.points.length - 1];
@@ -369,11 +375,11 @@ function DraftOverlay({ overlay, view }: { overlay: OverlayState; view: View }) 
   if (d?.kind === 'measure' || d?.kind === 'calibrate') {
     const a = toS(d.a);
     const b = d.b ? toS(d.b) : a;
-    const color = d.kind === 'calibrate' ? '#b0442a' : '#2767c2';
+    const color = d.kind === 'calibrate' ? 'var(--cv-origin)' : 'var(--cv-select)';
     els.push(<line key="ml" x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={color} strokeWidth={2} strokeDasharray={d.kind === 'calibrate' ? '6 3' : undefined} />);
-    els.push(<circle key="ma" cx={a.x} cy={a.y} r={4} fill="#fff" stroke={color} strokeWidth={2} />);
+    els.push(<circle key="ma" cx={a.x} cy={a.y} r={4} fill="var(--cv-halo)" stroke={color} strokeWidth={2} />);
     if (d.b) {
-      els.push(<circle key="mb" cx={b.x} cy={b.y} r={4} fill="#fff" stroke={color} strokeWidth={2} />);
+      els.push(<circle key="mb" cx={b.x} cy={b.y} r={4} fill="var(--cv-halo)" stroke={color} strokeWidth={2} />);
       const text = d.kind === 'calibrate' ? `Current: ${formatLength(dist(d.a, d.b), unitSystem)}` : formatLength(dist(d.a, d.b), unitSystem);
       els.push(<Tag key="mt" x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 14} text={text} />);
     }
@@ -382,16 +388,16 @@ function DraftOverlay({ overlay, view }: { overlay: OverlayState; view: View }) 
     if (g.axis === 'x') {
       const a = toS({ x: g.value, y: g.from });
       const b = toS({ x: g.value, y: g.to });
-      els.push(<line key={`g${i}`} x1={a.x} y1={a.y - 8} x2={b.x} y2={b.y + 8} stroke="#d0357a" strokeWidth={1} />);
+      els.push(<line key={`g${i}`} x1={a.x} y1={a.y - 8} x2={b.x} y2={b.y + 8} stroke="var(--cv-snap)" strokeWidth={1} />);
     } else {
       const a = toS({ x: g.from, y: g.value });
       const b = toS({ x: g.to, y: g.value });
-      els.push(<line key={`g${i}`} x1={a.x - 8} y1={a.y} x2={b.x + 8} y2={b.y} stroke="#d0357a" strokeWidth={1} />);
+      els.push(<line key={`g${i}`} x1={a.x - 8} y1={a.y} x2={b.x + 8} y2={b.y} stroke="var(--cv-snap)" strokeWidth={1} />);
     }
   }
   if (overlay.snapPoint) {
     const s = toS(overlay.snapPoint);
-    els.push(<rect key="sp" x={s.x - 4} y={s.y - 4} width={8} height={8} fill="none" stroke="#d0357a" strokeWidth={1.5} />);
+    els.push(<rect key="sp" x={s.x - 4} y={s.y - 4} width={8} height={8} fill="none" stroke="var(--cv-snap)" strokeWidth={1.5} />);
   }
   return <g pointerEvents="none">{els}</g>;
 }
@@ -400,8 +406,8 @@ function Tag({ x, y, text, anchor = 'middle' }: { x: number; y: number; text: st
   const w = text.length * 6.6 + 12;
   return (
     <g transform={`translate(${x} ${y})`}>
-      <rect x={anchor === 'middle' ? -w / 2 : 0} y={-9} width={w} height={18} rx={9} fill="#23241f" fillOpacity={0.85} />
-      <text x={anchor === 'middle' ? 0 : 6} textAnchor={anchor} dominantBaseline="central" fontSize={11} fill="#fff">
+      <rect x={anchor === 'middle' ? -w / 2 : 0} y={-9} width={w} height={18} rx={9} fill="var(--cv-ink)" fillOpacity={0.85} />
+      <text x={anchor === 'middle' ? 0 : 6} textAnchor={anchor} dominantBaseline="central" fontSize={11} fill="var(--cv-halo)">
         {text}
       </text>
     </g>

@@ -34,16 +34,19 @@ export function StatusBar() {
         <span className={`save-dot ${saveStatus}`} />
         {saveText}
       </span>
+      <span className="status-sep" />
       <span className="num" title="Cursor position in real-world units (origin at the red cross)">
         {cursor ? `X ${formatLength(cursor.x, units, units === 'metric' ? 'm' : undefined)}  Y ${formatLength(cursor.y, units, units === 'metric' ? 'm' : undefined)}` : 'X —  Y —'}
       </span>
+      <span className="status-sep" />
       <span className="num" title="Zoom never changes object dimensions; 100% = 1 m per 100 screen pixels">
         Zoom {zoomPercent(view)}% · 1 m = {(view.scale * 1000).toFixed(view.scale * 1000 < 10 ? 1 : 0)} px
       </span>
-      <span title="All dimensions are real-world measurements">Units: real-world {units === 'metric' ? 'metric (m, cm, m²)' : 'imperial (ft, in)'}</span>
+      <span className="status-sep" />
+      <span title={`All dimensions are real-world measurements (${units === 'metric' ? 'metres, centimetres, square metres' : 'feet, inches, square feet'})`}>{units === 'metric' ? 'Metric' : 'Imperial'}</span>
       {uncalibrated && (
-        <span style={{ color: 'var(--warn)' }} title="Use the Calibrate tool (K) to set the blueprint's real scale">
-          Blueprint scale not calibrated
+        <span className="badge warn dot" title="Use the Calibrate tool (K) to set the blueprint's real scale">
+          Scale not calibrated
         </span>
       )}
       {selection.length > 0 && (
@@ -52,7 +55,7 @@ export function StatusBar() {
         </span>
       )}
       <span className="spacer" />
-      {showFlash && flash && <span style={{ color: flash.kind === 'error' ? 'var(--danger)' : 'var(--text)' }}>{flash.text}</span>}
+      {showFlash && flash && (flash.kind === 'error' ? <span className="badge danger">{flash.text}</span> : <span>{flash.text}</span>)}
       <button
         className={snapping ? 'on' : ''}
         aria-pressed={snapping}

@@ -10,6 +10,7 @@ import { Menu } from '../components/Menu';
 import { confirmAsync, promptAsync, toast } from '../components/feedback';
 import { CLIMATE_PRESETS } from '../../engine/climate';
 import { Field, Select, TextInput } from '../components/Fields';
+import { ProjectThumb, relativeTime } from './ProjectThumb';
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -43,8 +44,8 @@ export function HomeScreen() {
           <p className="muted">Loading…</p>
         ) : projects.length === 0 ? (
           <div className="empty-state">
-            <Sprout size={32} color="var(--accent)" />
-            <h2 style={{ margin: '10px 0 6px' }}>Plan your first garden</h2>
+            <div className="empty-state-icon"><Sprout size={20} /></div>
+            <h2>Plan your first garden</h2>
             <p>Draw beds on a scaled plan, pick plants, and get quantities, a planting calendar and printable guides.</p>
             <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
               <button className="btn primary" onClick={() => setCreateOpen(true)}><Plus size={14} /> New garden</button>
@@ -54,7 +55,14 @@ export function HomeScreen() {
         ) : (
           <div className="project-grid">
             {projects.map((p) => (
-              <div key={p.id} className="project-card" role="button" tabIndex={0} onClick={() => navigate(`#/p/${p.id}`)} onKeyDown={(e) => e.key === 'Enter' && navigate(`#/p/${p.id}`)} aria-label={`Open ${p.name}`}>
+              <div key={p.id} className="project-card" role="button" tabIndex={0} onClick={() => navigate(`#/p/${p.id}`)} onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return;
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(`#/p/${p.id}`);
+                }
+              }} aria-label={`Open ${p.name}`}>
+                <ProjectThumb id={p.id} updatedAt={p.updatedAt} />
                 <div className="row">
                   <span className="name" style={{ flex: 1 }}>{p.name}</span>
                   <button className="icon-btn sm" aria-label={`Actions for ${p.name}`} onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenu({ p, x: r.left, y: r.bottom + 2 }); }}>
@@ -66,19 +74,20 @@ export function HomeScreen() {
                   <span><Layers size={12} /> {p.objectCount} objects</span>
                   <span><Sprout size={12} /> {p.plantingCount} plantings</span>
                 </div>
-                <div className="tiny muted">Edited {new Date(p.updatedAt).toLocaleString()}</div>
+                <div className="project-meta" title={new Date(p.updatedAt).toLocaleString()}>Edited {relativeTime(p.updatedAt)}</div>
               </div>
             ))}
           </div>
         )}
-        <div className="feature-list">
+        {projects && projects.length < 3 && <h2 className="home-section-title">What you can do</h2>}
+        {projects && projects.length < 3 && <div className="feature-list">
           <Feature icon={<Pencil size={18} />} title="CAD-style design" text="Import a site plan, calibrate its scale and draw beds, trees and paths in real units." />
           <Feature icon={<Calculator size={18} />} title="Honest calculations" text="Plant counts laid out on each bed’s real shape, with ranges and explanations." />
           <Feature icon={<CalendarDays size={18} />} title="Your calendar" text="Sowing, planting and harvest dates from your own frost dates." />
           <Feature icon={<FileDown size={18} />} title="Printable documents" text="Planting plan, care guide, harvest plan and a complete garden report as PDF." />
           <Feature icon={<WifiOff size={18} />} title="Works offline" text="Installable app; your plans and the plant database work without a connection." />
           <Feature icon={<ShieldCheck size={18} />} title="Private by design" text="No account, no tracking. Export a backup file whenever you like." />
-        </div>
+        </div>}
       </div>
       {createOpen && <CreateDialog onClose={() => setCreateOpen(false)} />}
       {menu && (

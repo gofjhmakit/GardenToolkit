@@ -93,8 +93,7 @@ export function ObjectInspector({ id }: { id: string }) {
     <div>
       <div className="section">
         <div className="row">
-          <span className="swatch" style={{ background: o.style.fill ?? (info.fill === 'none' ? info.stroke : info.fill), width: 16, height: 16 }} />
-          <strong style={{ flex: 1 }}>{info.label}</strong>
+          <span className="spacer" />
           <button className="icon-btn sm" aria-pressed={o.locked} title={o.locked ? 'Unlock' : 'Lock'} aria-label={o.locked ? 'Unlock object' : 'Lock object'} onClick={() => commit(o.locked ? 'Unlock' : 'Lock', (d) => void (d.objects[id].locked = !o.locked))}>
             {o.locked ? <Lock size={14} /> : <LockOpen size={14} />}
           </button>

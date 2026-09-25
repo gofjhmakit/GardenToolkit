@@ -45,7 +45,7 @@ export const ShapeElement = memo(function ShapeElement({ o, printMode }: { o: Ga
             {root ? <circle r={root} fill="none" stroke={stroke} strokeDasharray="6 5" strokeWidth={1} vectorEffect="non-scaling-stroke" opacity={0.6} /> : null}
             <ellipse rx={s.rx} ry={s.ry} fill={o.style.fill ?? info.fill} fillOpacity={0.55} stroke={stroke} strokeWidth={printMode ?? 1.25} vectorEffect={printMode ? undefined : 'non-scaling-stroke'} />
             <ellipse rx={s.rx * 0.62} ry={s.ry * 0.62} fill="none" stroke={stroke} strokeOpacity={0.35} strokeWidth={1} vectorEffect="non-scaling-stroke" />
-            <circle r={trunk} fill="#6b4a2b" />
+            <circle r={trunk} fill="#5E4127" />
           </g>
         );
       }

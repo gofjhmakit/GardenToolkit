@@ -58,10 +58,10 @@ function PlanContent({ doc, lookup, images, bounds, includeBackground }: { doc: 
         if (ang < -90) ang += 180;
         labels.push(
           <g key={id}>
-            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#2f5e8a" strokeWidth={stroke} />
-            <circle cx={a.x} cy={a.y} r={stroke * 2.5} fill="#2f5e8a" />
-            <circle cx={b.x} cy={b.y} r={stroke * 2.5} fill="#2f5e8a" />
-            <text transform={`translate(${(a.x + b.x) / 2} ${(a.y + b.y) / 2}) rotate(${ang})`} y={-font * 0.3} textAnchor="middle" fontSize={font * 0.8} fill="#2f5e8a" fontFamily="Helvetica, Arial, sans-serif">
+            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#2C5E6B" strokeWidth={stroke} />
+            <circle cx={a.x} cy={a.y} r={stroke * 2.5} fill="#2C5E6B" />
+            <circle cx={b.x} cy={b.y} r={stroke * 2.5} fill="#2C5E6B" />
+            <text transform={`translate(${(a.x + b.x) / 2} ${(a.y + b.y) / 2}) rotate(${ang})`} y={-font * 0.3} textAnchor="middle" fontSize={font * 0.8} fill="#2C5E6B" fontFamily="Helvetica, Arial, sans-serif">
               {formatLength(dist(s.a, s.b), doc.settings.unitSystem)}
             </text>
           </g>,
