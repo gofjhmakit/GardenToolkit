@@ -22,3 +22,20 @@ describe('units', () => {
     expect(toMm(1, 'ft')).toBeCloseTo(304.8);
   });
 });
+
+describe('units — imperial and odd input', () => {
+  it('formats imperial lengths', () => {
+    expect(formatLength(254, 'imperial')).toBe('10.0 in');
+    expect(formatLength(3048, 'imperial')).toBe('10′ 0.0″');
+    expect(formatLength(NaN)).toBe('—');
+    expect(formatArea(NaN)).toBe('—');
+  });
+  it('parses unit words and rejects garbage', () => {
+    expect(parseLength('2 metres')).toBe(2000);
+    expect(parseLength('15 millimeters')).toBe(15);
+    expect(parseLength('.5m')).toBe(500);
+    expect(parseLength('-1 m')).toBe(-1000);
+    expect(parseLength('1e3')).toBeNull();
+    expect(parseLength('3 m 20 cm')).toBeNull();
+  });
+});

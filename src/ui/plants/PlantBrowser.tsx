@@ -45,7 +45,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
   const showRecents = !filter.query && !isFilterActive(filter) && recents.length > 0;
   const recentPlants = showRecents ? recents.map((id) => catalog.get(id)).filter((p): p is Plant => !!p).slice(0, 8) : [];
   const listRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({ count: results.length, getScrollElement: () => listRef.current, estimateSize: () => 64, overscan: 8 });
+  const virtualizer = useVirtualizer({ count: results.length, getScrollElement: () => listRef.current, estimateSize: () => 64, overscan: 8, initialRect: { width: 400, height: 800 } });
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (autoFocus) searchRef.current?.focus();
