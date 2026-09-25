@@ -67,6 +67,9 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
         onSelect(results[next].id);
         virtualizer.scrollToIndex(next);
       }
+    } else if ((e.key === 'f' || e.key === 'F') && selectedId && e.currentTarget.getAttribute('role') === 'listbox') {
+      e.preventDefault();
+      toggleFavourite(selectedId);
     } else if (e.key === 'Enter' && selectedId && onActivate) {
       e.preventDefault();
       onActivate(selectedId);
@@ -156,7 +159,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
             </div>
           )}
         </div>
-        <div className="pb-results" ref={listRef} id="plant-results" role="listbox" aria-label="Plants" tabIndex={0} onKeyDown={onListKey} aria-activedescendant={selectedId ? `plant-${selectedId}` : undefined}>
+        <div className="pb-results" ref={listRef} id="plant-results" role="listbox" aria-label="Plants" tabIndex={0} onKeyDown={onListKey} aria-activedescendant={selectedId && virtualizer.getVirtualItems().some((v) => results[v.index]?.id === selectedId) ? `plant-${selectedId}` : undefined}>
           <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
             {virtualizer.getVirtualItems().map((vi) => {
               const p = results[vi.index];
@@ -190,7 +193,7 @@ function PlantListItem({ plant, selected, favourite, onSelect, onActivate, onFav
   const spacing = plant.planting.inRowSpacingCm ?? plant.planting.gridSpacingCm;
   const sun = plant.growing.sun?.map((s) => SUN_LABEL[s]).join('/');
   return (
-    <div className="plant-item" id={`plant-${plant.id}`} role="option" aria-selected={selected} onClick={onSelect} onDoubleClick={onActivate}>
+    <div className="plant-item" id={`plant-${plant.id}`} role="option" aria-selected={selected} aria-label={`${plantDisplayName(plant)}, ${plant.names.scientific}${favourite ? ', favourite' : ''}`} onClick={onSelect} onDoubleClick={onActivate}>
       <span className="cat-dot" style={{ background: CATEGORY_COLORS[plant.category] }} aria-hidden="true" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="pname">{plantDisplayName(plant)}</div>
@@ -204,18 +207,19 @@ function PlantListItem({ plant, selected, favourite, onSelect, onActivate, onFav
           {plant.dataset === 'user' ? ' · My plant' : ''}
         </div>
       </div>
-      <button
-        type="button"
-        className="icon-btn sm"
-        aria-label={favourite ? `Remove ${plantDisplayName(plant)} from favourites` : `Add ${plantDisplayName(plant)} to favourites`}
-        aria-pressed={favourite}
+      {/* Mouse shortcut only: interactive controls may not be nested in an option.
+          Keyboard users toggle favourites with F or the button in the detail pane. */}
+      <span
+        className="icon-btn sm fav-toggle"
+        aria-hidden="true"
+        title={favourite ? 'Remove from favourites (F)' : 'Add to favourites (F)'}
         onClick={(e) => {
           e.stopPropagation();
           onFavourite();
         }}
       >
         <Star size={14} fill={favourite ? 'var(--warn)' : 'none'} color={favourite ? 'var(--warn)' : 'currentColor'} />
-      </button>
+      </span>
     </div>
   );
 }

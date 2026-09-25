@@ -135,7 +135,7 @@ export function LayersPanel() {
                         </li>
                       ))}
                     {isBg && doc.backgrounds.length === 0 && (
-                      <li className="muted tiny" style={{ padding: '4px 28px' }}>
+                      <li className="muted tiny" role="treeitem" aria-disabled="true" aria-selected={false} style={{ padding: '4px 28px' }}>
                         No blueprint imported
                       </li>
                     )}
