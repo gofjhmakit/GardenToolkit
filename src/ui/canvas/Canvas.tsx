@@ -160,7 +160,8 @@ export function Canvas() {
 
   const selSet = new Set(selection);
   const worldTransform = `matrix(${view.scale} 0 0 ${view.scale} ${view.x} ${view.y})`;
-  const isEmpty = Object.keys(doc.objects).length === 0 && doc.backgrounds.length === 0;
+  // The welcome card only shows with the Select tool so it never blocks drawing.
+  const isEmpty = Object.keys(doc.objects).length === 0 && doc.backgrounds.length === 0 && tool === 'select';
   const hint = TOOL_HINTS[tool];
 
   return (
