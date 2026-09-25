@@ -72,10 +72,17 @@ function PlanContent({ doc, lookup, images, bounds, includeBackground }: { doc: 
       const b = worldBounds(o.transform, o.shape);
       const size = Math.min(b.maxX - b.minX, b.maxY - b.minY);
       const fs = Math.min(font, Math.max(size / 3, font * 0.45));
+      const cx = (b.minX + b.maxX) / 2;
+      const cy = (b.minY + b.maxY) / 2;
+      const tw = o.code.length * fs * 0.62 + fs * 0.5;
+      // A plain background box instead of a stroked halo: stroked text renders poorly in PDF converters.
       labels.push(
-        <text key={id} x={(b.minX + b.maxX) / 2} y={(b.minY + b.maxY) / 2} textAnchor="middle" dominantBaseline="central" fontSize={fs} fontWeight="bold" fill="#1d1d1b" stroke="#ffffff" strokeWidth={fs * 0.18} paintOrder="stroke" fontFamily="Helvetica, Arial, sans-serif">
-          {o.code}
-        </text>,
+        <g key={id}>
+          <rect x={cx - tw / 2} y={cy - fs * 0.62} width={tw} height={fs * 1.24} rx={fs * 0.25} fill="#ffffff" fillOpacity={0.85} />
+          <text x={cx} y={cy + fs * 0.35} textAnchor="middle" fontSize={fs} fontWeight="bold" fill="#1d1d1b" fontFamily="Helvetica, Arial, sans-serif">
+            {o.code}
+          </text>
+        </g>,
       );
     }
   }

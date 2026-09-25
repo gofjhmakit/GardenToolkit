@@ -161,7 +161,8 @@ function formatMonthDay(md: string): string {
 
 function eventsFor(cal: CalendarResult, plantingId: string, types: CalendarEvent['type'][]): string {
   const e = cal.events.filter((x) => x.plantingId === plantingId && types.includes(x.type));
-  return e.length ? e.map((x) => formatDateRange(x.start, x.end)).join('; ') : '—';
+  const label: Partial<Record<CalendarEvent['type'], string>> = { 'sow-indoors': 'Sow indoors', 'direct-sow': 'Sow', transplant: 'Plant out', 'plant-out': 'Plant' };
+  return e.length ? e.map((x) => `${types.length > 1 && label[x.type] ? `${label[x.type]} ` : ''}${formatDateRange(x.start, x.end)}`).join('; ') : '—';
 }
 
 // ---------------------------------------------------------------------------
