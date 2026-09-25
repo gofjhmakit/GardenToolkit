@@ -1941,12 +1941,21 @@ kbd {
   width: 22px;
   height: 22px;
 }
-.tree-row .row-actions > button:not(:has(.active-flag)) {
-  display: none;
+/* Row buttons collapse to zero width until the row is hovered or focused.
+   They stay in the tab order (display:none would make them unreachable by keyboard).
+   Toggled state flags (aria-pressed=true: hidden, locked) always stay visible. */
+.tree-row .row-actions > button:not([aria-pressed='true']) {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border-width: 0;
+  opacity: 0;
+  overflow: hidden;
 }
 .tree-row:hover .row-actions > button,
 .tree-row:focus-within .row-actions > button {
-  display: inline-flex;
+  width: 22px;
+  opacity: 1;
 }
 /* A toggled flag in a row is state, not a mode — no green pill */
 .tree-row .row-actions .icon-btn[aria-pressed='true'] {

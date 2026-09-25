@@ -65,7 +65,7 @@ type Gesture =
   | { type: 'resize'; handle: number; frame: Frame; ids: string[]; startDoc: ProjectDoc }
   | { type: 'rotate'; center: Vec; startAngle: number; ids: string[]; startRotation: number }
   | { type: 'marquee'; start: Vec; additive: boolean; startScreen: Vec }
-  | { type: 'vertex'; id: string; index: number; targets: SnapTargets }
+  | { type: 'vertex'; id: string; index: number; targets: SnapTargets; last: Vec | null }
   | { type: 'draw-box'; tool: ToolId; start: Vec; startScreen: Vec; targets: SnapTargets }
   | { type: 'freehand'; points: Vec[] }
   | { type: 'measure'; start: Vec; targets: SnapTargets }
@@ -200,7 +200,8 @@ export class CanvasInteraction {
     const frame = selectionFrame(doc, selection);
     if (!frame) return null;
     const single = selection.length === 1 ? doc.objects[selection[0]] : null;
-    if (single && (single.shape.type === 'dimension' || (single.shape.type === 'polyline' && single.shape.points.length === 2))) return null;
+    // No frame handles while editing points, or for two-point lines (they have endpoint handles).
+    if (single && (st().vertexEditId === single.id || single.shape.type === 'dimension' || (single.shape.type === 'polyline' && single.shape.points.length === 2))) return null;
     const toScreen = (w: Vec) => ({ x: w.x * view.scale + view.x, y: w.y * view.scale + view.y });
     const rh = rotateHandleScreen(frame, view);
     if (dist(screen, rh) <= HANDLE_PX) return 8;
@@ -327,7 +328,7 @@ export class CanvasInteraction {
         return;
       }
       state.beginGesture();
-      this.gesture = { type: 'vertex', id: vtx.id, index: vtx.index, targets: this.targets([vtx.id]) };
+      this.gesture = { type: 'vertex', id: vtx.id, index: vtx.index, targets: this.targets([vtx.id]), last: null };
       return;
     }
     const handle = this.hitHandle(screen);
@@ -525,16 +526,8 @@ export class CanvasInteraction {
         return;
       case 'vertex': {
         const sp = this.snap(p, e, g.targets);
-        state.updateGesture((d) => {
-          const o = d.objects[g.id];
-          const lp = worldToLocal(o.transform, sp);
-          const s = o.shape;
-          if (s.type === 'polygon' || s.type === 'polyline') s.points[g.index] = lp;
-          else if (s.type === 'dimension') {
-            if (g.index === 0) s.a = lp;
-            else s.b = lp;
-          }
-        });
+        g.last = sp;
+        state.updateGesture((d) => setVertex(d, g.id, g.index, sp, false));
         return;
       }
       case 'draw-box': {
@@ -643,10 +636,12 @@ export class CanvasInteraction {
         state.endGesture('Rotate');
         break;
       case 'vertex':
-        state.updateGesture((d) => {
-          recenterObject(d.objects[g.id]);
-        });
-        state.endGesture('Edit vertex');
+        // Gestures are applied to their base document, so the final update must include the move.
+        if (g.last) {
+          const last = g.last;
+          state.updateGesture((d) => setVertex(d, g.id, g.index, last, true));
+        }
+        state.endGesture('Edit point');
         break;
       case 'bg-move':
         state.endGesture('Move blueprint');
@@ -826,6 +821,19 @@ function dedupe(pts: Vec[], tol: number): Vec[] {
   for (const p of pts) if (!out.length || dist(out[out.length - 1], p) > tol) out.push(p);
   if (out.length > 2 && dist(out[0], out[out.length - 1]) <= tol) out.pop();
   return out;
+}
+
+function setVertex(d: ProjectDoc, id: string, index: number, world: Vec, recenter: boolean): void {
+  const o = d.objects[id];
+  if (!o) return;
+  const lp = worldToLocal(o.transform, world);
+  const s = o.shape;
+  if (s.type === 'polygon' || s.type === 'polyline') s.points[index] = lp;
+  else if (s.type === 'dimension') {
+    if (index === 0) s.a = lp;
+    else s.b = lp;
+  }
+  if (recenter) recenterObject(o);
 }
 
 export function recenterObject(o: GardenObject): void {
