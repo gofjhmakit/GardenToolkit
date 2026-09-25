@@ -132,6 +132,9 @@ references (dangling ids, objects missing from layers) instead of refusing to op
   and grams), broadcast sowing (seed g/m²) and single-plant symbols (trees/shrubs) each have their
   own logic. The results come with a step-by-step explanation and the positions used to draw
   markers. Missing data gives `null` and a warning, never a guess.
+  Above `MAX_LAYOUT_STATIONS` candidate stations (field-sized areas) the per-plant layout is
+  skipped in favour of an area ÷ spacing estimate with a warning, so a typo or a crafted file
+  cannot freeze the main thread.
 - **Sharing a bed:** several plantings split the bed into bands along the row direction, with
   area found by bisection, so it works for concave shapes too. Shares can be set explicitly.
 - **Harvest** (`engine/harvest.ts`): user override → per-plant range × quantity → per-m² range ×
