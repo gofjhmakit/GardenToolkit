@@ -244,3 +244,27 @@ for (const [name, width, height] of [['iPhone 17 Pro Max', 440, 956], ['iPad min
     await noHorizontalOverflow(page);
   });
 }
+
+test('plant list rows never overlap after searching from a scrolled list', async ({ page }) => {
+  await newPhoneGarden(page);
+  await page.getByRole('tab', { name: 'Plant database' }).tap();
+  const list = page.getByRole('listbox', { name: 'Plants' });
+  await list.evaluate((el) => (el.scrollTop = 2000));
+  await sleep(300);
+  const search = page.getByLabel('Search plants');
+  for (const ch of 'mari') {
+    await search.press(ch);
+    await sleep(80);
+  }
+  await sleep(400);
+  const rows = await page.locator('.plant-item').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => [r.top, r.bottom]));
+  expect(rows.length).toBeGreaterThan(1);
+  for (let i = 1; i < rows.length; i++) expect(rows[i][0]).toBeGreaterThanOrEqual(rows[i - 1][1] - 1);
+});
+
+test('zoom controls sit below the ruler', async ({ page }) => {
+  await newPhoneGarden(page);
+  const c = await canvas(page);
+  const z = await page.getByRole('group', { name: 'Zoom' }).boundingBox();
+  expect(z!.y).toBeGreaterThanOrEqual(c.y + 20);
+});

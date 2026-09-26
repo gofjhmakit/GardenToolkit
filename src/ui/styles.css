@@ -2551,6 +2551,11 @@ html {
   text-size-adjust: 100%;
 }
 
+.canvas-hint.fading {
+  opacity: 0;
+  transition: opacity var(--dur-3) var(--ease);
+}
+
 /* Finish/Cancel for multi-tap drawing (useful with a mouse too) */
 .draw-actions {
   position: absolute;
@@ -2758,12 +2763,14 @@ html {
 
   /* Canvas overlays */
   .editor.compact .zoom-controls {
-    top: 8px;
+    /* below the 20 px ruler */
+    top: 28px;
     right: 8px;
     bottom: auto;
   }
   .editor.compact .canvas-hint {
-    bottom: 12px;
+    /* above the scale bar */
+    bottom: 44px;
     max-width: calc(100% - 24px);
     white-space: normal;
     text-align: center;

@@ -46,7 +46,19 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
   const showRecents = !filter.query && !isFilterActive(filter) && recents.length > 0;
   const recentPlants = showRecents ? recents.map((id) => catalog.get(id)).filter((p): p is Plant => !!p).slice(0, 8) : [];
   const listRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({ count: results.length, getScrollElement: () => listRef.current, estimateSize: () => 64, overscan: 8, initialRect: { width: 400, height: 800 } });
+  const virtualizer = useVirtualizer({
+    count: results.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 64,
+    overscan: 8,
+    initialRect: { width: 400, height: 800 },
+    // Measurements follow the plant, not the row number, so a new search can't reuse wrong heights.
+    getItemKey: (i) => results[i]?.id ?? i,
+  });
+  useEffect(() => {
+    // A shorter result list with the old scroll offset would place every row at the top.
+    listRef.current?.scrollTo({ top: 0 });
+  }, [results]);
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (autoFocus) searchRef.current?.focus();

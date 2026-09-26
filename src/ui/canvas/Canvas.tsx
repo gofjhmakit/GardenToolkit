@@ -61,6 +61,14 @@ export function Canvas() {
   const lookup = usePlantLookup();
   const wheelMode = usePrefs((s) => s.wheel);
   const coarse = useCoarsePointer();
+  // On touch screens the hint covers part of a small canvas: show it briefly per tool.
+  const [hintFaded, setHintFaded] = useState(false);
+  useEffect(() => {
+    setHintFaded(false);
+    if (!coarse) return;
+    const t = window.setTimeout(() => setHintFaded(true), 4500);
+    return () => window.clearTimeout(t);
+  }, [tool, coarse]);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -255,7 +263,7 @@ export function Canvas() {
           </div>
         </div>
       )}
-      {hint && !isEmpty && !pendingMulti && <div className="canvas-hint">{hint}</div>}
+      {hint && !isEmpty && !pendingMulti && <div className={hintFaded ? 'canvas-hint fading' : 'canvas-hint'}>{hint}</div>}
       {pendingMulti && (
         <div className="draw-actions" role="group" aria-label="Drawing">
           <button className="btn sm" onClick={() => interaction.reset()}>
