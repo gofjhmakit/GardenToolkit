@@ -26,7 +26,7 @@ records under **Plant database → Data sources & licences**.
 
 | Dataset | Content | Licence | Status |
 | --- | --- | --- | --- |
-| `core.json` (`gtk-core`) | 110 curated common temperate garden plants (vegetables, herbs, fruit, berries, fruit trees, ornamentals, bulbs, shrubs, trees, green manures) with planting, timing, care, yield, rotation data; 13 companion relations; rotation rules | CC0-1.0 | Bundled |
+| `core.json` (`gtk-core`) | 328 curated temperate garden plants (85 vegetables, 54 herbs, 50 annual/biennial flowers, 45 perennials, 14 bulbs, berries, fruit trees, vines, shrubs, trees, grasses and 11 green manures), Finnish names for almost all of them with planting, timing, care, yield, rotation data; 13 companion relations; rotation rules | CC0-1.0 | Bundled |
 | `wikidata-names.json` (`gtk-wikidata-names`) | Names/taxonomy for thousands of garden-relevant species (en/fi/sv/de) — **names only** | CC0-1.0 | Pipeline ready (`npm run data:wikidata`); not generated in this repository yet because the build environment had no access to Wikidata |
 | User plants ("My plants") | Created in the app, stored in IndexedDB | User's own | Built in |
 
@@ -40,7 +40,14 @@ single citable source, and the records say so (source `gtk-editorial`). Ranges a
 broad. Record confidence is mostly `medium`, and all yield figures are marked `low` confidence
 with their assumptions stated. The Finnish frost-date presets are rounded approximations with
 low confidence, and the UI tells users to replace them with local observations (e.g. from the
-Finnish Meteorological Institute). Improving this data with properly cited sources is the most
+Finnish Meteorological Institute).
+
+Winter hardiness (`data/plants/seed/hardiness.mjs`) gives each hardy perennial the coldest Finnish
+growing zone (I–VIII) where it usually survives, plus a USDA zone range. These are rounded
+editorial approximations of commonly published nursery ratings; cultivars often differ by a zone
+or two. Tender perennials that are overwintered indoors have no zone rating on purpose. Finnish
+common names were included only where the maintainers were confident of them; a plant without a
+Finnish name shows its English name. Improving this data with properly cited sources is the most
 valuable next step for the database (see "Adding data").
 
 ### Candidate sources reviewed

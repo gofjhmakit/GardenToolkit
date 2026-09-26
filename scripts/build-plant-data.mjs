@@ -11,15 +11,28 @@ import vegetables from '../data/plants/seed/vegetables.mjs';
 import herbs from '../data/plants/seed/herbs.mjs';
 import fruit from '../data/plants/seed/fruit.mjs';
 import ornamentals from '../data/plants/seed/ornamentals.mjs';
+import vegetables2 from '../data/plants/seed/vegetables2.mjs';
+import herbs2 from '../data/plants/seed/herbs2.mjs';
+import flowers2 from '../data/plants/seed/flowers2.mjs';
+import perennials2 from '../data/plants/seed/perennials2.mjs';
+import woody2 from '../data/plants/seed/woody2.mjs';
+import greenmanure from '../data/plants/seed/greenmanure.mjs';
 import { companions, rotation, sources } from '../data/plants/seed/relations.mjs';
+import { HARDINESS } from '../data/plants/seed/hardiness.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const plants = [...vegetables, ...herbs, ...fruit, ...ornamentals];
+const plants = [...vegetables, ...vegetables2, ...herbs, ...herbs2, ...fruit, ...woody2, ...ornamentals, ...flowers2, ...perennials2, ...greenmanure];
 
 const ids = new Set();
 for (const p of plants) {
   if (ids.has(p.id)) throw new Error(`Duplicate plant id: ${p.id}`);
   ids.add(p.id);
+}
+for (const [id, [fiMax, usdaMin, usdaMax]] of Object.entries(HARDINESS)) {
+  const p = plants.find((x) => x.id === id);
+  if (!p) throw new Error(`Hardiness entry for unknown plant ${id}`);
+  p.growing.finnishZones ??= { min: 1, max: fiMax };
+  p.growing.usdaZones ??= { min: usdaMin, max: usdaMax };
 }
 for (const c of companions) {
   for (const end of [c.a, c.b]) {

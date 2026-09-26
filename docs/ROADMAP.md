@@ -25,7 +25,7 @@
 
 **Planting**
 - Inspector for every object kind, with growing conditions, a materials estimate for raised beds, and tree details.
-- Plant database of 110 curated records: search (fuzzy, accent-insensitive, Finnish names), filters (category, light, water, lifecycle, edibility, sowing/harvest month, spacing data), favourites, recent plants, a virtualised list, full details with provenance, and custom plants.
+- Plant database of 328 curated records with Finnish names and winter-hardiness zones: search (fuzzy, accent-insensitive, Finnish names), filters (category, light, water, lifecycle, edibility, sowing/harvest month, spacing data), favourites, recent plants, a virtualised list, full details with provenance, and custom plants.
 - Assign a plant to many areas at once, with a quantity preview per area.
 - Calculator: shape-aware capacity for rows, spaced plants, square/triangular grids, broadcast sowing and single plants. Handles shared beds, explicit shares, spacing/margin/pattern overrides and quantity overrides, gives seed estimates, and explains every result.
 - Harvest ranges with basis, confidence and assumptions, plus your own yield overrides. "Unavailable" is shown when there's no data.
@@ -42,7 +42,7 @@
 
 ## Known limitations / next steps
 
-1. **Plant data depth.** The bundled data is 110 curated records compiled from general guidance, not cited per field (see PLANT_DATA.md). Next: run `npm run data:wikidata` where Wikidata is reachable (it adds thousands of names-only species), then add cited, per-field sources and region-specific (Finnish) timing data.
+1. **Plant data depth.** The bundled data is 328 curated records compiled from general guidance, not cited per field (see PLANT_DATA.md). Next: run `npm run data:wikidata` where Wikidata is reachable (it adds thousands of names-only species), then add cited, per-field sources and region-specific (Finnish) timing data.
 2. **Finnish translation.** The infrastructure is done; only the main chrome is translated. Remaining UI strings need wrapping in `t()` and translating in `src/i18n/fi.json`. Care texts in the plant data need `fi` entries.
 3. **Canvas:**
    - no snapping to the blueprint image contents;

@@ -70,6 +70,17 @@ describe('suitability', () => {
     const rhubarb = catalog.get('rheum-x-hybridum')!;
     const loc = createProject('x').location;
     expect(checkHardiness(rhubarb, { ...loc, climateSystem: 'finnish-zone', climateZone: 'VIII' }).status).toBe('ok');
-    expect(checkHardiness(catalog.get('malus-domestica')!, { ...loc, climateSystem: 'finnish-zone', climateZone: 'VI' }).status).toBe('unknown');
+    // Apple is rated to zone V: zone VI is beyond it, zone IV is fine.
+    expect(checkHardiness(catalog.get('malus-domestica')!, { ...loc, climateSystem: 'finnish-zone', climateZone: 'VI' }).status).toBe('warning');
+    expect(checkHardiness(catalog.get('malus-domestica')!, { ...loc, climateSystem: 'finnish-zone', climateZone: 'IV' }).status).toBe('ok');
+    // Tender perennials have no zone rating and say so.
+    expect(checkHardiness(catalog.get('laurus-nobilis')!, { ...loc, climateSystem: 'finnish-zone', climateZone: 'I' }).status).toBe('unknown');
+  });
+  it('has winter-hardiness data for every hardy perennial', () => {
+    const missing = catalog
+      .all()
+      .filter((p) => p.lifecycle === 'perennial' && p.growing.frostTolerance === 'hardy' && (!p.growing.finnishZones || !p.growing.usdaZones))
+      .map((p) => p.id);
+    expect(missing).toEqual([]);
   });
 });

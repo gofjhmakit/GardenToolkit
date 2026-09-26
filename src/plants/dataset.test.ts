@@ -58,6 +58,8 @@ describe('plant search', () => {
     expect(search('Daucus')[0].id).toBe('daucus-carota-sativus');
     expect(search('porkkana')[0].id).toBe('daucus-carota-sativus');
     expect(search('tomat')[0].id).toBe('solanum-lycopersicum');
+    expect(search('pea')[0].id).toBe('pisum-sativum');
+    for (const p of search('mari').slice(0, 4)) expect(p.names.common.en.join(' ')).toMatch(/marigold/i);
     expect(search('tomatoe').map((p) => p.id)).toContain('solanum-lycopersicum');
     expect(search('paarynapuu')[0].id).toBe('pyrus-communis');
   });

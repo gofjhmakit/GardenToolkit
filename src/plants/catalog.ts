@@ -149,7 +149,8 @@ export class PlantCatalog {
     ms.addAll(
       this.all().map((p) => ({
         id: p.id,
-        common: allCommonNames(p).join(' '),
+        // Each distinct word once: a name shared by several languages must not count twice.
+        common: [...new Set(allCommonNames(p).join(' ').toLowerCase().split(/\s+/))].join(' '),
         scientific: p.names.scientific,
         synonyms: p.names.synonyms.join(' '),
         taxonomy: [p.taxonomy.family, p.taxonomy.genus].filter(Boolean).join(' '),
@@ -168,13 +169,38 @@ export class PlantCatalog {
     const ms = this.ensureIndex();
     let res = ms.search(q);
     if (res.length === 0) res = ms.search(q, { combineWith: 'OR' });
-    return res.map((r) => r.id as string);
+    // Tie-break toward names the query nearly spells out ("tomat" → Tomato before Tomatillo).
+    const needle = fold(q);
+    const closeness = (id: string) => {
+      const p = this.plants.get(id);
+      if (!p) return 0;
+      let best = 0;
+      for (const name of allCommonNames(p).map(fold)) {
+        // A name that is exactly the query ("pea" → Pea, not Snow pea) wins outright.
+        if (name === needle) return 3;
+        for (const word of name.split(/\s+/)) {
+          if (word.startsWith(needle)) best = Math.max(best, needle.length / word.length);
+        }
+      }
+      return best;
+    };
+    return res
+      .map((r) => ({ id: r.id as string, score: r.score * (1 + 0.5 * closeness(r.id as string)) }))
+      .sort((a, b) => b.score - a.score)
+      .map((r) => r.id);
   }
 
   /** Builds the index eagerly (e.g. during idle time). */
   warmIndex(): void {
     this.ensureIndex();
   }
+}
+
+function fold(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 export async function fetchDataset(url: string): Promise<unknown> {

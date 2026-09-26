@@ -133,7 +133,12 @@ test.describe('planting workflow & views', () => {
   test('plant database: filters, favourites persist, detail shows provenance', async ({ page }) => {
     await page.getByRole('tab', { name: 'Plant database' }).click();
     await page.getByRole('button', { name: 'Herb', exact: true }).click();
-    await expect(page.getByText(/of 110 plants/)).toContainText(/^2\d of 110/);
+    // A category filter narrows the list (counts follow the dataset, so compare, don't hard-code).
+    const count = page.getByText(/^\d+ of \d+ plants$/);
+    await expect(count).toBeVisible();
+    const [shown, total] = ((await count.textContent()) ?? '').match(/\d+/g)!.map(Number);
+    expect(shown).toBeGreaterThan(20);
+    expect(shown).toBeLessThan(total);
     await page.getByLabel('Search plants').fill('basil');
     await page.getByRole('button', { name: 'Add to favourites' }).click();
     await expect(page.getByRole('heading', { name: 'Data source' })).toBeVisible();
