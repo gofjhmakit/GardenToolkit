@@ -8,7 +8,8 @@ import { kindInfo } from '../domain/objectKinds';
 import type { Range } from '../domain/range';
 import type { RotationGroup, RotationRule } from '../plants/schema';
 import type { PlantLookup } from './plantings';
-import { plantDisplayName } from '../plants/names';
+import { localizedText, plantDisplayName } from '../plants/names';
+import { t } from '../i18n';
 
 /**
  * A conventional four-course sequence (potatoes → legumes → brassicas →
@@ -89,7 +90,7 @@ export function analyzeRotation(doc: ProjectDoc, lookup: PlantLookup, rules: Rot
             group: a.group,
             seasons: [a.season, b.season],
             minYears,
-            message: `${rule?.label.en ?? a.group} grown in ${a.season} and again in ${b.season}; guidance suggests leaving ${minYears.min === minYears.max ? minYears.min : `${minYears.min}–${minYears.max}`} years between. ${rule?.reason.en ?? ''}`.trim(),
+            message: `${t('{{group}} grown in {{first}} and again in {{second}}; guidance suggests leaving {{years}} years between.', { group: localizedText(rule?.label) ?? a.group, first: a.season, second: b.season, years: minYears.min === minYears.max ? minYears.min : `${minYears.min}–${minYears.max}` })} ${localizedText(rule?.reason) ?? ''}`.trim(),
           });
         }
       }
@@ -104,7 +105,7 @@ export function analyzeRotation(doc: ProjectDoc, lookup: PlantLookup, rules: Rot
         suggestion = {
           season: last.season + 1,
           group: next,
-          reason: `In a conventional four-course rotation (potatoes → legumes → brassicas → roots), ${ruleOf.get(course)?.label.en ?? course} are followed by ${ruleOf.get(next)?.label.en ?? next}.`,
+          reason: t('In a conventional four-course rotation (potatoes → legumes → brassicas → roots), {{course}} are followed by {{next}}.', { course: localizedText(ruleOf.get(course)?.label) ?? course, next: localizedText(ruleOf.get(next)?.label) ?? next }),
         };
       }
     }

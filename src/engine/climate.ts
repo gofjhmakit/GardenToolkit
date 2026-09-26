@@ -9,6 +9,7 @@
 import type { LocationSettings } from '../domain/project';
 import type { Plant } from '../plants/schema';
 import { isValidMonthDay } from '../lib/dates';
+import { t } from '../i18n';
 
 export interface ClimatePreset {
   id: string;
@@ -25,14 +26,14 @@ const FI_NOTE =
   'Approximate average frost dates for the Finnish growing zone (editorial estimate, low confidence). Replace with local data.';
 
 export const CLIMATE_PRESETS: ClimatePreset[] = [
-  { id: 'fi-I', country: 'Finland', climateSystem: 'finnish-zone', zone: 'I', label: 'Finland – zone I (SW coast & archipelago)', lastFrost: '05-15', firstFrost: '10-01', note: FI_NOTE },
-  { id: 'fi-II', country: 'Finland', climateSystem: 'finnish-zone', zone: 'II', label: 'Finland – zone II (southern Finland)', lastFrost: '05-20', firstFrost: '09-25', note: FI_NOTE },
-  { id: 'fi-III', country: 'Finland', climateSystem: 'finnish-zone', zone: 'III', label: 'Finland – zone III (southern inland)', lastFrost: '05-25', firstFrost: '09-20', note: FI_NOTE },
-  { id: 'fi-IV', country: 'Finland', climateSystem: 'finnish-zone', zone: 'IV', label: 'Finland – zone IV (central Finland)', lastFrost: '05-30', firstFrost: '09-15', note: FI_NOTE },
-  { id: 'fi-V', country: 'Finland', climateSystem: 'finnish-zone', zone: 'V', label: 'Finland – zone V (northern central)', lastFrost: '06-05', firstFrost: '09-10', note: FI_NOTE },
-  { id: 'fi-VI', country: 'Finland', climateSystem: 'finnish-zone', zone: 'VI', label: 'Finland – zone VI (Oulu region, Kainuu)', lastFrost: '06-10', firstFrost: '09-05', note: FI_NOTE },
-  { id: 'fi-VII', country: 'Finland', climateSystem: 'finnish-zone', zone: 'VII', label: 'Finland – zone VII (southern Lapland)', lastFrost: '06-15', firstFrost: '08-31', note: FI_NOTE },
-  { id: 'fi-VIII', country: 'Finland', climateSystem: 'finnish-zone', zone: 'VIII', label: 'Finland – zone VIII (northern Lapland)', lastFrost: '06-20', firstFrost: '08-25', note: FI_NOTE },
+  { id: 'fi-I', country: 'Finland', climateSystem: 'finnish-zone', zone: 'I', label: t('Finland – zone I (SW coast & archipelago)'), lastFrost: '05-15', firstFrost: '10-01', note: FI_NOTE },
+  { id: 'fi-II', country: 'Finland', climateSystem: 'finnish-zone', zone: 'II', label: t('Finland – zone II (southern Finland)'), lastFrost: '05-20', firstFrost: '09-25', note: FI_NOTE },
+  { id: 'fi-III', country: 'Finland', climateSystem: 'finnish-zone', zone: 'III', label: t('Finland – zone III (southern inland)'), lastFrost: '05-25', firstFrost: '09-20', note: FI_NOTE },
+  { id: 'fi-IV', country: 'Finland', climateSystem: 'finnish-zone', zone: 'IV', label: t('Finland – zone IV (central Finland)'), lastFrost: '05-30', firstFrost: '09-15', note: FI_NOTE },
+  { id: 'fi-V', country: 'Finland', climateSystem: 'finnish-zone', zone: 'V', label: t('Finland – zone V (northern central)'), lastFrost: '06-05', firstFrost: '09-10', note: FI_NOTE },
+  { id: 'fi-VI', country: 'Finland', climateSystem: 'finnish-zone', zone: 'VI', label: t('Finland – zone VI (Oulu region, Kainuu)'), lastFrost: '06-10', firstFrost: '09-05', note: FI_NOTE },
+  { id: 'fi-VII', country: 'Finland', climateSystem: 'finnish-zone', zone: 'VII', label: t('Finland – zone VII (southern Lapland)'), lastFrost: '06-15', firstFrost: '08-31', note: FI_NOTE },
+  { id: 'fi-VIII', country: 'Finland', climateSystem: 'finnish-zone', zone: 'VIII', label: t('Finland – zone VIII (northern Lapland)'), lastFrost: '06-20', firstFrost: '08-25', note: FI_NOTE },
 ];
 
 /** Placeholder frost dates used only when a project has none, always flagged in the UI. */
@@ -85,30 +86,30 @@ export interface HardinessCheck {
 
 /** Compares a plant's hardiness data with the project's zone, if both exist. */
 export function checkHardiness(plant: Plant, loc: LocationSettings): HardinessCheck {
-  if (plant.lifecycle === 'annual') return { status: 'ok', message: 'Annual — winter hardiness not relevant.' };
+  if (plant.lifecycle === 'annual') return { status: 'ok', message: t('Annual — winter hardiness not relevant.') };
   if (loc.climateSystem === 'finnish-zone') {
     const z = finnishZoneNumber(loc.climateZone);
     const r = plant.growing.finnishZones;
-    if (z == null || !r) return { status: 'unknown', message: 'No Finnish zone hardiness data to compare.' };
+    if (z == null || !r) return { status: 'unknown', message: t('No Finnish zone hardiness data to compare.') };
     if (z > r.max) {
       return {
         status: 'warning',
-        message: `Rated for Finnish zones ${r.min}–${r.max}; your garden is in zone ${loc.climateZone}. Winter survival is uncertain.`,
+        message: t('Rated for Finnish zones {{min}}–{{max}}; your garden is in zone {{zone}}. Winter survival is uncertain.', { min: r.min, max: r.max, zone: loc.climateZone }),
       };
     }
-    return { status: 'ok', message: `Rated for Finnish zones up to ${r.max}.` };
+    return { status: 'ok', message: t('Rated for Finnish zones up to {{max}}.', { max: r.max }) };
   }
   if (loc.climateSystem === 'usda') {
     const z = usdaZoneNumber(loc.climateZone);
     const r = plant.growing.usdaZones;
-    if (z == null || !r) return { status: 'unknown', message: 'No USDA zone hardiness data to compare.' };
+    if (z == null || !r) return { status: 'unknown', message: t('No USDA zone hardiness data to compare.') };
     if (z < r.min) {
       return {
         status: 'warning',
-        message: `Hardy to USDA zone ${r.min}; your garden is zone ${loc.climateZone}. It may not survive winter.`,
+        message: t('Hardy to USDA zone {{min}}; your garden is zone {{zone}}. It may not survive winter.', { min: r.min, zone: loc.climateZone }),
       };
     }
-    return { status: 'ok', message: `Hardy to USDA zone ${r.min}.` };
+    return { status: 'ok', message: t('Hardy to USDA zone {{min}}.', { min: r.min }) };
   }
-  return { status: 'unknown', message: 'Set a climate zone to check hardiness.' };
+  return { status: 'unknown', message: t('Set a climate zone to check hardiness.') };
 }

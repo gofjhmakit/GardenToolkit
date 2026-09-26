@@ -17,7 +17,8 @@ import {
   type Vec,
 } from '../domain/geometry';
 import { midpoint, type Range } from '../domain/range';
-import { formatArea, formatLength } from '../domain/units';
+import { formatArea, formatLength, formatNumber } from '../domain/units';
+import { t } from '../i18n';
 import type { PlantingMethod } from '../plants/schema';
 
 export type LayoutPattern = 'square' | 'triangular';
@@ -233,7 +234,7 @@ function seedEstimate(
     };
     result.seeds = seeds;
     ex.push(
-      `Seeds: ${fmtL(rowLengthMm)} of row sown every ${fmtL(rules.seedMm.min)}–${fmtL(rules.seedMm.max)} ≈ ${seeds.min.toLocaleString('en-US')}–${seeds.max.toLocaleString('en-US')} seeds, thinned to the plant spacing.`,
+      t('Seeds: {{length}} of row sown every {{min}}–{{max}} ≈ {{seedsMin}}–{{seedsMax}} seeds, thinned to the plant spacing.', { length: fmtL(rowLengthMm), min: fmtL(rules.seedMm.min), max: fmtL(rules.seedMm.max), seedsMin: formatNumber(seeds.min), seedsMax: formatNumber(seeds.max) }),
     );
   } else if (rules.seedsPerStation) {
     result.seeds = {
@@ -241,7 +242,7 @@ function seedEstimate(
       max: Math.round(plants.max * rules.seedsPerStation.max),
     };
     ex.push(
-      `Seeds: ${rules.seedsPerStation.min}–${rules.seedsPerStation.max} seeds per station ⇒ ${result.seeds.min.toLocaleString('en-US')}–${result.seeds.max.toLocaleString('en-US')} seeds.`,
+      t('Seeds: {{min}}–{{max}} seeds per station ⇒ {{seedsMin}}–{{seedsMax}} seeds.', { min: rules.seedsPerStation.min, max: rules.seedsPerStation.max, seedsMin: formatNumber(result.seeds.min), seedsMax: formatNumber(result.seeds.max) }),
     );
   } else if (rules.germinationRate && rules.germinationRate.min > 0) {
     result.seeds = {
@@ -249,7 +250,7 @@ function seedEstimate(
       max: Math.ceil(plants.max / rules.germinationRate.min),
     };
     ex.push(
-      `Seeds: allowing for ${Math.round(rules.germinationRate.min * 100)}–${Math.round(rules.germinationRate.max * 100)}% germination.`,
+      t('Seeds: allowing for {{min}}–{{max}}% germination.', { min: Math.round(rules.germinationRate.min * 100), max: Math.round(rules.germinationRate.max * 100) }),
     );
   }
   if (result.seeds && rules.seedsPerGram && rules.seedsPerGram.min > 0) {
@@ -276,21 +277,21 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
   const across = axis === 'x' ? b.maxY - b.minY : b.maxX - b.minX;
 
   if (region.length < 3 || !(areaMm2 > 0) || !Number.isFinite(areaMm2) || !Number.isFinite(along) || !Number.isFinite(across)) {
-    result.warnings.push('The area has no measurable size.');
+    result.warnings.push(t('The area has no measurable size.'));
     return result;
   }
-  ex.push(`Area: ${formatArea(areaMm2)} (extent ${fmtL(along)} × ${fmtL(across)}).`);
+  ex.push(t('Area: {{area}} (extent {{along}} × {{across}}).', { area: formatArea(areaMm2), along: fmtL(along), across: fmtL(across) }));
 
   if (input.singlePlantHost) {
     result.plants = 1;
     result.plantsRange = { min: 1, max: 1 };
     result.positions = [{ x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 }];
-    ex.push('This object represents a single plant (tree or shrub symbol).');
+    ex.push(t('This object represents a single plant (tree or shrub symbol).'));
     if (rules.inRowMm) {
       const need = rules.inRowMm.min;
       if (need > Math.min(along, across) * 1.05) {
         result.warnings.push(
-          `Drawn footprint (${fmtL(Math.min(along, across))}) is smaller than the recommended spacing (${fmtL(need)}); the mature plant may need more room.`,
+          t('Drawn footprint ({{size}}) is smaller than the recommended spacing ({{need}}); the mature plant may need more room.', { size: fmtL(Math.min(along, across)), need: fmtL(need) }),
         );
       }
     }
@@ -304,25 +305,25 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
       const m2 = areaMm2 / 1e6;
       result.seedGrams = { min: rules.seedRateGPerM2.min * m2, max: rules.seedRateGPerM2.max * m2 };
       ex.push(
-        `Seed: ${rules.seedRateGPerM2.min}–${rules.seedRateGPerM2.max} g/m² × ${m2.toFixed(2)} m² = ${result.seedGrams.min.toFixed(0)}–${result.seedGrams.max.toFixed(0)} g.`,
+        t('Seed: {{min}}–{{max}} g/m² × {{area}} m² = {{gMin}}–{{gMax}} g.', { min: formatNumber(rules.seedRateGPerM2.min), max: formatNumber(rules.seedRateGPerM2.max), area: formatNumber(m2), gMin: formatNumber(result.seedGrams.min, 0), gMax: formatNumber(result.seedGrams.max, 0) }),
       );
     } else {
-      result.warnings.push('No sowing-rate data is available for broadcast sowing; enter a quantity manually.');
+      result.warnings.push(t('No sowing-rate data is available for broadcast sowing; enter a quantity manually.'));
     }
     if (rules.inRowMm) {
       // A density figure exists: estimate a plant count from it (area / spacing²).
       const dens = (s: number) => Math.floor(areaMm2 / (s * s));
       result.plantsRange = { min: dens(rules.inRowMm.max), max: dens(rules.inRowMm.min) };
       result.plants = dens(midpoint(rules.inRowMm));
-      ex.push(`Density estimate at ${fmtL(midpoint(rules.inRowMm))} average spacing ≈ ${result.plants} plants.`);
+      ex.push(t('Density estimate at {{spacing}} average spacing ≈ {{count}} plants.', { spacing: fmtL(midpoint(rules.inRowMm)), count: result.plants }));
     }
     return result;
   }
 
   const inRow = rules.inRowMm;
   if (!inRow) {
-    result.warnings.push('No spacing data for this plant — enter a spacing to calculate quantities.');
-    ex.push('Quantity cannot be calculated without spacing information.');
+    result.warnings.push(t('No spacing data for this plant — enter a spacing to calculate quantities.'));
+    ex.push(t('Quantity cannot be calculated without spacing information.'));
     return result;
   }
   const isGrid = rules.method === 'grid' || rules.method === 'individual';
@@ -343,9 +344,9 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
     result.plants = perArea(result.inRowMm, result.rowMm);
     result.plantsRange = { min: perArea(inRow.max, rowR.max), max: perArea(inRow.min, rowR.min) };
     ex.push(
-      `The area is too large for a plant-by-plant layout; the quantity is estimated as area ÷ (${fmtL(result.inRowMm)} × ${fmtL(result.rowMm)}) ≈ ${result.plants.toLocaleString('en-US')} plants, without edge margins.`,
+      t('The area is too large for a plant-by-plant layout; the quantity is estimated as area ÷ ({{inRow}} × {{row}}) ≈ {{count}} plants, without edge margins.', { inRow: fmtL(result.inRowMm), row: fmtL(result.rowMm), count: formatNumber(result.plants) }),
     );
-    result.warnings.push('Very large area: the quantity is a rough area-based estimate and plant markers are not drawn. Check the object size if this is unexpected.');
+    result.warnings.push(t('Very large area: the quantity is a rough area-based estimate and plant markers are not drawn. Check the object size if this is unexpected.'));
     seedEstimate(rules, result.plantsRange, null, result);
     return result;
   }
@@ -376,29 +377,31 @@ export function calculatePlantCapacity(input: CapacityInput): CapacityResult {
   result.positionsTruncated = pref.lat.truncated;
   result.rowLines = pref.lat.rowLines.map(([p, q]) => [unrotate(p, axis === 'y'), unrotate(q, axis === 'y')]);
 
-  const dir = axis === 'x' ? 'along the local x (length) direction' : 'along the local y direction';
+  const dir = axis === 'x' ? t('along the local x (length) direction') : t('along the local y direction');
   if (isGrid) {
     ex.push(
-      `${pattern === 'triangular' ? 'Triangular (offset)' : 'Square'} grid at ${fmtL(prefIn)} spacing` +
-        (pattern === 'triangular' ? ` (rows ${fmtL(prefRow)} apart)` : '') +
-        `, keeping ${fmtL(pref.mAlong)} from the edges.`,
+      pattern === 'triangular'
+        ? t('Triangular (offset) grid at {{spacing}} spacing (rows {{row}} apart), keeping {{margin}} from the edges.', { spacing: fmtL(prefIn), row: fmtL(prefRow), margin: fmtL(pref.mAlong) })
+        : t('Square grid at {{spacing}} spacing, keeping {{margin}} from the edges.', { spacing: fmtL(prefIn), margin: fmtL(pref.mAlong) }),
     );
-    ex.push(`${pref.lat.rows} grid rows, up to ${pref.lat.maxRowCount} plants each ⇒ ${pref.lat.count} plants.`);
+    ex.push(t('{{rows}} grid rows, up to {{perRow}} plants each ⇒ {{count}} plants.', { rows: pref.lat.rows, perRow: pref.lat.maxRowCount, count: pref.lat.count }));
   } else {
     ex.push(
-      `Rows run ${dir}: ${pref.lat.rows} rows ${fmtL(prefRow)} apart across ${fmtL(across)}, outer rows ${fmtL(pref.mAcross)} from the edge.`,
+      t('Rows run {{dir}}: {{rows}} rows {{row}} apart across {{across}}, outer rows {{margin}} from the edge.', { dir, rows: pref.lat.rows, row: fmtL(prefRow), across: fmtL(across), margin: fmtL(pref.mAcross) }),
     );
     ex.push(
-      `In each row plants are ${fmtL(prefIn)} apart, ${fmtL(pref.mAlong)} from the row ends: up to ${pref.lat.maxRowCount} per row ⇒ ${pref.lat.count} plants.`,
+      t('In each row plants are {{spacing}} apart, {{margin}} from the row ends: up to {{perRow}} per row ⇒ {{count}} plants.', { spacing: fmtL(prefIn), margin: fmtL(pref.mAlong), perRow: pref.lat.maxRowCount, count: pref.lat.count }),
     );
   }
   if (inRow.min !== inRow.max || rowR.min !== rowR.max) {
     ex.push(
-      `Using the full spacing range (${fmtL(inRow.min)}–${fmtL(inRow.max)}${!isGrid ? `, rows ${fmtL(rowR.min)}–${fmtL(rowR.max)}` : ''}) the bed holds ${result.plantsRange.min}–${result.plantsRange.max} plants.`,
+      isGrid
+        ? t('Using the full spacing range ({{min}}–{{max}}) the bed holds {{pMin}}–{{pMax}} plants.', { min: fmtL(inRow.min), max: fmtL(inRow.max), pMin: result.plantsRange.min, pMax: result.plantsRange.max })
+        : t('Using the full spacing range ({{min}}–{{max}}, rows {{rMin}}–{{rMax}}) the bed holds {{pMin}}–{{pMax}} plants.', { min: fmtL(inRow.min), max: fmtL(inRow.max), rMin: fmtL(rowR.min), rMax: fmtL(rowR.max), pMin: result.plantsRange.min, pMax: result.plantsRange.max }),
     );
   }
   if (pref.lat.count === 0) {
-    result.warnings.push('The area is too small for even one plant at the recommended spacing.');
+    result.warnings.push(t('The area is too small for even one plant at the recommended spacing.'));
   }
   seedEstimate(
     rules,

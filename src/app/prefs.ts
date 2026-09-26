@@ -13,7 +13,16 @@ export interface Prefs {
 }
 
 const KEY = 'garden-toolkit:prefs';
-const DEFAULTS: Prefs = { wheel: 'zoom', language: 'en', showLeftPanel: true, showRightPanel: true, theme: 'system' };
+/** First run: Finnish for a Finnish browser, otherwise English. The user can switch in settings. */
+function defaultLanguage(): string {
+  try {
+    return typeof navigator !== 'undefined' && /^fi\b/i.test(navigator.language) ? 'fi' : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+const DEFAULTS: Prefs = { wheel: 'zoom', language: defaultLanguage(), showLeftPanel: true, showRightPanel: true, theme: 'system' };
 
 export function loadPrefs(): Prefs {
   try {

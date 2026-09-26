@@ -14,6 +14,7 @@ import {
   ungroupSelection,
   zOrder,
 } from './actions';
+import { t } from '../../i18n';
 
 export function ContextMenuHost() {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -30,26 +31,26 @@ export function ContextMenuHost() {
   const anyLocked = sel.some((id) => doc.objects[id]?.locked);
   const entries: MenuEntry[] = sel.length
     ? [
-        ...(plantable.length ? [{ label: `Add plants to ${plantable.length > 1 ? `${plantable.length} areas` : 'this area'}…`, onSelect: () => window.dispatchEvent(new CustomEvent('gtk:add-plants', { detail: { ids: plantable } })) } as MenuEntry, { type: 'separator' } as MenuEntry] : []),
-        { label: 'Cut', shortcut: 'Mod+X', onSelect: () => cutToClipboard() },
-        { label: 'Copy', shortcut: 'Mod+C', onSelect: () => void copyToClipboard() },
-        { label: 'Paste', shortcut: 'Mod+V', onSelect: () => void pasteFromMenu() },
-        { label: 'Duplicate', shortcut: 'Mod+D', onSelect: duplicateSelection },
-        { label: 'Delete', shortcut: 'Del', onSelect: deleteSelection },
+        ...(plantable.length ? [{ label: plantable.length > 1 ? t('Add plants to {{count}} areas…', { count: plantable.length }) : t('Add plants to this area…'), onSelect: () => window.dispatchEvent(new CustomEvent('gtk:add-plants', { detail: { ids: plantable } })) } as MenuEntry, { type: 'separator' } as MenuEntry] : []),
+        { label: t('Cut'), shortcut: 'Mod+X', onSelect: () => cutToClipboard() },
+        { label: t('Copy'), shortcut: 'Mod+C', onSelect: () => void copyToClipboard() },
+        { label: t('Paste'), shortcut: 'Mod+V', onSelect: () => void pasteFromMenu() },
+        { label: t('Duplicate'), shortcut: 'Mod+D', onSelect: duplicateSelection },
+        { label: t('Delete'), shortcut: 'Del', onSelect: deleteSelection },
         { type: 'separator' },
-        { label: 'Group', shortcut: 'Mod+G', disabled: sel.length < 2, onSelect: groupSelection },
-        { label: 'Ungroup', shortcut: 'Mod+Shift+G', onSelect: ungroupSelection },
-        { label: anyLocked ? 'Unlock' : 'Lock', shortcut: 'Mod+Shift+L', onSelect: () => lockSelection(!anyLocked) },
-        { label: 'Hide', shortcut: 'Mod+Shift+H', onSelect: hideSelection },
+        { label: t('Group'), shortcut: 'Mod+G', disabled: sel.length < 2, onSelect: groupSelection },
+        { label: t('Ungroup'), shortcut: 'Mod+Shift+G', onSelect: ungroupSelection },
+        { label: anyLocked ? t('Unlock') : t('Lock'), shortcut: 'Mod+Shift+L', onSelect: () => lockSelection(!anyLocked) },
+        { label: t('Hide'), shortcut: 'Mod+Shift+H', onSelect: hideSelection },
         { type: 'separator' },
-        { label: 'Bring to front', onSelect: () => zOrder('front') },
-        { label: 'Send to back', onSelect: () => zOrder('back') },
-        { label: 'Zoom to selection', onSelect: s.zoomToSelection },
+        { label: t('Bring to front'), onSelect: () => zOrder('front') },
+        { label: t('Send to back'), onSelect: () => zOrder('back') },
+        { label: t('Zoom to selection'), onSelect: s.zoomToSelection },
       ]
     : [
-        { label: 'Paste', shortcut: 'Mod+V', onSelect: () => void pasteFromMenu() },
-        { label: 'Import blueprint…', onSelect: () => window.dispatchEvent(new CustomEvent('gtk:import-blueprint')) },
-        { label: 'Fit to screen', onSelect: s.fitToContent },
+        { label: t('Paste'), shortcut: 'Mod+V', onSelect: () => void pasteFromMenu() },
+        { label: t('Import blueprint…'), onSelect: () => window.dispatchEvent(new CustomEvent('gtk:import-blueprint')) },
+        { label: t('Fit to screen'), onSelect: s.fitToContent },
       ];
-  return <Menu label="Context menu" entries={entries} anchor={pos} onClose={() => setPos(null)} />;
+  return <Menu label={t('Context menu')} entries={entries} anchor={pos} onClose={() => setPos(null)} />;
 }

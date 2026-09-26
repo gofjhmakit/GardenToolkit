@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { listSnapshots, recoverFromSnapshot } from '../persistence/projectRepo';
 import type { SnapshotRecord } from '../persistence/db';
 import { toast } from './components/feedback';
+import { t } from '../i18n';
 
 /** Offers version snapshots when a project cannot be opened. */
 export function RecoveryPanel({ projectId, onRecovered }: { projectId: string; onRecovered: () => void }) {
@@ -12,7 +13,7 @@ export function RecoveryPanel({ projectId, onRecovered }: { projectId: string; o
   if (!snaps?.length) return null;
   return (
     <div className="card col" style={{ textAlign: 'left', margin: '12px 0' }}>
-      <h3>Restore a saved version</h3>
+      <h3>{t('Restore a saved version')}</h3>
       <table className="table">
         <tbody>
           {snaps.map((s) => (
@@ -24,12 +25,12 @@ export function RecoveryPanel({ projectId, onRecovered }: { projectId: string; o
                   className="btn sm"
                   onClick={async () => {
                     if (await recoverFromSnapshot(projectId, s.id)) {
-                      toast('ok', 'Project restored from a saved version');
+                      toast('ok', t('Project restored from a saved version'));
                       onRecovered();
-                    } else toast('error', 'That version could not be read either.');
+                    } else toast('error', t('That version could not be read either.'));
                   }}
                 >
-                  Restore this version
+                  {t('Restore this version')}
                 </button>
               </td>
             </tr>

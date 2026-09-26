@@ -32,6 +32,7 @@ import {
 } from '../domain/project';
 import { PlantSchema, type Plant } from '../plants/schema';
 import { repairReferences } from './migrations';
+import { t, tn } from '../i18n';
 
 export const PROJECT_FILE_FORMAT = 'garden-toolkit-project';
 export const PROJECT_FILE_VERSION = 1;
@@ -230,13 +231,13 @@ const FILE_MIGRATIONS: Record<number, (f: Record<string, unknown>) => Record<str
 export function migrateProjectFile(raw: Record<string, unknown>): Record<string, unknown> {
   let f = raw;
   let v = typeof f.schemaVersion === 'number' ? f.schemaVersion : NaN;
-  if (!Number.isInteger(v)) throw new Error('The file has no valid schemaVersion.');
+  if (!Number.isInteger(v)) throw new Error(t('The file has no valid schemaVersion.'));
   if (v > PROJECT_FILE_VERSION) {
-    throw new Error(`This file uses project format version ${v}, which is newer than this app supports (${PROJECT_FILE_VERSION}).`);
+    throw new Error(t('This file uses project format version {{version}}, which is newer than this app supports ({{supported}}).', { version: v, supported: PROJECT_FILE_VERSION }));
   }
   while (v < PROJECT_FILE_VERSION) {
     const m = FILE_MIGRATIONS[v];
-    if (!m) throw new Error(`Cannot upgrade project format version ${v}.`);
+    if (!m) throw new Error(t('Cannot upgrade project format version {{version}}.', { version: v }));
     f = m(f);
     v++;
   }
@@ -261,11 +262,11 @@ export function fromProjectFile(
   const objects: ProjectDoc['objects'] = {};
   for (const o of file.objects) {
     if (o.id === '__proto__') {
-      warnings.push('An object with the reserved id "__proto__" was skipped.');
+      warnings.push(t('An object with the reserved id "__proto__" was skipped.'));
       continue;
     }
     if (Object.hasOwn(objects, o.id)) {
-      warnings.push(`Duplicate object id ${o.id} skipped.`);
+      warnings.push(t('Duplicate object id {{id}} skipped.', { id: o.id }));
       continue;
     }
     objects[o.id] = {
@@ -298,13 +299,13 @@ export function fromProjectFile(
     // Only embed plants the local database does not already know.
     if (!opts.knownPlant(p.data.id)) embeddedPlants[p.data.id] = p.data;
   }
-  if (invalidPlants) warnings.push(`${invalidPlants} embedded plant record(s) were invalid and ignored.`);
+  if (invalidPlants) warnings.push(tn('{{count}} embedded plant records were invalid and ignored.', invalidPlants));
 
   const backgrounds: ProjectDoc['backgrounds'] = [];
   for (const b of file.backgrounds) {
     const assetId = opts.assetIdMap.get(b.asset);
     if (!assetId) {
-      warnings.push(`Background image "${b.name}" is missing its image data and was skipped.`);
+      warnings.push(t('Background image "{{name}}" is missing its image data and was skipped.', { name: b.name }));
       continue;
     }
     backgrounds.push({
@@ -331,7 +332,7 @@ export function fromProjectFile(
       .filter((id) => !opts.knownPlant(id) && !Object.hasOwn(embeddedPlants, id)),
   );
   if (unknownPlants.size) {
-    warnings.push(`${unknownPlants.size} plant(s) used in this project are not in your plant database and had no embedded data.`);
+    warnings.push(tn('{{count}} plants used in this project are not in your plant database and had no embedded data.', unknownPlants.size));
   }
 
   const doc: ProjectDoc = {

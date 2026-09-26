@@ -8,6 +8,8 @@
  * display units happens only in formatting.
  */
 
+import { locale } from '../i18n';
+
 export type UnitSystem = 'metric' | 'imperial';
 export type LengthUnit = 'mm' | 'cm' | 'm' | 'in' | 'ft';
 
@@ -38,7 +40,12 @@ export function m2ToMm2(m2: number): number {
 const M2_PER_FT2 = 0.09290304;
 
 function fmt(n: number, digits: number): string {
-  return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return n.toLocaleString(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+/** A number in the UI language's format (decimal comma in Finnish). */
+export function formatNumber(n: number, maxDigits = 2): string {
+  return n.toLocaleString(locale(), { maximumFractionDigits: maxDigits });
 }
 
 /** Chooses a sensible unit for a length and formats it. */

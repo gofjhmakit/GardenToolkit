@@ -11,27 +11,28 @@ import type { Planting } from '../../domain/project';
 import { plantDisplayName } from '../../plants/names';
 import { plantColor } from '../plantColors';
 import { Field, LengthInput, NumberInput, Select, TextInput } from '../components/Fields';
+import { t, tn } from '../../i18n';
 
 export const METHOD_LABELS: Record<PlantingMethod, string> = {
-  individual: 'Individual plants',
-  spaced: 'Spaced plants (rows)',
-  rows: 'Row sowing',
-  grid: 'Grid / intensive',
-  broadcast: 'Broadcast / area',
+  individual: t('Individual plants'),
+  spaced: t('Spaced plants (rows)'),
+  rows: t('Row sowing'),
+  grid: t('Grid / intensive'),
+  broadcast: t('Broadcast / area'),
 };
 
-const STATUS_LABELS: Record<Planting['status'], string> = {
-  planned: 'Planned',
-  sown: 'Sown',
-  planted: 'Planted',
-  growing: 'Growing',
-  harvested: 'Harvested',
-  removed: 'Removed',
+export const STATUS_LABELS: Record<Planting['status'], string> = {
+  planned: t('Planned'),
+  sown: t('Sown'),
+  planted: t('Planted'),
+  growing: t('Growing'),
+  harvested: t('Harvested'),
+  removed: t('Removed'),
 };
 
 export function ConfidenceBadge({ c }: { c: string }) {
   const cls = c === 'high' ? 'ok' : c === 'medium' ? 'accent' : c === 'low' ? 'warn' : '';
-  return <span className={`badge ${cls} conf`} title="Data confidence">{c === 'unknown' ? 'confidence unknown' : `${c} confidence`}</span>;
+  return <span className={`badge ${cls} conf`} title={t('Data confidence')}>{c === 'unknown' ? t('confidence unknown') : c === 'high' ? t('high confidence') : c === 'medium' ? t('medium confidence') : t('low confidence')}</span>;
 }
 
 export function PlantingCard({ comp, siblings }: { comp: PlantingComputation; siblings: number }) {
@@ -60,7 +61,7 @@ export function PlantingCard({ comp, siblings }: { comp: PlantingComputation; si
           </div>
           {plant && <div className="small muted" style={{ fontStyle: 'italic' }}>{plant.names.scientific}</div>}
         </div>
-        <button className="icon-btn sm" aria-label={`Remove ${name}`} title="Remove from this area" onClick={() => useEditor.getState().commit('Remove planting', (d) => removePlantings(d, [id]))}>
+        <button className="icon-btn sm" aria-label={t('Remove {{name}}', { name })} title={t('Remove from this area')} onClick={() => useEditor.getState().commit('Remove planting', (d) => removePlantings(d, [id]))}>
           <X size={14} />
         </button>
       </div>
@@ -70,67 +71,67 @@ export function PlantingCard({ comp, siblings }: { comp: PlantingComputation; si
           <div style={{ flex: 1 }}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <span>
-                <strong className="num" style={{ fontSize: 16 }}>{comp.quantity ?? '—'}</strong> plants
-                {comp.quantitySource === 'override' && <span className="badge accent" style={{ marginLeft: 6 }}>your value</span>}
+                <strong className="num" style={{ fontSize: 16 }}>{comp.quantity ?? '—'}</strong> {t('plants')}
+                {comp.quantitySource === 'override' && <span className="badge accent" style={{ marginLeft: 6 }}>{t('your value')}</span>}
               </span>
               <span className="small muted num">{formatArea(capacity.areaMm2, units)}</span>
             </div>
             <div className="small">
               {capacity.plants != null ? (
                 <>
-                  Calculated: <strong className="num">{capacity.plants}</strong>
-                  {capacity.plantsRange && capacity.plantsRange.min !== capacity.plantsRange.max && <span className="muted"> (range {formatRange(capacity.plantsRange)})</span>}
-                  {capacity.rows ? <span className="muted"> · {capacity.rows} rows</span> : null}
+                  {t('Calculated:')} <strong className="num">{capacity.plants}</strong>
+                  {capacity.plantsRange && capacity.plantsRange.min !== capacity.plantsRange.max && <span className="muted"> ({t('range {{range}}', { range: formatRange(capacity.plantsRange) })})</span>}
+                  {capacity.rows ? <span className="muted"> · {tn('{{count}} rows', capacity.rows)}</span> : null}
                 </>
               ) : (
-                <span className="muted">Not calculable — {capacity.warnings[0] ?? 'missing data'}</span>
+                <span className="muted">{t('Not calculable — {{reason}}', { reason: capacity.warnings[0] ?? t('missing data') })}</span>
               )}
             </div>
             {capacity.seeds && (
               <div className="small">
-                Seed: <span className="num">{formatRange(capacity.seeds)}</span> seeds
+                {t('Seed:')} <span className="num">{formatRange(capacity.seeds)}</span> {t('seeds')}
                 {capacity.seedGrams && <span className="muted num"> (≈{formatRange(capacity.seedGrams, 1)} g)</span>}
               </div>
             )}
-            {!capacity.seeds && capacity.seedGrams && <div className="small">Seed: ≈{formatRange(capacity.seedGrams, 1)} g</div>}
+            {!capacity.seeds && capacity.seedGrams && <div className="small">{t('Seed:')} ≈{formatRange(capacity.seedGrams, 1)} g</div>}
           </div>
         </div>
       )}
 
       {!single && (
         <div className="grid2">
-          <Field label="Your quantity" hint={planting.quantityOverride != null ? 'Override is kept even if the bed changes' : 'Leave empty to use the calculation'}>
+          <Field label={t('Your quantity')} hint={planting.quantityOverride != null ? t('Override is kept even if the bed changes') : t('Leave empty to use the calculation')}>
             {(fid) => (
               <NumberInput id={fid} value={planting.quantityOverride} integer min={0} allowEmpty placeholder={capacity.plants != null ? String(capacity.plants) : ''} onCommit={(v) => commit('Set quantity', { quantityOverride: v })} />
             )}
           </Field>
-          <Field label="Method">
+          <Field label={t('Method')}>
             {(fid) => (
               <Select<PlantingMethod>
                 id={fid}
                 value={planting.method ?? ''}
-                emptyLabel={`Default (${METHOD_LABELS[method]})`}
+                emptyLabel={t('Default ({{method}})', { method: METHOD_LABELS[method] })}
                 options={PLANTING_METHODS.map((m) => ({ value: m, label: METHOD_LABELS[m] }))}
                 onChange={(v) => commit('Planting method', { method: v })}
               />
             )}
           </Field>
-          <Field label={method === 'grid' || method === 'individual' ? 'Plant spacing' : 'In-row spacing'} hint={comp.rules.inRowMm ? `Data: ${formatRange({ min: comp.rules.inRowMm.min / 10, max: comp.rules.inRowMm.max / 10 })} cm` : 'No data — enter a value'}>
+          <Field label={method === 'grid' || method === 'individual' ? t('Plant spacing') : t('In-row spacing')} hint={comp.rules.inRowMm ? t('Data: {{range}} cm', { range: formatRange({ min: comp.rules.inRowMm.min / 10, max: comp.rules.inRowMm.max / 10 }) }) : t('No data — enter a value')}>
             {(fid) => <LengthInput id={fid} unit={small} valueMm={planting.spacing.inRowMm} allowEmpty min={5} placeholder={capacity.inRowMm ? String(Math.round(capacity.inRowMm / 10)) : ''} onCommit={(v) => commit('Spacing', { spacing: { inRowMm: v } })} />}
           </Field>
           {method !== 'grid' && method !== 'individual' && method !== 'broadcast' ? (
-            <Field label="Row spacing" hint={comp.rules.rowMm ? `Data: ${formatRange({ min: comp.rules.rowMm.min / 10, max: comp.rules.rowMm.max / 10 })} cm` : undefined}>
+            <Field label={t('Row spacing')} hint={comp.rules.rowMm ? t('Data: {{range}} cm', { range: formatRange({ min: comp.rules.rowMm.min / 10, max: comp.rules.rowMm.max / 10 }) }) : undefined}>
               {(fid) => <LengthInput id={fid} unit={small} valueMm={planting.spacing.rowMm} allowEmpty min={5} placeholder={capacity.rowMm ? String(Math.round(capacity.rowMm / 10)) : ''} onCommit={(v) => commit('Row spacing', { spacing: { rowMm: v } })} />}
             </Field>
           ) : (
-            <Field label="Pattern">
+            <Field label={t('Pattern')}>
               {(fid) => (
                 <Select<'square' | 'triangular'>
                   id={fid}
                   value={planting.spacing.pattern ?? 'square'}
                   options={[
-                    { value: 'square', label: 'Square grid' },
-                    { value: 'triangular', label: 'Offset (triangular)' },
+                    { value: 'square', label: t('Square grid') },
+                    { value: 'triangular', label: t('Offset (triangular)') },
                   ]}
                   onChange={(v) => commit('Pattern', { spacing: { pattern: v ?? 'square' } })}
                 />
@@ -138,24 +139,24 @@ export function PlantingCard({ comp, siblings }: { comp: PlantingComputation; si
             </Field>
           )}
           {siblings > 1 && (
-            <Field label="Share of area" hint={`Currently ${Math.round(comp.share * 100)}%`}>
+            <Field label={t('Share of area')} hint={t('Currently {{pct}}%', { pct: Math.round(comp.share * 100) })}>
               {(fid) => (
                 <NumberInput id={fid} value={planting.areaShare != null ? Math.round(planting.areaShare * 1000) / 10 : null} min={0} max={100} digits={1} suffix="%" allowEmpty placeholder={String(Math.round(comp.share * 100))} onCommit={(v) => commit('Area share', { areaShare: v == null ? null : v / 100 })} />
               )}
             </Field>
           )}
-          <Field label="Edge margin" hint="Default: half the spacing">
+          <Field label={t('Edge margin')} hint={t('Default: half the spacing')}>
             {(fid) => <LengthInput id={fid} unit={small} valueMm={planting.spacing.edgeMarginMm} allowEmpty onCommit={(v) => commit('Edge margin', { spacing: { edgeMarginMm: v } })} />}
           </Field>
         </div>
       )}
 
       <div className="small">
-        <strong>Harvest: </strong>
+        <strong>{t('Harvest:')}{' '}</strong>
         {harvest.total ? (
           <>
             <span className="num">{formatRange(harvest.total, harvest.total.max < 10 ? 1 : 0)} kg</span> <ConfidenceBadge c={harvest.confidence} />
-            <div className="muted tiny">{harvest.assumptions.join(' ')} Estimates are not guarantees.</div>
+            <div className="muted tiny">{harvest.assumptions.join(' ')} {t('Estimates are not guarantees.')}</div>
           </>
         ) : (
           <span className="muted">{harvest.unavailableReason}</span>
@@ -177,39 +178,39 @@ export function PlantingCard({ comp, siblings }: { comp: PlantingComputation; si
 
       {!single && capacity.explanation.length > 0 && (
         <details>
-          <summary className="small" style={{ cursor: 'pointer' }}>How was this calculated?</summary>
+          <summary className="small" style={{ cursor: 'pointer' }}>{t('How was this calculated?')}</summary>
           <ol className="small" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
             {capacity.explanation.map((e, i) => (
               <li key={i}>{e}</li>
             ))}
           </ol>
-          {plant && <p className="tiny muted" style={{ marginTop: 4 }}>Spacing source: {plant.provenance.sources.map((s) => s.id).join(', ')} · record confidence {plant.provenance.confidence}.</p>}
+          {plant && <p className="tiny muted" style={{ marginTop: 4 }}>{t('Spacing source: {{sources}} · record confidence {{confidence}}.', { sources: plant.provenance.sources.map((s) => s.id).join(', '), confidence: t(plant.provenance.confidence) })}</p>}
         </details>
       )}
 
       <details>
-        <summary className="small" style={{ cursor: 'pointer' }}>Variety, dates, yield & notes</summary>
+        <summary className="small" style={{ cursor: 'pointer' }}>{t('Variety, dates, yield & notes')}</summary>
         <div className="col" style={{ marginTop: 8 }}>
           <div className="grid2">
-            <Field label="Variety / cultivar">{(fid) => <TextInput id={fid} value={planting.variety} onChange={(v) => commit('Variety', { variety: v }, 'variety')} />}</Field>
-            <Field label="Status">
+            <Field label={t('Variety / cultivar')}>{(fid) => <TextInput id={fid} value={planting.variety} onChange={(v) => commit('Variety', { variety: v }, 'variety')} />}</Field>
+            <Field label={t('Status')}>
               {(fid) => <Select<Planting['status']> id={fid} value={planting.status} options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value: value as Planting['status'], label }))} onChange={(v) => v && commit('Status', { status: v })} />}
             </Field>
           </div>
           <div className="grid2">
-            {plant?.timing.sowIndoors && <DateField label="Sow indoors" value={planting.dates.sowIndoors} onChange={(v) => commit('Date', { dates: { sowIndoors: v } })} />}
-            {plant?.timing.directSow && <DateField label="Sow outdoors" value={planting.dates.directSow} onChange={(v) => commit('Date', { dates: { directSow: v } })} />}
-            {(plant?.timing.transplant || plant?.timing.plantOut) && <DateField label="Plant out / transplant" value={planting.dates.transplant} onChange={(v) => commit('Date', { dates: { transplant: v } })} />}
-            <DateField label="Harvest from" value={planting.dates.harvestStart} onChange={(v) => commit('Date', { dates: { harvestStart: v } })} />
-            <DateField label="Harvest until" value={planting.dates.harvestEnd} onChange={(v) => commit('Date', { dates: { harvestEnd: v } })} />
+            {plant?.timing.sowIndoors && <DateField label={t('Sow indoors')} value={planting.dates.sowIndoors} onChange={(v) => commit('Date', { dates: { sowIndoors: v } })} />}
+            {plant?.timing.directSow && <DateField label={t('Sow outdoors')} value={planting.dates.directSow} onChange={(v) => commit('Date', { dates: { directSow: v } })} />}
+            {(plant?.timing.transplant || plant?.timing.plantOut) && <DateField label={t('Plant out / transplant')} value={planting.dates.transplant} onChange={(v) => commit('Date', { dates: { transplant: v } })} />}
+            <DateField label={t('Harvest from')} value={planting.dates.harvestStart} onChange={(v) => commit('Date', { dates: { harvestStart: v } })} />
+            <DateField label={t('Harvest until')} value={planting.dates.harvestEnd} onChange={(v) => commit('Date', { dates: { harvestEnd: v } })} />
           </div>
-          <p className="tiny muted">Leave dates empty to derive them from your frost dates. See the Calendar tab.</p>
+          <p className="tiny muted">{t('Leave dates empty to derive them from your frost dates. See the Calendar tab.')}</p>
           <YieldOverride planting={planting} onChange={(y) => commit('Expected yield', { yieldOverride: y })} />
-          <Field label="Notes">{(fid) => <TextInput id={fid} multiline value={planting.notes} maxLength={20000} onChange={(v) => commit('Planting notes', { notes: v }, 'pnotes')} />}</Field>
+          <Field label={t('Notes')}>{(fid) => <TextInput id={fid} multiline value={planting.notes} maxLength={20000} onChange={(v) => commit('Planting notes', { notes: v }, 'pnotes')} />}</Field>
           {!single && capacity.inRowMm && (
             <p className="tiny muted">
-              Layout: {capacity.rows ?? 0} rows × up to {capacity.plantsPerRow ?? 0} plants, {formatLength(capacity.inRowMm)} apart
-              {capacity.rowMm ? `, rows ${formatLength(capacity.rowMm)} apart` : ''}.
+              {t('Layout: {{rows}} rows × up to {{perRow}} plants, {{spacing}} apart', { rows: capacity.rows ?? 0, perRow: capacity.plantsPerRow ?? 0, spacing: formatLength(capacity.inRowMm) })}
+              {capacity.rowMm ? t(', rows {{spacing}} apart', { spacing: formatLength(capacity.rowMm) }) : ''}.
             </p>
           )}
         </div>
@@ -226,16 +227,16 @@ function YieldOverride({ planting, onChange }: { planting: Planting; onChange: (
   const y = planting.yieldOverride;
   return (
     <div className="col" style={{ gap: 4 }}>
-      <span className="field-label">Your expected yield (optional)</span>
+      <span className="field-label">{t('Your expected yield (optional)')}</span>
       <div className="grid3">
         <Select<'total' | 'per-plant' | 'per-m2'>
           ariaLabel="Yield basis"
           value={y?.basis ?? ''}
-          emptyLabel="Use data"
+          emptyLabel={t('Use data')}
           options={[
-            { value: 'total', label: 'Total kg' },
-            { value: 'per-plant', label: 'kg / plant' },
-            { value: 'per-m2', label: 'kg / m²' },
+            { value: 'total', label: t('Total kg') },
+            { value: 'per-plant', label: t('kg / plant') },
+            { value: 'per-m2', label: t('kg / m²') },
           ]}
           onChange={(b) => onChange(b ? { basis: b, minKg: y?.minKg ?? 0, maxKg: y?.maxKg ?? 0 } : null)}
         />

@@ -44,7 +44,7 @@ test.describe('project management (home)', () => {
     await page.getByRole('button', { name: 'Actions for Beta' }).click();
     await page.getByRole('menuitem', { name: 'Duplicate' }).click();
     await expect(page.getByRole('button', { name: 'Open Beta (copy)' })).toBeVisible();
-    await expect(page.getByText('1 objects').first()).toBeVisible();
+    await expect(page.getByText('1 object', { exact: true }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Actions for Beta (copy)' }).click();
     await page.getByRole('menuitem', { name: 'Delete…' }).click();
     await page.getByRole('button', { name: 'Delete permanently' }).click();

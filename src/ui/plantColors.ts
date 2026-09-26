@@ -1,4 +1,5 @@
 import type { PlantCategory } from '../plants/schema';
+import { t } from '../i18n';
 
 export const CATEGORY_COLORS: Record<PlantCategory, string> = {
   vegetable: '#1E7A4C',
@@ -20,22 +21,22 @@ export const CATEGORY_COLORS: Record<PlantCategory, string> = {
 };
 
 export const CATEGORY_LABELS: Record<PlantCategory, string> = {
-  vegetable: 'Vegetable',
-  herb: 'Herb',
-  fruit: 'Fruit',
-  berry: 'Berry',
-  'fruit-tree': 'Fruit tree',
-  nut: 'Nut',
-  tree: 'Tree',
-  shrub: 'Shrub',
-  flower: 'Flower',
-  perennial: 'Perennial',
-  bulb: 'Bulb',
-  vine: 'Vine / climber',
-  grass: 'Grass',
-  groundcover: 'Groundcover',
-  'green-manure': 'Green manure',
-  aquatic: 'Aquatic',
+  vegetable: t('Vegetable'),
+  herb: t('Herb'),
+  fruit: t('Fruit'),
+  berry: t('Berry'),
+  'fruit-tree': t('Fruit tree'),
+  nut: t('Nut'),
+  tree: t('Tree'),
+  shrub: t('Shrub'),
+  flower: t('Flower'),
+  perennial: t('Perennial'),
+  bulb: t('Bulb'),
+  vine: t('Vine / climber'),
+  grass: t('Grass'),
+  groundcover: t('Groundcover'),
+  'green-manure': t('Green manure'),
+  aquatic: t('Aquatic'),
 };
 
 /** Stable colour for a plant id (distinguishes several plantings in one bed). */

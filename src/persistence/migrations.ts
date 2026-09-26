@@ -4,6 +4,7 @@
  * validated with ProjectDocSchema.
  */
 import { DOC_VERSION, ProjectDocSchema, type ProjectDoc } from '../domain/project';
+import { t } from '../i18n';
 
 type RawDoc = Record<string, unknown>;
 type Migration = (doc: RawDoc) => RawDoc;
@@ -19,17 +20,17 @@ export const DOC_MIGRATIONS: Record<number, Migration> = {
 export class MigrationError extends Error {}
 
 export function migrateRawDoc(raw: unknown, target = DOC_VERSION, migrations = DOC_MIGRATIONS): { doc: RawDoc; from: number } {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new MigrationError('Project data is not an object.');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new MigrationError(t('Project data is not an object.'));
   let doc = raw as RawDoc;
   const from = typeof doc.docVersion === 'number' ? doc.docVersion : 0;
   if (from > target) {
     throw new MigrationError(
-      `This project was saved by a newer version of Garden Toolkit (format ${from}; this app supports up to ${target}). Update the app to open it.`,
+      t('This project was saved by a newer version of Garden Toolkit (format {{from}}; this app supports up to {{target}}). Update the app to open it.', { from, target }),
     );
   }
   for (let v = from; v < target; v++) {
     const step = migrations[v];
-    if (!step) throw new MigrationError(`No migration path from project format ${v} to ${v + 1}.`);
+    if (!step) throw new MigrationError(t('No migration path from project format {{from}} to {{to}}.', { from: v, to: v + 1 }));
     doc = step(doc);
   }
   return { doc, from };
@@ -47,7 +48,7 @@ export function parseStoredDoc(raw: unknown): ParseDocResult {
     if (!res.success) {
       return {
         ok: false,
-        error: 'The project data failed validation.',
+        error: t('The project data failed validation.'),
         details: res.error.issues.slice(0, 20).map((i) => `${i.path.join('.')}: ${i.message}`),
       };
     }

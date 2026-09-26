@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import { useTabGuard } from '../../app/tabGuard';
+import { t } from '../../i18n';
 
 export function TabGuardBanner() {
   const { otherTabs, staleSavedAt } = useTabGuard();
@@ -9,16 +10,16 @@ export function TabGuardBanner() {
       <AlertTriangle size={14} />
       <span>
         {staleSavedAt
-          ? 'This project was changed and saved in another tab. Reload to see those changes — edits made here would overwrite them.'
-          : 'This project is also open in another tab. Edit it in one tab only, or changes may overwrite each other.'}
+          ? t('This project was changed and saved in another tab. Reload to see those changes — edits made here would overwrite them.')
+          : t('This project is also open in another tab. Edit it in one tab only, or changes may overwrite each other.')}
       </span>
       {staleSavedAt && (
         <button className="btn sm primary" onClick={() => location.reload()}>
-          Reload
+          {t('Reload')}
         </button>
       )}
       <button className="btn sm ghost" onClick={() => useTabGuard.setState({ otherTabs: false })}>
-        Dismiss
+        {t('Dismiss')}
       </button>
     </div>
   );

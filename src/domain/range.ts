@@ -3,6 +3,8 @@
  * so horticultural quantities are stored as ranges instead of fake-precise
  * single values. A single value is represented as `min === max`.
  */
+import { locale } from '../i18n';
+
 export interface Range {
   min: number;
   max: number;
@@ -30,7 +32,7 @@ export function isPoint(r: Range): boolean {
 
 export function formatRange(r: Range, digits = 0, unit = ''): string {
   const f = (n: number) =>
-    n.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+    n.toLocaleString(locale(), { maximumFractionDigits: digits, minimumFractionDigits: 0 });
   const suffix = unit ? ` ${unit}` : '';
   return isPoint(r) || f(r.min) === f(r.max) ? `${f(r.min)}${suffix}` : `${f(r.min)}–${f(r.max)}${suffix}`;
 }

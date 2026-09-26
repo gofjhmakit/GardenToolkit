@@ -21,6 +21,7 @@ import {
   type RotationRule,
 } from './schema';
 import { allCommonNames } from './names';
+import { t } from '../i18n';
 
 export interface DatasetInfo {
   id: string;
@@ -105,7 +106,7 @@ export class PlantCatalog {
       existing.plantCount += accepted;
       existing.rejected += rejected;
     } else {
-      this.datasets.push({ id: 'user', title: 'My plants', version: 'local', license: 'User data', origin: 'user', plantCount: accepted, rejected });
+      this.datasets.push({ id: 'user', title: t('My plants'), version: 'local', license: t('User data'), origin: 'user', plantCount: accepted, rejected });
     }
     this.index = null;
   }

@@ -8,6 +8,7 @@ import { SUN_LABEL } from '../../engine/suitability';
 import { usePlants } from '../../app/plantStore';
 import { newId } from '../../lib/ids';
 import { toast } from '../components/feedback';
+import { t } from '../../i18n';
 
 /** Creates a user-defined plant stored in this browser ("My plants"). */
 export function CustomPlantForm({ onClose }: { onClose: (id?: string) => void }) {
@@ -42,39 +43,39 @@ export function CustomPlantForm({ onClose }: { onClose: (id?: string) => void })
     };
     const res = PlantSchema.safeParse(raw);
     if (!res.success) {
-      toast('error', 'Could not save the plant', res.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`));
+      toast('error', t('Could not save the plant'), res.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`));
       return;
     }
     await usePlants.getState().saveUserPlant(res.data);
-    toast('ok', `Saved "${name}" to My plants`);
+    toast('ok', t('Saved "{{name}}" to My plants', { name }));
     onClose(id);
   };
   return (
     <Dialog
       open
-      title="New custom plant"
+      title={t('New custom plant')}
       onClose={() => onClose()}
       footer={
         <>
-          <button className="btn" onClick={() => onClose()}>Cancel</button>
-          <button className="btn primary" disabled={!name.trim()} onClick={save}>Save plant</button>
+          <button className="btn" onClick={() => onClose()}>{t('Cancel')}</button>
+          <button className="btn primary" disabled={!name.trim()} onClick={save}>{t('Save plant')}</button>
         </>
       }
     >
       <div className="col">
-        <p className="small muted">Custom plants are stored only in this browser and embedded in project exports that use them. Leave values empty if unknown — calculations will say so instead of guessing.</p>
+        <p className="small muted">{t('Custom plants are stored only in this browser and embedded in project exports that use them. Leave values empty if unknown — calculations will say so instead of guessing.')}</p>
         <div className="grid2">
-          <Field label="Common name *">{(id) => <TextInput id={id} value={name} onChange={setName} />}</Field>
-          <Field label="Scientific name">{(id) => <TextInput id={id} value={sci} onChange={setSci} placeholder="Genus species" />}</Field>
-          <Field label="Category">{(id) => <Select id={id} value={category} options={PLANT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] }))} onChange={(v) => v && setCategory(v)} />}</Field>
-          <Field label="Planting method">{(id) => <Select id={id} value={method} options={PLANTING_METHODS.map((m) => ({ value: m, label: METHOD_LABELS[m] }))} onChange={(v) => v && setMethod(v)} />}</Field>
-          <Field label="Light">{(id) => <Select id={id} value={sun ?? ''} emptyLabel="Unknown" options={SUN_LEVELS.map((s) => ({ value: s, label: SUN_LABEL[s] }))} onChange={setSun} />}</Field>
-          <Field label="Days to maturity">{(id) => <NumberInput id={id} value={dtm} integer min={1} allowEmpty onCommit={setDtm} suffix="days" />}</Field>
-          <Field label="Plant spacing min–max (cm)">{(id) => <div className="row"><NumberInput id={id} value={spMin} min={0.5} allowEmpty onCommit={setSpMin} /><NumberInput ariaLabel="Plant spacing max" value={spMax} min={0.5} allowEmpty onCommit={setSpMax} /></div>}</Field>
-          <Field label="Row spacing min–max (cm)">{(id) => <div className="row"><NumberInput id={id} value={rowMin} min={1} allowEmpty onCommit={setRowMin} /><NumberInput ariaLabel="Row spacing max" value={rowMax} min={1} allowEmpty onCommit={setRowMax} /></div>}</Field>
-          <Field label="Yield per plant (kg)">{(id) => <NumberInput id={id} value={yieldPlant} min={0} allowEmpty onCommit={setYieldPlant} />}</Field>
+          <Field label={t('Common name *')}>{(id) => <TextInput id={id} value={name} onChange={setName} />}</Field>
+          <Field label={t('Scientific name')}>{(id) => <TextInput id={id} value={sci} onChange={setSci} placeholder={t('Genus species')} />}</Field>
+          <Field label={t('Category')}>{(id) => <Select id={id} value={category} options={PLANT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] }))} onChange={(v) => v && setCategory(v)} />}</Field>
+          <Field label={t('Planting method')}>{(id) => <Select id={id} value={method} options={PLANTING_METHODS.map((m) => ({ value: m, label: METHOD_LABELS[m] }))} onChange={(v) => v && setMethod(v)} />}</Field>
+          <Field label={t('Light')}>{(id) => <Select id={id} value={sun ?? ''} emptyLabel={t('Unknown')} options={SUN_LEVELS.map((s) => ({ value: s, label: SUN_LABEL[s] }))} onChange={setSun} />}</Field>
+          <Field label={t('Days to maturity')}>{(id) => <NumberInput id={id} value={dtm} integer min={1} allowEmpty onCommit={setDtm} suffix="days" />}</Field>
+          <Field label={t('Plant spacing min–max (cm)')}>{(id) => <div className="row"><NumberInput id={id} value={spMin} min={0.5} allowEmpty onCommit={setSpMin} /><NumberInput ariaLabel="Plant spacing max" value={spMax} min={0.5} allowEmpty onCommit={setSpMax} /></div>}</Field>
+          <Field label={t('Row spacing min–max (cm)')}>{(id) => <div className="row"><NumberInput id={id} value={rowMin} min={1} allowEmpty onCommit={setRowMin} /><NumberInput ariaLabel="Row spacing max" value={rowMax} min={1} allowEmpty onCommit={setRowMax} /></div>}</Field>
+          <Field label={t('Yield per plant (kg)')}>{(id) => <NumberInput id={id} value={yieldPlant} min={0} allowEmpty onCommit={setYieldPlant} />}</Field>
         </div>
-        <Field label="Care notes">{(id) => <TextInput id={id} multiline value={notes} onChange={setNotes} maxLength={5000} />}</Field>
+        <Field label={t('Care notes')}>{(id) => <TextInput id={id} multiline value={notes} onChange={setNotes} maxLength={5000} />}</Field>
       </div>
     </Dialog>
   );

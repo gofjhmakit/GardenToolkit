@@ -17,6 +17,7 @@ import {
 } from './actions';
 import { flushSave } from '../../app/autosave';
 import { createSnapshot } from '../../persistence/projectRepo';
+import { t } from '../../i18n';
 
 export const TOOL_KEYS: Record<string, ToolId> = {
   v: 'select',
@@ -39,43 +40,43 @@ export interface ShortcutDoc {
 }
 
 export const SHORTCUTS: ShortcutDoc[] = [
-  { keys: 'Mod+Z', label: 'Undo', group: 'Edit' },
-  { keys: 'Mod+Shift+Z', label: 'Redo', group: 'Edit' },
-  { keys: 'Mod+C', label: 'Copy', group: 'Edit' },
-  { keys: 'Mod+X', label: 'Cut', group: 'Edit' },
-  { keys: 'Mod+V', label: 'Paste', group: 'Edit' },
-  { keys: 'Mod+D', label: 'Duplicate', group: 'Edit' },
-  { keys: 'Del', label: 'Delete', group: 'Edit' },
-  { keys: 'Mod+A', label: 'Select all', group: 'Edit' },
-  { keys: 'Esc', label: 'Deselect / cancel drawing', group: 'Edit' },
-  { keys: 'Mod+S', label: 'Save a version snapshot', group: 'Edit' },
-  { keys: 'Mod+G', label: 'Group', group: 'Arrange' },
-  { keys: 'Mod+Shift+G', label: 'Ungroup', group: 'Arrange' },
-  { keys: 'Mod+Shift+L', label: 'Lock / unlock', group: 'Arrange' },
-  { keys: 'Mod+Shift+H', label: 'Hide', group: 'Arrange' },
-  { keys: 'Mod+]', label: 'Bring forward', group: 'Arrange' },
-  { keys: 'Mod+[', label: 'Send backward', group: 'Arrange' },
-  { keys: 'Mod+Shift+]', label: 'Bring to front', group: 'Arrange' },
-  { keys: 'Mod+Shift+[', label: 'Send to back', group: 'Arrange' },
-  { keys: 'Arrows', label: 'Nudge 1 cm (Shift: one grid step)', group: 'Arrange' },
-  { keys: 'Shift+1', label: 'Fit to screen', group: 'View' },
-  { keys: 'Shift+2', label: 'Zoom to selection', group: 'View' },
-  { keys: 'Mod+= / Mod+-', label: 'Zoom in / out', group: 'View' },
-  { keys: 'Space+drag', label: 'Pan', group: 'View' },
-  { keys: 'V', label: 'Select tool', group: 'Tools' },
-  { keys: 'H', label: 'Hand (pan) tool', group: 'Tools' },
-  { keys: 'R', label: 'Rectangle', group: 'Tools' },
-  { keys: 'O', label: 'Ellipse / circle', group: 'Tools' },
-  { keys: 'P', label: 'Polygon', group: 'Tools' },
-  { keys: 'F', label: 'Freehand area', group: 'Tools' },
-  { keys: 'L', label: 'Line / path', group: 'Tools' },
-  { keys: 'T', label: 'Text label', group: 'Tools' },
-  { keys: 'D', label: 'Dimension', group: 'Tools' },
-  { keys: 'M', label: 'Measure', group: 'Tools' },
-  { keys: 'K', label: 'Calibrate blueprint scale', group: 'Tools' },
-  { keys: 'Mod (hold)', label: 'Temporarily disable snapping while dragging', group: 'Tools' },
-  { keys: 'Alt+drag', label: 'Duplicate while moving', group: 'Tools' },
-  { keys: '?', label: 'Show keyboard shortcuts', group: 'Help' },
+  { keys: 'Mod+Z', label: t('Undo'), group: t('Edit') },
+  { keys: 'Mod+Shift+Z', label: t('Redo'), group: t('Edit') },
+  { keys: 'Mod+C', label: t('Copy'), group: t('Edit') },
+  { keys: 'Mod+X', label: t('Cut'), group: t('Edit') },
+  { keys: 'Mod+V', label: t('Paste'), group: t('Edit') },
+  { keys: 'Mod+D', label: t('Duplicate'), group: t('Edit') },
+  { keys: 'Del', label: t('Delete'), group: t('Edit') },
+  { keys: 'Mod+A', label: t('Select all'), group: t('Edit') },
+  { keys: 'Esc', label: t('Deselect / cancel drawing'), group: t('Edit') },
+  { keys: 'Mod+S', label: t('Save a version snapshot'), group: t('Edit') },
+  { keys: 'Mod+G', label: t('Group'), group: t('Arrange') },
+  { keys: 'Mod+Shift+G', label: t('Ungroup'), group: t('Arrange') },
+  { keys: 'Mod+Shift+L', label: t('Lock / unlock'), group: t('Arrange') },
+  { keys: 'Mod+Shift+H', label: t('Hide'), group: t('Arrange') },
+  { keys: 'Mod+]', label: t('Bring forward'), group: t('Arrange') },
+  { keys: 'Mod+[', label: t('Send backward'), group: t('Arrange') },
+  { keys: 'Mod+Shift+]', label: t('Bring to front'), group: t('Arrange') },
+  { keys: 'Mod+Shift+[', label: t('Send to back'), group: t('Arrange') },
+  { keys: 'Arrows', label: t('Nudge 1 cm (Shift: one grid step)'), group: t('Arrange') },
+  { keys: 'Shift+1', label: t('Fit to screen'), group: t('View') },
+  { keys: 'Shift+2', label: t('Zoom to selection'), group: t('View') },
+  { keys: 'Mod+= / Mod+-', label: t('Zoom in / out'), group: t('View') },
+  { keys: 'Space+drag', label: t('Pan'), group: t('View') },
+  { keys: 'V', label: t('Select tool'), group: t('Tools') },
+  { keys: 'H', label: t('Hand (pan) tool'), group: t('Tools') },
+  { keys: 'R', label: t('Rectangle'), group: t('Tools') },
+  { keys: 'O', label: t('Ellipse / circle'), group: t('Tools') },
+  { keys: 'P', label: t('Polygon'), group: t('Tools') },
+  { keys: 'F', label: t('Freehand area'), group: t('Tools') },
+  { keys: 'L', label: t('Line / path'), group: t('Tools') },
+  { keys: 'T', label: t('Text label'), group: t('Tools') },
+  { keys: 'D', label: t('Dimension'), group: t('Tools') },
+  { keys: 'M', label: t('Measure'), group: t('Tools') },
+  { keys: 'K', label: t('Calibrate blueprint scale'), group: t('Tools') },
+  { keys: 'Mod (hold)', label: t('Temporarily disable snapping while dragging'), group: t('Tools') },
+  { keys: 'Alt+drag', label: t('Duplicate while moving'), group: t('Tools') },
+  { keys: '?', label: t('Show keyboard shortcuts'), group: t('Help') },
 ];
 
 /** Global editor keyboard shortcuts (platform-aware: ⌘ on macOS, Ctrl elsewhere). */
@@ -93,7 +94,7 @@ export function useShortcuts(opts: { onHelp: () => void; enabled: boolean }) {
         await flushSave();
         const doc = editorApi.getState().doc;
         if (doc) await createSnapshot(doc, 'Saved version', false);
-        s.showFlash('Saved locally and stored a version snapshot');
+        s.showFlash(t('Saved locally and stored a version snapshot'));
         return;
       }
       if (isEditableTarget(e.target)) return;

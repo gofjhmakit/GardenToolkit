@@ -11,8 +11,9 @@ import { NumberInput } from '../components/Fields';
 import { gardenStats } from '../../reports/builders';
 import { plantingsCsv } from '../../reports/csv';
 import { downloadText, safeFileName } from '../../lib/download';
-import { METHOD_LABELS, ConfidenceBadge } from '../panels/PlantingCard';
+import { METHOD_LABELS, ConfidenceBadge, STATUS_LABELS } from '../panels/PlantingCard';
 import { plantColor } from '../plantColors';
+import { t } from '../../i18n';
 
 export function PlantingsView() {
   const doc = useEditor((s) => s.doc)!;
@@ -30,42 +31,42 @@ export function PlantingsView() {
     <div className="view-inner">
       <div className="view-header">
         <div>
-          <h1>Plantings {doc.settings.activeSeason}</h1>
-          <p className="muted">Every plant in every area, with calculated and overridden quantities.</p>
+          <h1>{t('Plantings {{year}}', { year: doc.settings.activeSeason })}</h1>
+          <p className="muted">{t('Every plant in every area, with calculated and overridden quantities.')}</p>
         </div>
         <span className="spacer" />
-        <input className="input" style={{ width: 220 }} placeholder="Filter…" aria-label="Filter plantings" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" style={{ width: 220 }} placeholder={t('Filter…')} aria-label={t('Filter plantings')} value={q} onChange={(e) => setQ(e.target.value)} />
         <button className="btn" onClick={() => downloadText(plantingsCsv(doc, lookup), `${safeFileName(doc.meta.name)}-plantings.csv`, 'text/csv')}>
-          <Download size={14} /> CSV
+          <Download size={14} />{' '}{t('CSV')}
         </button>
       </div>
       <div className="stat-grid">
-        <Stat label="Planting area" value={formatArea(stats.plantingAreaM2 * 1e6, units)} />
-        <Stat label="Vegetable & herb area" value={formatArea(stats.vegetableAreaM2 * 1e6, units)} />
-        <Stat label="Plants" value={stats.plantCount.toLocaleString()} sub={stats.plantCountComplete ? undefined : 'some quantities unknown'} />
-        <Stat label="Varieties" value={String(stats.varieties)} />
-        <Stat label="Estimated harvest" value={stats.harvest.total ? `${formatRange(stats.harvest.total)} kg` : '—'} sub={stats.harvest.excluded ? `${stats.harvest.excluded} crop(s) without yield data` : 'range, not a guarantee'} />
+        <Stat label={t('Planting area')} value={formatArea(stats.plantingAreaM2 * 1e6, units)} />
+        <Stat label={t('Vegetable & herb area')} value={formatArea(stats.vegetableAreaM2 * 1e6, units)} />
+        <Stat label={t('Plants')} value={stats.plantCount.toLocaleString()} sub={stats.plantCountComplete ? undefined : t('some quantities unknown')} />
+        <Stat label={t('Varieties')} value={String(stats.varieties)} />
+        <Stat label={t('Estimated harvest')} value={stats.harvest.total ? `${formatRange(stats.harvest.total)} kg` : '—'} sub={stats.harvest.excluded ? `${stats.harvest.excluded} crop(s) without yield data` : t('range, not a guarantee')} />
       </div>
       {rows.length === 0 ? (
         <div className="empty-state">
           <Sprout size={28} />
-          <p>No plants yet. In the Design tab, select one or more beds and click “Add plants”.</p>
-          <button className="btn primary" onClick={() => useEditor.getState().setWorkspace('design')}>Go to design</button>
+          <p>{t('No plants yet. In the Design tab, select one or more beds and click “Add plants”.')}</p>
+          <button className="btn primary" onClick={() => useEditor.getState().setWorkspace('design')}>{t('Go to design')}</button>
         </div>
       ) : (
         <div className="card flush">
           <table className="table">
             <thead>
               <tr>
-                <th>Area</th>
-                <th>Plant</th>
-                <th>Method</th>
-                <th className="r">Area</th>
-                <th className="r">Calculated</th>
-                <th className="r" style={{ width: 110 }}>Your quantity</th>
-                <th className="r">Seed</th>
-                <th className="r">Est. harvest</th>
-                <th>Status</th>
+                <th>{t('Area')}</th>
+                <th>{t('Plant')}</th>
+                <th>{t('Method')}</th>
+                <th className="r">{t('Area')}</th>
+                <th className="r">{t('Calculated')}</th>
+                <th className="r" style={{ width: 110 }}>{t('Your quantity')}</th>
+                <th className="r">{t('Seed')}</th>
+                <th className="r">{t('Est. harvest')}</th>
+                <th>{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -114,7 +115,7 @@ export function PlantingsView() {
                       <span className="muted tiny">unavailable</span>
                     )}
                   </td>
-                  <td>{r.planting.status}</td>
+                  <td>{STATUS_LABELS[r.planting.status]}</td>
                 </tr>
               ))}
             </tbody>

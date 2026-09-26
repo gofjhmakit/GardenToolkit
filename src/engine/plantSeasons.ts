@@ -3,7 +3,7 @@
  * plant browser for "Harvest: Jul–Sep" style summaries and month filters.
  */
 import type { LocationSettings } from '../domain/project';
-import { addDays, monthDayToIso, monthOf } from '../lib/dates';
+import { addDays, MONTH_SHORT, monthDayToIso, monthOf } from '../lib/dates';
 import type { Plant } from '../plants/schema';
 import { resolveWindow } from './calendar';
 import { frostDates, isSouthernHemisphere } from './climate';
@@ -75,7 +75,7 @@ export function plantSeasons(plant: Plant, a: SeasonAnchors): PlantSeasons {
   return { sow, plant: plantWin, harvest };
 }
 
-const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const SHORT = MONTH_SHORT;
 
 export function formatMonthSpan(span: Span | null): string | null {
   if (!span) return null;

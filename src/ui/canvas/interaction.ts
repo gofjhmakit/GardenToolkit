@@ -38,6 +38,7 @@ import { buildSnapTargets, snapAngle, snapMove, snapPoint, type SnapGuide, type 
 import { editorApi, screenToWorld, type ToolId } from '../../editor/store';
 import { handleWorld, resizeFromHandle, selectionFrame, type Frame } from './frame';
 import { scaleShape } from '../../domain/geometry';
+import { t } from '../../i18n';
 
 export const HANDLE_PX = 8;
 /** Fingers are less precise than a mouse: hit areas grow by this factor for touch input. */
@@ -475,7 +476,7 @@ export class CanvasInteraction {
     const doc = state.doc!;
     const bgId = state.selectedBackgroundId ?? (doc.backgrounds.length === 1 ? doc.backgrounds[0].id : null) ?? this.hitBackground(p);
     if (!bgId) {
-      state.showFlash('Import or select a blueprint image first, then click two points with a known distance.', 'error');
+      state.showFlash(t('Import or select a blueprint image first, then click two points with a known distance.'), 'error');
       return;
     }
     const targets = this.targets();
@@ -787,7 +788,7 @@ export class CanvasInteraction {
     const state = st();
     const doc = state.doc!;
     const fontSize = Math.max(100, Math.round(14 / state.view.scale / 10) * 10);
-    const obj = makeObject(doc, 'label', { x: p.x, y: p.y, rotation: 0 }, { type: 'text', text: 'Label', fontSize }, { name: 'Label' });
+    const obj = makeObject(doc, 'label', { x: p.x, y: p.y, rotation: 0 }, { type: 'text', text: t('Label'), fontSize }, { name: 'Label' });
     state.commit('Add text', (d) => addObjects(d, [obj]), { select: [obj.id] });
     state.setTool('select');
     this.ctx.onTextCreated(obj.id);

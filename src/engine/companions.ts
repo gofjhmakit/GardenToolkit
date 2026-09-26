@@ -3,6 +3,7 @@
  * UI can distinguish documented effects from common claims and folklore.
  */
 import type { CompanionRelation, Plant } from '../plants/schema';
+import { t } from '../i18n';
 
 /**
  * Relation endpoints may be a plant id, `genus:<Genus>` or `family:<Family>`.
@@ -48,7 +49,7 @@ export function relationsForPlant(plant: Plant, relations: CompanionRelation[]):
 }
 
 export const EVIDENCE_LABEL: Record<CompanionRelation['evidence'], string> = {
-  documented: 'Documented',
-  'common-claim': 'Common claim',
-  traditional: 'Traditional / folklore',
+  documented: t('Documented'),
+  'common-claim': t('Common claim'),
+  traditional: t('Traditional / folklore'),
 };

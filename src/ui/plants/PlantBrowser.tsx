@@ -14,6 +14,7 @@ import { MONTH_NAMES } from '../../lib/dates';
 import { PlantDetail } from './PlantDetail';
 import { Select, Checkbox } from '../components/Fields';
 import { useCompact } from '../useCompact';
+import { t, tn } from '../../i18n';
 
 interface Props {
   selectedId: string | null;
@@ -98,14 +99,14 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
 
   return (
     <div className={compact ? `plant-browser phone show-${pane}` : 'plant-browser'}>
-      <div className="pb-filters" aria-label="Plant filters">
+      <div className="pb-filters" aria-label={t('Plant filters')}>
         {compact && (
           <button type="button" className="btn sm pb-back" onClick={() => setPane('list')}>
-            <ChevronLeft size={16} /> Show {results.length.toLocaleString()} plants
+            <ChevronLeft size={16} /> {tn('Show {{count}} plants', results.length)}
           </button>
         )}
         <div className="col" style={{ gap: 4 }}>
-          <span className="field-label">Category</span>
+          <span className="field-label">{t('Category')}</span>
           <div className="row wrap" style={{ gap: 4 }}>
             {PLANT_CATEGORIES.filter((c) => catalog.all().some((p) => p.category === c)).map((c) => (
               <button
@@ -120,38 +121,38 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
             ))}
           </div>
         </div>
-        <Checkbox checked={filter.favouritesOnly} onChange={(v) => set({ favouritesOnly: v })} label={`Favourites only (${favourites.size})`} />
+        <Checkbox checked={filter.favouritesOnly} onChange={(v) => set({ favouritesOnly: v })} label={t('Favourites only ({{count}})', { count: favourites.size })} />
         <div className="field">
-          <label htmlFor="f-sun">Tolerates</label>
-          <Select id="f-sun" value={filter.sun ?? ''} emptyLabel="Any light" options={SUN_LEVELS.map((s) => ({ value: s, label: SUN_LABEL[s] }))} onChange={(v) => set({ sun: v })} />
+          <label htmlFor="f-sun">{t('Tolerates')}</label>
+          <Select id="f-sun" value={filter.sun ?? ''} emptyLabel={t('Any light')} options={SUN_LEVELS.map((s) => ({ value: s, label: SUN_LABEL[s] }))} onChange={(v) => set({ sun: v })} />
         </div>
         <div className="field">
-          <label htmlFor="f-water">Water need</label>
-          <Select id="f-water" value={filter.water ?? ''} emptyLabel="Any" options={[{ value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High' }]} onChange={(v) => set({ water: v })} />
+          <label htmlFor="f-water">{t('Water need')}</label>
+          <Select id="f-water" value={filter.water ?? ''} emptyLabel={t('Any')} options={[{ value: 'low', label: t('Low') }, { value: 'medium', label: t('Medium') }, { value: 'high', label: t('High') }]} onChange={(v) => set({ water: v })} />
         </div>
         <div className="field">
-          <label htmlFor="f-life">Lifecycle</label>
-          <Select id="f-life" value={filter.lifecycle ?? ''} emptyLabel="Any" options={[{ value: 'annual', label: 'Annual' }, { value: 'biennial', label: 'Biennial' }, { value: 'perennial', label: 'Perennial' }]} onChange={(v) => set({ lifecycle: v })} />
+          <label htmlFor="f-life">{t('Lifecycle')}</label>
+          <Select id="f-life" value={filter.lifecycle ?? ''} emptyLabel={t('Any')} options={[{ value: 'annual', label: t('Annual') }, { value: 'biennial', label: t('Biennial') }, { value: 'perennial', label: t('Perennial') }]} onChange={(v) => set({ lifecycle: v })} />
         </div>
         <div className="field">
-          <label htmlFor="f-edible">Edible</label>
-          <Select id="f-edible" value={filter.edible == null ? '' : filter.edible ? 'yes' : 'no'} emptyLabel="Any" options={[{ value: 'yes', label: 'Edible' }, { value: 'no', label: 'Non-edible / ornamental' }]} onChange={(v) => set({ edible: v == null ? null : v === 'yes' })} />
+          <label htmlFor="f-edible">{t('Edible')}</label>
+          <Select id="f-edible" value={filter.edible == null ? '' : filter.edible ? 'yes' : 'no'} emptyLabel={t('Any')} options={[{ value: 'yes', label: t('Edible') }, { value: 'no', label: t('Non-edible / ornamental') }]} onChange={(v) => set({ edible: v == null ? null : v === 'yes' })} />
         </div>
         <div className="field">
-          <label htmlFor="f-sow">Sow / plant in</label>
-          <Select id="f-sow" value={filter.sowMonth ? String(filter.sowMonth) : ''} emptyLabel="Any month" options={MONTH_NAMES.map((m, i) => ({ value: String(i + 1), label: m }))} onChange={(v) => set({ sowMonth: v ? Number(v) : null })} />
+          <label htmlFor="f-sow">{t('Sow / plant in')}</label>
+          <Select id="f-sow" value={filter.sowMonth ? String(filter.sowMonth) : ''} emptyLabel={t('Any month')} options={MONTH_NAMES.map((m, i) => ({ value: String(i + 1), label: m }))} onChange={(v) => set({ sowMonth: v ? Number(v) : null })} />
         </div>
         <div className="field">
-          <label htmlFor="f-harvest">Harvest in</label>
-          <Select id="f-harvest" value={filter.harvestMonth ? String(filter.harvestMonth) : ''} emptyLabel="Any month" options={MONTH_NAMES.map((m, i) => ({ value: String(i + 1), label: m }))} onChange={(v) => set({ harvestMonth: v ? Number(v) : null })} />
+          <label htmlFor="f-harvest">{t('Harvest in')}</label>
+          <Select id="f-harvest" value={filter.harvestMonth ? String(filter.harvestMonth) : ''} emptyLabel={t('Any month')} options={MONTH_NAMES.map((m, i) => ({ value: String(i + 1), label: m }))} onChange={(v) => set({ harvestMonth: v ? Number(v) : null })} />
         </div>
-        <Checkbox checked={filter.withSpacing} onChange={(v) => set({ withSpacing: v })} label="Only plants with spacing data" />
+        <Checkbox checked={filter.withSpacing} onChange={(v) => set({ withSpacing: v })} label={t('Only plants with spacing data')} />
         {isFilterActive(filter) && (
           <button className="btn sm" onClick={() => setFilter({ ...EMPTY_FILTER, query: filter.query })}>
-            Clear filters
+            {t('Clear filters')}
           </button>
         )}
-        <p className="tiny muted">Months are based on this garden’s frost dates.</p>
+        <p className="tiny muted">{t('Months are based on this garden’s frost dates.')}</p>
       </div>
 
       <div className="pb-list">
@@ -162,8 +163,8 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
               ref={searchRef}
               className="input"
               type="search"
-              placeholder="Search name, scientific name, family, tag…"
-              aria-label="Search plants"
+              placeholder={t('Search name, scientific name, family, tag…')}
+              aria-label={t('Search plants')}
               aria-controls="plant-results"
               value={filter.query}
               onChange={(e) => set({ query: e.target.value })}
@@ -172,15 +173,15 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
           </label>
           {compact && (
             <button type="button" className="btn sm pb-filter-toggle" aria-pressed={isFilterActive(filter)} onClick={() => setPane('filters')}>
-              <SlidersHorizontal size={14} /> Filters{isFilterActive(filter) ? ' (on)' : ''}
+              <SlidersHorizontal size={14} /> {isFilterActive(filter) ? t('Filters (on)') : t('Filters')}
             </button>
           )}
           <div className="tiny muted" aria-live="polite">
-            {status === 'loading' ? 'Loading plant database…' : `${results.length.toLocaleString()} of ${catalog.plants.size.toLocaleString()} plants`}
+            {status === 'loading' ? t('Loading plant database…') : `${results.length.toLocaleString()} of ${catalog.plants.size.toLocaleString()} plants`}
           </div>
           {recentPlants.length > 0 && (
             <div className="row wrap" style={{ gap: 4 }}>
-              <span className="tiny muted">Recent:</span>
+              <span className="tiny muted">{t('Recent:')}</span>
               {recentPlants.map((p) => (
                 <button key={p.id} className="chip" style={{ height: 20, fontSize: 11 }} onClick={() => pick(p.id)}>
                   {plantDisplayName(p)}
@@ -189,7 +190,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
             </div>
           )}
         </div>
-        <div className="pb-results" ref={listRef} id="plant-results" role="listbox" aria-label="Plants" tabIndex={0} onKeyDown={onListKey} aria-activedescendant={selectedId && virtualizer.getVirtualItems().some((v) => results[v.index]?.id === selectedId) ? `plant-${selectedId}` : undefined}>
+        <div className="pb-results" ref={listRef} id="plant-results" role="listbox" aria-label={t('Plants')} tabIndex={0} onKeyDown={onListKey} aria-activedescendant={selectedId && virtualizer.getVirtualItems().some((v) => results[v.index]?.id === selectedId) ? `plant-${selectedId}` : undefined}>
           <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
             {virtualizer.getVirtualItems().map((vi) => {
               const p = results[vi.index];
@@ -209,17 +210,17 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
               );
             })}
           </div>
-          {results.length === 0 && status !== 'loading' && <p className="muted" style={{ padding: 16 }}>No plants match. Try fewer filters or a different spelling.</p>}
+          {results.length === 0 && status !== 'loading' && <p className="muted" style={{ padding: 16 }}>{t('No plants match. Try fewer filters or a different spelling.')}</p>}
         </div>
       </div>
 
-      <div className="pb-detail" aria-label="Plant details">
+      <div className="pb-detail" aria-label={t('Plant details')}>
         {compact && (
           <button type="button" className="btn sm pb-back" onClick={() => setPane('list')}>
-            <ChevronLeft size={16} /> All plants
+            <ChevronLeft size={16} />{' '}{t('All plants')}
           </button>
         )}
-        {renderSide ? renderSide(selected) : selected ? <PlantDetail plant={selected} /> : <p className="muted">Select a plant to see its details.</p>}
+        {renderSide ? renderSide(selected) : selected ? <PlantDetail plant={selected} /> : <p className="muted">{t('Select a plant to see its details.')}</p>}
       </div>
     </div>
   );
@@ -238,9 +239,9 @@ function PlantListItem({ plant, selected, favourite, onSelect, onActivate, onFav
           {[CATEGORY_LABELS[plant.category], sun, plant.lifecycle ? plant.lifecycle[0].toUpperCase() + plant.lifecycle.slice(1) : null].filter(Boolean).join(' · ')}
         </div>
         <div className="meta">
-          {spacing ? `Spacing: ${formatRange(spacing)} cm` : 'Spacing: unknown'}
+          {spacing ? `Spacing: ${formatRange(spacing)} cm` : t('Spacing: unknown')}
           {harvest ? ` · Harvest: ${harvest}` : ''}
-          {plant.dataset === 'user' ? ' · My plant' : ''}
+          {plant.dataset === 'user' ? t(' · My plant') : ''}
         </div>
       </div>
       {/* Mouse shortcut only: interactive controls may not be nested in an option.
@@ -248,7 +249,7 @@ function PlantListItem({ plant, selected, favourite, onSelect, onActivate, onFav
       <span
         className="icon-btn sm fav-toggle"
         aria-hidden="true"
-        title={favourite ? 'Remove from favourites (F)' : 'Add to favourites (F)'}
+        title={favourite ? t('Remove from favourites (F)') : t('Add to favourites (F)')}
         onClick={(e) => {
           e.stopPropagation();
           onFavourite();

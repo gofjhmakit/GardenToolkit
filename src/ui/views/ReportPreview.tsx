@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReportDoc } from '../../reports/model';
+import { t } from '../../i18n';
 
 /** HTML preview of a ReportDoc. All content is rendered as text (no HTML injection). */
 export function ReportPreview({ report, planUrl }: { report: ReportDoc; planUrl: string | null }) {
@@ -75,12 +76,12 @@ export function ReportPreview({ report, planUrl }: { report: ReportDoc; planUrl:
           case 'plan':
             return planUrl ? (
               <figure key={i} style={{ margin: 0 }}>
-                <img className="plan-img" src={planUrl} alt="Scaled garden plan" />
+                <img className="plan-img" src={planUrl} alt={t('Scaled garden plan')} />
                 {b.caption && <figcaption style={{ fontSize: 11, color: '#6B665C' }}>{b.caption}</figcaption>}
               </figure>
             ) : (
               <p key={i} style={{ color: '#6B665C' }}>
-                Rendering plan…
+                {t('Rendering plan…')}
               </p>
             );
           case 'pagebreak':

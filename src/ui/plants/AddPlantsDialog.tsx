@@ -17,6 +17,7 @@ import { plantDisplayName } from '../../plants/names';
 import type { Plant } from '../../plants/schema';
 import { kindInfo } from '../../domain/objectKinds';
 import { toast } from '../components/feedback';
+import { t, tn } from '../../i18n';
 
 export function AddPlantsDialog({ objectIds, onClose }: { objectIds: string[]; onClose: () => void }) {
   const doc = useEditor((s) => s.doc)!;
@@ -67,12 +68,12 @@ export function AddPlantsDialog({ objectIds, onClose }: { objectIds: string[]; o
       }
     });
     touchRecent(plantId);
-    toast('ok', `${name} added to ${targets.length} area${targets.length > 1 ? 's' : ''}`);
+    toast('ok', tn('{{name}} added to {{count}} areas', targets.length, { name }));
     onClose();
   };
 
   const renderSide = (plant: Plant | undefined) => {
-    if (!plant) return <p className="muted">Select a plant.</p>;
+    if (!plant) return <p className="muted">{t('Select a plant.')}</p>;
     const totalQty = preview.reduce((s, p) => s + (p.c?.quantity ?? 0), 0);
     return (
       <div className="col">
@@ -81,17 +82,17 @@ export function AddPlantsDialog({ objectIds, onClose }: { objectIds: string[]; o
           <div className="muted" style={{ fontStyle: 'italic' }}>{plant.names.scientific}</div>
         </div>
         <div className="field">
-          <label htmlFor="add-variety">Variety / cultivar (optional)</label>
-          <input id="add-variety" className="input" value={variety} maxLength={200} onChange={(e) => setVariety(e.target.value)} placeholder="e.g. Nantes 2" />
+          <label htmlFor="add-variety">{t('Variety / cultivar (optional)')}</label>
+          <input id="add-variety" className="input" value={variety} maxLength={200} onChange={(e) => setVariety(e.target.value)} placeholder={t('e.g. Nantes 2')} />
         </div>
-        <h4>Will be added to {targets.length} area{targets.length > 1 ? 's' : ''}</h4>
+        <h4>{tn('Will be added to {{count}} areas', targets.length)}</h4>
         <table className="table">
           <thead>
             <tr>
-              <th>Area</th>
-              <th className="r">Space</th>
-              <th className="r">Plants</th>
-              <th>Sun</th>
+              <th>{t('Area')}</th>
+              <th className="r">{t('Space')}</th>
+              <th className="r">{t('Plants')}</th>
+              <th>{t('Sun')}</th>
             </tr>
           </thead>
           <tbody>
@@ -99,7 +100,7 @@ export function AddPlantsDialog({ objectIds, onClose }: { objectIds: string[]; o
               <tr key={o.id}>
                 <td>
                   <strong>{o.code}</strong> {o.name}
-                  {shared && <div className="tiny muted">shares the area ({Math.round((c?.share ?? 0) * 100)}%)</div>}
+                  {shared && <div className="tiny muted">{t('shares the area ({{pct}}%)', { pct: Math.round((c?.share ?? 0) * 100) })}</div>}
                 </td>
                 <td className="r num">{formatArea(c?.capacity.areaMm2 ?? shapeArea(o.shape), doc.settings.unitSystem)}</td>
                 <td className="r num" title={c?.capacity.explanation.join('\n')}>
@@ -123,10 +124,10 @@ export function AddPlantsDialog({ objectIds, onClose }: { objectIds: string[]; o
         </table>
         {totalQty > 0 && (
           <p className="small">
-            Total: <strong className="num">{totalQty.toLocaleString()}</strong> plants
+            {t('Total:')} <strong className="num">{totalQty.toLocaleString()}</strong> {t('plants')}
             {preview.some((p) => p.harvest?.total) && (
               <>
-                {' '}· est. harvest{' '}
+                {' '}· {t('est. harvest')}{' '}
                 <strong className="num">
                   {formatRange(
                     preview.reduce(
@@ -149,19 +150,19 @@ export function AddPlantsDialog({ objectIds, onClose }: { objectIds: string[]; o
         {preview.some((p) => p.c && p.c.capacity.plants == null && p.o.kind !== 'tree' && p.o.kind !== 'shrub') && (
           <div className="callout">
             <HelpCircle size={14} />
-            <span>This plant has no spacing data, so the quantity can’t be calculated. You can enter spacing or a quantity after adding it.</span>
+            <span>{t('This plant has no spacing data, so the quantity can’t be calculated. You can enter spacing or a quantity after adding it.')}</span>
           </div>
         )}
-        <p className="tiny muted">Quantities use the preferred (mid-range) spacing laid out on each area’s real shape. You can override spacing or quantity afterwards; your values are kept. Nothing in the global plant database is changed.</p>
+        <p className="tiny muted">{t('Quantities use the preferred (mid-range) spacing laid out on each area’s real shape. You can override spacing or quantity afterwards; your values are kept. Nothing in the global plant database is changed.')}</p>
         <button className="btn primary" onClick={() => add()}>
-          Add {plantDisplayName(plant)} to {targets.length} area{targets.length > 1 ? 's' : ''}
+          {tn('Add {{name}} to {{count}} areas', targets.length, { name: plantDisplayName(plant) })}
         </button>
       </div>
     );
   };
 
   return (
-    <Dialog open wide title={targets.length === 1 ? `Add plants to ${targets[0]?.code} ${targets[0]?.name}` : `Add a plant to ${targets.length} areas`} onClose={onClose}>
+    <Dialog open wide title={targets.length === 1 ? t('Add plants to {{code}} {{name}}', { code: targets[0]?.code, name: targets[0]?.name }) : t('Add a plant to {{count}} areas', { count: targets.length })} onClose={onClose}>
       <div style={{ height: '100%', margin: -16 }}>
         <PlantBrowser selectedId={selected} onSelect={setSelected} onActivate={(id) => add(id)} renderSide={renderSide} autoFocus />
       </div>

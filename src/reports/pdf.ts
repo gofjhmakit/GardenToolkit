@@ -5,6 +5,8 @@
  */
 import type { Block, ReportDoc } from './model';
 import type { PlanSvg } from './planExport';
+import { formatNumber } from '../domain/units';
+import { locale, t } from '../i18n';
 
 const MARGIN = 15;
 const ACCENT: [number, number, number] = [47, 106, 69];
@@ -204,7 +206,7 @@ export async function renderPdf(report: ReportDoc, plan: PlanSvg | null): Promis
         pdf.rect(x, y, w, h);
         y += h + 2;
         const scaleDen = Math.round(plan.widthMm / w);
-        text(`${b.caption ?? ''} Scale approx. 1:${scaleDen.toLocaleString('en-US')} when printed on A4 at 100%.`.trim(), 8, { color: MUTED });
+        text(`${b.caption ?? ''} ${t('Scale approx. 1:{{scale}} when printed on A4 at 100%.', { scale: formatNumber(scaleDen, 0) })}`.trim(), 8, { color: MUTED });
         break;
       }
       case 'pagebreak':
@@ -216,14 +218,14 @@ export async function renderPdf(report: ReportDoc, plan: PlanSvg | null): Promis
 
   // Running header/footer
   const pages = pdf.getNumberOfPages();
-  const generated = new Date(report.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const generated = new Date(report.generatedAt).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
   for (let i = 1; i <= pages; i++) {
     pdf.setPage(i);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(7.5);
     pdf.setTextColor(...MUTED);
     if (i > 1) pdf.text(pdfText(`${report.projectName} — ${report.title}`), MARGIN, MARGIN);
-    pdf.text(pdfText(`Garden Toolkit · generated ${generated} · estimates are ranges, not guarantees`), MARGIN, pageH - MARGIN + 4);
+    pdf.text(pdfText(t('Garden Toolkit · generated {{date}} · estimates are ranges, not guarantees', { date: generated })), MARGIN, pageH - MARGIN + 4);
     pdf.text(`${i} / ${pages}`, pageW - MARGIN, pageH - MARGIN + 4, { align: 'right' });
   }
   return pdf.output('blob');

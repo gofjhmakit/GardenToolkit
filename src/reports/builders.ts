@@ -5,13 +5,13 @@
 import type { GardenObject, ProjectDoc } from '../domain/project';
 import { kindInfo } from '../domain/objectKinds';
 import { isClosedShape, shapeArea, shapeDimensions, shapePerimeter } from '../domain/geometry';
-import { formatArea, formatLength } from '../domain/units';
+import { formatArea, formatLength, formatNumber } from '../domain/units';
 import { formatRange, type Range } from '../domain/range';
 import { computeObjectPlantings, type PlantingComputation, type PlantLookup } from '../engine/plantings';
 import { calculateExpectedHarvest, sumHarvest, type HarvestEstimate } from '../engine/harvest';
 import { generatePlantingCalendar, groupEventsByMonth, type CalendarEvent, type CalendarResult } from '../engine/calendar';
 import { analyzeRotation } from '../engine/rotation';
-import { checkSuitability } from '../engine/suitability';
+import { checkSuitability, SUN_LABEL } from '../engine/suitability';
 import { findCompanionRelations, EVIDENCE_LABEL } from '../engine/companions';
 import { frostFreeDays } from '../engine/climate';
 import { localizedText, plantDisplayName } from '../plants/names';
@@ -19,6 +19,8 @@ import type { CompanionRelation, Plant, PlantCategory, RotationRule, DataSource 
 import { formatDate, formatDateRange, MONTH_NAMES } from '../lib/dates';
 import type { Block, ReportDoc, ReportKind } from './model';
 import { REPORT_INFO } from './model';
+// Imported as `tr`: `t()` in this file picks a plant's localised text.
+import { locale, t as tr, tn } from '../i18n';
 
 export interface ReportContext {
   doc: ProjectDoc;
@@ -37,22 +39,22 @@ export interface Row extends PlantingComputation {
 
 const CATEGORY_ORDER: PlantCategory[] = ['vegetable', 'herb', 'fruit', 'berry', 'fruit-tree', 'nut', 'tree', 'shrub', 'perennial', 'flower', 'bulb', 'vine', 'grass', 'groundcover', 'green-manure', 'aquatic'];
 const CATEGORY_TITLES: Record<PlantCategory, string> = {
-  vegetable: 'Vegetables',
-  herb: 'Herbs',
-  fruit: 'Fruit',
-  berry: 'Berries',
-  'fruit-tree': 'Fruit trees',
-  nut: 'Nuts',
-  tree: 'Trees',
-  shrub: 'Shrubs',
-  flower: 'Flowers',
-  perennial: 'Perennials',
-  bulb: 'Bulbs',
-  vine: 'Climbers',
-  grass: 'Grasses',
-  groundcover: 'Groundcover',
-  'green-manure': 'Green manures',
-  aquatic: 'Aquatic plants',
+  vegetable: tr('Vegetables'),
+  herb: tr('Herbs'),
+  fruit: tr('Fruit'),
+  berry: tr('Berries'),
+  'fruit-tree': tr('Fruit trees'),
+  nut: tr('Nuts'),
+  tree: tr('Trees'),
+  shrub: tr('Shrubs'),
+  flower: tr('Flowers'),
+  perennial: tr('Perennials'),
+  bulb: tr('Bulbs'),
+  vine: tr('Climbers'),
+  grass: tr('Grasses'),
+  groundcover: tr('Groundcover'),
+  'green-manure': tr('Green manures'),
+  aquatic: tr('Aquatic plants'),
 };
 
 function orderedObjects(doc: ProjectDoc): GardenObject[] {
@@ -84,10 +86,10 @@ function objectSize(o: GardenObject, units: ProjectDoc['settings']['unitSystem']
   const s = o.shape;
   if (s.type === 'rect') return `${formatLength(s.width, units)} × ${formatLength(s.height, units)}`;
   if (s.type === 'ellipse') return s.rx === s.ry ? `⌀ ${formatLength(s.rx * 2, units)}` : `${formatLength(s.rx * 2, units)} × ${formatLength(s.ry * 2, units)}`;
-  if (s.type === 'polyline') return `${formatLength(shapePerimeter(s), units)} long${s.width ? `, ${formatLength(s.width, units)} wide` : ''}`;
+  if (s.type === 'polyline') return s.width ? tr('{{length}} long, {{width}} wide', { length: formatLength(shapePerimeter(s), units), width: formatLength(s.width, units) }) : tr('{{length}} long', { length: formatLength(shapePerimeter(s), units) });
   if (s.type === 'polygon') {
     const d = shapeDimensions(s);
-    return `approx. ${formatLength(d.width, units)} × ${formatLength(d.height, units)}`;
+    return tr('approx. {{width}} × {{height}}', { width: formatLength(d.width, units), height: formatLength(d.height, units) });
   }
   return '';
 }
@@ -134,7 +136,7 @@ function header(ctx: ReportContext, kind: ReportKind, orientation: ReportDoc['or
   return {
     id: kind,
     title: REPORT_INFO[kind].title,
-    subtitle: `${d.meta.name} · season ${d.settings.activeSeason}${loc ? ` · ${loc}` : ''}`,
+    subtitle: `${d.meta.name} · ${tr('season {{year}}', { year: d.settings.activeSeason })}${loc ? ` · ${loc}` : ''}`,
     generatedAt: ctx.now.toISOString(),
     projectName: d.meta.name,
     orientation,
@@ -144,24 +146,25 @@ function header(ctx: ReportContext, kind: ReportKind, orientation: ReportDoc['or
 function locationBlock(doc: ProjectDoc): Block {
   const l = doc.location;
   const rows: [string, string][] = [];
-  if (l.country || l.region) rows.push(['Location', [l.region, l.country].filter(Boolean).join(', ')]);
-  if (l.climateZone) rows.push(['Climate zone', `${l.climateSystem === 'finnish-zone' ? 'Finnish growing zone' : l.climateSystem === 'usda' ? 'USDA zone' : 'Zone'} ${l.climateZone}`]);
-  rows.push(['Average last spring frost', l.lastFrost ? formatMonthDay(l.lastFrost) : 'not set']);
-  rows.push(['Average first autumn frost', l.firstFrost ? formatMonthDay(l.firstFrost) : 'not set']);
+  if (l.country || l.region) rows.push([tr('Location'), [l.region, l.country].filter(Boolean).join(', ')]);
+  if (l.climateZone) rows.push([tr('Climate zone'), `${l.climateSystem === 'finnish-zone' ? tr('Finnish growing zone') : l.climateSystem === 'usda' ? tr('USDA zone') : tr('Zone')} ${l.climateZone}`]);
+  rows.push([tr('Average last spring frost'), l.lastFrost ? formatMonthDay(l.lastFrost) : tr('not set')]);
+  rows.push([tr('Average first autumn frost'), l.firstFrost ? formatMonthDay(l.firstFrost) : tr('not set')]);
   const ffd = frostFreeDays(l);
-  if (ffd) rows.push(['Frost-free period', `≈ ${ffd} days`]);
-  if (l.frostDateSource) rows.push(['Frost date source', l.frostDateSource]);
+  if (ffd) rows.push([tr('Frost-free period'), tr('≈ {{days}} days', { days: ffd })]);
+  if (l.frostDateSource) rows.push([tr('Frost date source'), l.frostDateSource]);
   return { type: 'kv', rows };
 }
 
 function formatMonthDay(md: string): string {
   const [m, d] = md.split('-').map(Number);
-  return `${d} ${MONTH_NAMES[m - 1]}`;
+  // "15 May" / "15. toukokuuta"
+  return new Date(Date.UTC(2001, m - 1, d)).toLocaleDateString(locale(), { day: 'numeric', month: 'long', timeZone: 'UTC' });
 }
 
 function eventsFor(cal: CalendarResult, plantingId: string, types: CalendarEvent['type'][]): string {
   const e = cal.events.filter((x) => x.plantingId === plantingId && types.includes(x.type));
-  const label: Partial<Record<CalendarEvent['type'], string>> = { 'sow-indoors': 'Sow indoors', 'direct-sow': 'Sow', transplant: 'Plant out', 'plant-out': 'Plant' };
+  const label: Partial<Record<CalendarEvent['type'], string>> = { 'sow-indoors': tr('Sow indoors'), 'direct-sow': tr('Sow'), transplant: tr('Plant out'), 'plant-out': tr('Plant') };
   return e.length ? e.map((x) => `${types.length > 1 && label[x.type] ? `${label[x.type]} ` : ''}${formatDateRange(x.start, x.end)}`).join('; ') : '—';
 }
 
@@ -176,28 +179,32 @@ export function buildPlantingPlan(ctx: ReportContext): ReportDoc {
   const blocks: Block[] = [
     { type: 'stats', items: statItems(stats, units) },
     locationBlock(doc),
-    { type: 'plan', caption: 'Scaled plan — area codes refer to the tables below.' },
+    { type: 'plan', caption: tr('Scaled plan — area codes refer to the tables below.') },
   ];
   if (cal.placeholderFrostDates) blocks.push({ type: 'paragraph', style: 'warning', text: cal.warnings[0] });
-  blocks.push({ type: 'pagebreak' }, { type: 'heading', level: 2, text: 'What to plant where' });
+  blocks.push({ type: 'pagebreak' }, { type: 'heading', level: 2, text: tr('What to plant where') });
   const byHost = new Map<string, Row[]>();
   for (const r of rows) byHost.set(r.host.id, [...(byHost.get(r.host.id) ?? []), r]);
-  if (!rows.length) blocks.push({ type: 'paragraph', style: 'muted', text: 'No plants have been assigned to any area for this season yet.' });
+  if (!rows.length) blocks.push({ type: 'paragraph', style: 'muted', text: tr('No plants have been assigned to any area for this season yet.') });
   for (const [, list] of byHost) {
     const h = list[0].host;
     blocks.push({ type: 'heading', level: 3, text: `${h.code} — ${h.name} (${kindInfo(h.kind).label}, ${objectSize(h, units)}, ${formatArea(shapeArea(h.shape), units)})` });
-    const conditions = [h.props.sunLevel && `sun: ${h.props.sunLevel.replace('-', ' ')}${h.props.sunHours != null ? ` (${h.props.sunHours} h)` : ''}`, h.props.soil && `soil: ${h.props.soil}`, h.props.irrigation && `irrigation: ${h.props.irrigation}`].filter(Boolean);
+    const conditions = [
+      h.props.sunLevel && `${tr('sun')}: ${SUN_LABEL[h.props.sunLevel].toLowerCase()}${h.props.sunHours != null ? ` (${h.props.sunHours} h)` : ''}`,
+      h.props.soil && `${tr('soil')}: ${tr(h.props.soil)}`,
+      h.props.irrigation && `${tr('irrigation')}: ${tr(h.props.irrigation)}`,
+    ].filter(Boolean);
     if (conditions.length) blocks.push({ type: 'paragraph', style: 'muted', text: conditions.join(' · ') });
     blocks.push({
       type: 'table',
-      columns: ['Plant', 'Qty', 'Spacing (in row × rows)', 'Depth', 'Sow / plant', 'Harvest', 'Expected yield'],
+      columns: [tr('Plant'), tr('Qty'), tr('Spacing (in row × rows)'), tr('Depth'), tr('Sow / plant'), tr('Harvest'), tr('Expected yield')],
       widths: [22, 7, 17, 9, 17, 15, 13],
       rows: list.map((r) => {
         const p = r.plant?.planting;
         const spacing = r.capacity.inRowMm ? `${Math.round(r.capacity.inRowMm / 10)} cm${r.capacity.rowMm && r.rules.method !== 'grid' && r.rules.method !== 'individual' ? ` × ${Math.round(r.capacity.rowMm / 10)} cm` : ''}` : '—';
         const depth = p?.seedDepthCm ? cm(p.seedDepthCm) : p?.plantingDepthCm ? cm(p.plantingDepthCm) : '—';
         return [
-          nameOf(r, ctx.language) + (r.share < 0.999 ? ` (${Math.round(r.share * 100)}% of area)` : ''),
+          nameOf(r, ctx.language) + (r.share < 0.999 ? ` (${tr('{{pct}}% of area', { pct: Math.round(r.share * 100) })})` : ''),
           r.quantity != null ? `${r.quantity}${r.quantitySource === 'override' ? '*' : ''}` : '—',
           spacing,
           depth,
@@ -211,11 +218,11 @@ export function buildPlantingPlan(ctx: ReportContext): ReportDoc {
     if (notes.length) blocks.push({ type: 'bullets', items: notes });
     const relations = findCompanionRelations(list.map((r) => r.plant).filter((p): p is Plant => !!p), ctx.companions);
     for (const f of relations) {
-      blocks.push({ type: 'paragraph', style: f.relation.kind === 'antagonistic' ? 'warning' : 'note', text: `${plantDisplayName(f.a)} ${f.relation.kind === 'antagonistic' ? 'and' : '+'} ${plantDisplayName(f.b)} (${EVIDENCE_LABEL[f.relation.evidence]}): ${localizedText(f.relation.mechanism) ?? ''}` });
+      blocks.push({ type: 'paragraph', style: f.relation.kind === 'antagonistic' ? 'warning' : 'note', text: `${plantDisplayName(f.a)} ${f.relation.kind === 'antagonistic' ? tr('and') : '+'} ${plantDisplayName(f.b)} (${EVIDENCE_LABEL[f.relation.evidence]}): ${localizedText(f.relation.mechanism) ?? ''}` });
     }
   }
-  if (rows.some((r) => r.quantitySource === 'override')) blocks.push({ type: 'paragraph', style: 'muted', text: '* Quantity set manually by you.' });
-  blocks.push({ type: 'paragraph', style: 'muted', text: 'Yields are estimated ranges, not guarantees. Dates are derived from average frost dates — adjust to the actual weather and soil temperature.' });
+  if (rows.some((r) => r.quantitySource === 'override')) blocks.push({ type: 'paragraph', style: 'muted', text: tr('* Quantity set manually by you.') });
+  blocks.push({ type: 'paragraph', style: 'muted', text: tr('Yields are estimated ranges, not guarantees. Dates are derived from average frost dates — adjust to the actual weather and soil temperature.') });
   return { ...header(ctx, 'planting-plan'), blocks };
 }
 
@@ -226,12 +233,12 @@ export function buildGardenDesign(ctx: ReportContext): ReportDoc {
   const rows = collectRows(doc, ctx.lookup, ctx.language);
   const stats = gardenStats(doc, rows);
   const blocks: Block[] = [
-    { type: 'plan', caption: 'Garden design drawn to scale.', fullPage: true },
+    { type: 'plan', caption: tr('Garden design drawn to scale.'), fullPage: true },
     { type: 'pagebreak' },
-    { type: 'heading', level: 2, text: 'Legend' },
+    { type: 'heading', level: 2, text: tr('Legend') },
     {
       type: 'table',
-      columns: ['Code', 'Name', 'Type', 'Size', 'Area', 'Details'],
+      columns: [tr('Code'), tr('Name'), tr('Type'), tr('Size'), tr('Area'), tr('Details')],
       widths: [8, 24, 17, 22, 11, 18],
       rows: objs
         .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }))
@@ -241,14 +248,14 @@ export function buildGardenDesign(ctx: ReportContext): ReportDoc {
           kindInfo(o.kind).label,
           objectSize(o, units),
           isClosedShape(o.shape) || o.kind === 'path' ? formatArea(shapeArea(o.shape), units) : '—',
-          [o.props.material, o.props.heightMm ? `height ${formatLength(o.props.heightMm, units)}` : null].filter(Boolean).join(', '),
+          [o.props.material, o.props.heightMm ? tr('height {{height}}', { height: formatLength(o.props.heightMm, units) }) : null].filter(Boolean).join(', '),
         ]),
     },
-    { type: 'heading', level: 2, text: 'Surfaces and areas' },
-    { type: 'table', columns: ['Type', 'Count', 'Total area'], rows: stats.byKind.map((k) => [k.label, k.count, `${k.areaM2.toFixed(k.areaM2 < 10 ? 2 : 1)} m²`]) },
+    { type: 'heading', level: 2, text: tr('Surfaces and areas') },
+    { type: 'table', columns: [tr('Type'), tr('Count'), tr('Total area')], rows: stats.byKind.map((k) => [k.label, k.count, `${formatNumber(k.areaM2, k.areaM2 < 10 ? 2 : 1)} m²`]) },
   ];
   const uncal = doc.backgrounds.filter((b) => !b.calibration);
-  if (uncal.length) blocks.push({ type: 'paragraph', style: 'warning', text: 'The blueprint image has not been calibrated; dimensions measured against it may be inaccurate.' });
+  if (uncal.length) blocks.push({ type: 'paragraph', style: 'warning', text: tr('The blueprint image has not been calibrated; dimensions measured against it may be inaccurate.') });
   return { ...header(ctx, 'garden-design', 'landscape'), blocks };
 }
 
@@ -258,7 +265,7 @@ export function buildCareGuide(ctx: ReportContext): ReportDoc {
   const byPlant = new Map<string, Row[]>();
   for (const r of rows) byPlant.set(r.planting.plantId, [...(byPlant.get(r.planting.plantId) ?? []), r]);
   const blocks: Block[] = [];
-  if (!rows.length) blocks.push({ type: 'paragraph', style: 'muted', text: 'No plants assigned yet.' });
+  if (!rows.length) blocks.push({ type: 'paragraph', style: 'muted', text: tr('No plants assigned yet.') });
   const groups = new Map<PlantCategory | 'unknown', string[]>();
   for (const [pid, list] of byPlant) {
     const cat = list[0].plant?.category ?? 'unknown';
@@ -269,7 +276,7 @@ export function buildCareGuide(ctx: ReportContext): ReportDoc {
   for (const cat of order) {
     const ids = groups.get(cat);
     if (!ids) continue;
-    blocks.push({ type: 'heading', level: 2, text: cat === 'unknown' ? 'Other plants' : CATEGORY_TITLES[cat] });
+    blocks.push({ type: 'heading', level: 2, text: cat === 'unknown' ? tr('Other plants') : CATEGORY_TITLES[cat] });
     ids.sort((a, b) => nameOf(byPlant.get(a)![0], lang).localeCompare(nameOf(byPlant.get(b)![0], lang)));
     for (const pid of ids) {
       const list = byPlant.get(pid)!;
@@ -279,38 +286,38 @@ export function buildCareGuide(ctx: ReportContext): ReportDoc {
       const qty = list.reduce((s, r) => s + (r.quantity ?? 0), 0);
       const where = list.map((r) => `${r.host.code} ${r.host.name}${r.quantity != null ? ` (${r.quantity})` : ''}${r.planting.variety ? ` ‘${r.planting.variety}’` : ''}`).join('; ');
       const kv: [string, string][] = [
-        ['Where', where],
-        ['Quantity', `${qty}${list.some((r) => r.quantity == null) ? ' (some unknown)' : ''}`],
+        [tr('Where'), where],
+        [tr('Quantity'), `${qty}${list.some((r) => r.quantity == null) ? tr(' (some unknown)') : ''}`],
       ];
       if (!plant) {
-        blocks.push({ type: 'kv', rows: kv }, { type: 'paragraph', style: 'muted', text: 'No care data available for this plant.' });
+        blocks.push({ type: 'kv', rows: kv }, { type: 'paragraph', style: 'muted', text: tr('No care data available for this plant.') });
         continue;
       }
       const p = plant.planting;
       const c = plant.care;
       const t = localizedText;
       const add = (label: string, value: string | null | undefined) => value && kv.push([label, value]);
-      add('Planting', [t(p.directSowing, lang), t(p.transplanting, lang)].filter(Boolean).join(' '));
-      add('Spacing', [p.inRowSpacingCm && `${formatRange(p.inRowSpacingCm)} cm between plants`, p.rowSpacingCm && `${formatRange(p.rowSpacingCm)} cm between rows`].filter(Boolean).join(', '));
-      add('Depth', p.seedDepthCm ? `sow ${formatRange(p.seedDepthCm, 1)} cm deep` : p.plantingDepthCm ? `plant ${formatRange(p.plantingDepthCm, 1)} cm deep` : null);
-      add('Light', plant.growing.sun?.join(', ').replace(/-/g, ' '));
-      add('Watering', t(c.watering, lang) ?? (plant.growing.water ? `${plant.growing.water} water need` : null));
-      add('Feeding', t(c.fertilizing, lang) ?? (c.feeding ? `${c.feeding} feeder` : null));
-      add('Pruning', t(c.pruning, lang));
-      add('Support', t(c.support, lang));
-      add('Thinning', t(c.thinning, lang));
-      add('Mulching', t(c.mulching, lang));
-      add('Pests', t(c.pests, lang));
-      add('Diseases', t(c.diseases, lang));
-      add('Harvest', t(c.harvesting, lang));
-      add('Storage', t(c.storage, lang));
-      add('Winter', t(c.winter, lang));
+      add(tr('Planting'), [t(p.directSowing, lang), t(p.transplanting, lang)].filter(Boolean).join(' '));
+      add(tr('Spacing'), [p.inRowSpacingCm && tr('{{range}} cm between plants', { range: formatRange(p.inRowSpacingCm) }), p.rowSpacingCm && tr('{{range}} cm between rows', { range: formatRange(p.rowSpacingCm) })].filter(Boolean).join(', '));
+      add(tr('Depth'), p.seedDepthCm ? tr('sow {{range}} cm deep', { range: formatRange(p.seedDepthCm, 1) }) : p.plantingDepthCm ? tr('plant {{range}} cm deep', { range: formatRange(p.plantingDepthCm, 1) }) : null);
+      add(tr('Light'), plant.growing.sun?.join(', ').replace(/-/g, ' '));
+      add(tr('Watering'), t(c.watering, lang) ?? (plant.growing.water ? tr('{{level}} water need', { level: tr(plant.growing.water) }) : null));
+      add(tr('Feeding'), t(c.fertilizing, lang) ?? (c.feeding ? tr('{{level}} feeder', { level: tr(c.feeding) }) : null));
+      add(tr('Pruning'), t(c.pruning, lang));
+      add(tr('Support'), t(c.support, lang));
+      add(tr('Thinning'), t(c.thinning, lang));
+      add(tr('Mulching'), t(c.mulching, lang));
+      add(tr('Pests'), t(c.pests, lang));
+      add(tr('Diseases'), t(c.diseases, lang));
+      add(tr('Harvest'), t(c.harvesting, lang));
+      add(tr('Storage'), t(c.storage, lang));
+      add(tr('Winter'), t(c.winter, lang));
       const warnings = list.flatMap((r) => checkSuitability(plant, r.host, doc.location).filter((i) => i.status === 'warning').map((i) => `${r.host.code}: ${i.message}`));
       blocks.push({ type: 'kv', rows: kv });
       if (warnings.length) blocks.push({ type: 'bullets', items: warnings });
     }
   }
-  blocks.push({ type: 'paragraph', style: 'muted', text: 'Care information is general guidance compiled from the plant database; local conditions and cultivar differences matter. Data confidence is recorded for each plant in the app.' });
+  blocks.push({ type: 'paragraph', style: 'muted', text: tr('Care information is general guidance compiled from the plant database; local conditions and cultivar differences matter. Data confidence is recorded for each plant in the app.') });
   return { ...header(ctx, 'care-guide'), blocks };
 }
 
@@ -319,15 +326,15 @@ export function buildCalendarDoc(ctx: ReportContext): ReportDoc {
   const blocks: Block[] = [locationBlock(ctx.doc)];
   for (const w of cal.warnings) blocks.push({ type: 'paragraph', style: 'warning', text: w });
   const groups = groupEventsByMonth(cal.events);
-  if (!cal.events.length) blocks.push({ type: 'paragraph', style: 'muted', text: 'No calendar events — add plants to your beds first.' });
+  if (!cal.events.length) blocks.push({ type: 'paragraph', style: 'muted', text: tr('No calendar events — add plants to your beds first.') });
   for (const [ym, events] of groups) {
     const [y, m] = ym.split('-').map(Number);
     blocks.push({ type: 'heading', level: 2, text: `${MONTH_NAMES[m - 1]} ${y}` });
     blocks.push({
       type: 'table',
-      columns: ['Done', 'Date', 'Task', 'Basis'],
+      columns: [tr('Done'), tr('Date'), tr('Task'), tr('Basis')],
       widths: [7, 20, 43, 30],
-      rows: events.map((e) => [e.done ? '✓' : '☐', formatDateRange(e.start, e.end), e.title + (e.note ? ` — ${e.note}` : '') + (e.warnings.length ? ` ⚠ ${e.warnings.join(' ')}` : ''), e.overridden ? 'Your date' : e.basis]),
+      rows: events.map((e) => [e.done ? '✓' : '☐', formatDateRange(e.start, e.end), e.title + (e.note ? ` — ${e.note}` : '') + (e.warnings.length ? ` ⚠ ${e.warnings.join(' ')}` : ''), e.overridden ? tr('Your date') : e.basis]),
     });
   }
   return { ...header(ctx, 'calendar'), blocks };
@@ -342,13 +349,13 @@ export function buildHarvestPlan(ctx: ReportContext): ReportDoc {
     {
       type: 'stats',
       items: [
-        { label: 'Estimated harvest', value: stats.harvest.total ? kg(stats.harvest.total) : 'n/a', sub: `${stats.harvest.included} planting(s) with yield data` },
-        { label: 'Without yield data', value: String(stats.harvest.excluded), sub: 'not included in the total' },
+        { label: tr('Estimated harvest'), value: stats.harvest.total ? kg(stats.harvest.total) : tr('n/a'), sub: tn('{{count}} plantings with yield data', stats.harvest.included) },
+        { label: tr('Without yield data'), value: String(stats.harvest.excluded), sub: tr('not included in the total') },
       ],
     },
     {
       type: 'table',
-      columns: ['Crop', 'Where', 'Qty', 'Harvest window', 'Estimated yield', 'Basis / confidence'],
+      columns: [tr('Crop'), tr('Where'), tr('Qty'), tr('Harvest window'), tr('Estimated yield'), tr('Basis / confidence')],
       widths: [20, 12, 7, 20, 14, 27],
       rows: rows.map((r) => {
         const h = cal.events.find((e) => e.plantingId === r.planting.id && e.type === 'harvest');
@@ -358,17 +365,17 @@ export function buildHarvestPlan(ctx: ReportContext): ReportDoc {
           r.quantity ?? '—',
           h ? formatDateRange(h.start, h.end) : '—',
           r.harvest.total ? kg(r.harvest.total) : 'unavailable',
-          r.harvest.total ? `${r.harvest.basis}, ${r.harvest.confidence} confidence` : r.harvest.unavailableReason ?? '',
+          r.harvest.total ? tr('{{basis}}, {{confidence}} confidence', { basis: tr(r.harvest.basis), confidence: tr(r.harvest.confidence) }) : r.harvest.unavailableReason ?? '',
         ];
       }),
     },
-    { type: 'heading', level: 2, text: 'Assumptions' },
+    { type: 'heading', level: 2, text: tr('Assumptions') },
     {
       type: 'bullets',
       items: [
-        'Yield figures are broad ranges for healthy home-garden plants in a reasonable season. Actual harvests vary with cultivar, weather, soil, pests and care.',
-        'Where the database has no reliable yield figure, no estimate is made and the crop is excluded from totals.',
-        'Harvest windows are derived from days-to-maturity or seasonal windows relative to your frost dates.',
+        tr('Yield figures are broad ranges for healthy home-garden plants in a reasonable season. Actual harvests vary with cultivar, weather, soil, pests and care.'),
+        tr('Where the database has no reliable yield figure, no estimate is made and the crop is excluded from totals.'),
+        tr('Harvest windows are derived from days-to-maturity or seasonal windows relative to your frost dates.'),
         ...[...new Set(rows.flatMap((r) => r.harvest.assumptions))].slice(0, 20),
       ],
     },
@@ -379,12 +386,12 @@ export function buildHarvestPlan(ctx: ReportContext): ReportDoc {
 function statItems(stats: GardenStats, units: ProjectDoc['settings']['unitSystem']) {
   const area = (m2: number) => formatArea(m2 * 1e6, units);
   const items = [
-    { label: 'Planting area', value: area(stats.plantingAreaM2), sub: 'beds and plantable areas' },
-    { label: 'Vegetable & herb area', value: area(stats.vegetableAreaM2), sub: 'areas with edible crops' },
-    { label: 'Plants', value: stats.plantCount.toLocaleString('en-US'), sub: stats.plantCountComplete ? 'calculated or set by you' : 'some quantities unknown' },
-    { label: 'Varieties', value: String(stats.varieties) },
+    { label: tr('Planting area'), value: area(stats.plantingAreaM2), sub: tr('beds and plantable areas') },
+    { label: tr('Vegetable & herb area'), value: area(stats.vegetableAreaM2), sub: tr('areas with edible crops') },
+    { label: tr('Plants'), value: formatNumber(stats.plantCount), sub: stats.plantCountComplete ? tr('calculated or set by you') : tr('some quantities unknown') },
+    { label: tr('Varieties'), value: String(stats.varieties) },
   ];
-  if (stats.harvest.total) items.push({ label: 'Estimated harvest', value: kg(stats.harvest.total), sub: `${stats.harvest.excluded ? `${stats.harvest.excluded} crop(s) without data excluded` : 'range, not a guarantee'}` });
+  if (stats.harvest.total) items.push({ label: tr('Estimated harvest'), value: kg(stats.harvest.total), sub: stats.harvest.excluded ? tn('{{count}} crops without data excluded', stats.harvest.excluded) : tr('range, not a guarantee') });
   return items;
 }
 
@@ -396,26 +403,26 @@ export function buildCompleteReport(ctx: ReportContext): ReportDoc {
   const cal = generatePlantingCalendar(doc, lookup, { language: ctx.language });
   const rotation = analyzeRotation(doc, lookup, ctx.rotationRules);
   const blocks: Block[] = [
-    { type: 'heading', level: 2, text: 'Overview' },
+    { type: 'heading', level: 2, text: tr('Overview') },
     ...(doc.meta.description ? [{ type: 'paragraph' as const, text: doc.meta.description }] : []),
     { type: 'stats', items: statItems(stats, units) },
     locationBlock(doc),
-    { type: 'plan', caption: 'Garden plan' },
+    { type: 'plan', caption: tr('Garden plan') },
     { type: 'pagebreak' },
-    { type: 'heading', level: 2, text: 'Areas' },
+    { type: 'heading', level: 2, text: tr('Areas') },
     {
       type: 'table',
-      columns: ['Code', 'Name', 'Type', 'Size', 'Area', 'Sun', 'Soil', 'Irrigation'],
+      columns: [tr('Code'), tr('Name'), tr('Type'), tr('Size'), tr('Area'), tr('Sun'), tr('Soil'), tr('Irrigation')],
       widths: [7, 18, 14, 18, 10, 11, 10, 12],
       rows: orderedObjects(doc)
         .filter((o) => kindInfo(o.kind).surface || kindInfo(o.kind).plantable)
         .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }))
-        .map((o) => [o.code, o.name, kindInfo(o.kind).label, objectSize(o, units), formatArea(shapeArea(o.shape), units), o.props.sunLevel ?? (o.props.sunHours != null ? `${o.props.sunHours} h` : '—'), o.props.soil ?? '—', o.props.irrigation ?? '—']),
+        .map((o) => [o.code, o.name, kindInfo(o.kind).label, objectSize(o, units), formatArea(shapeArea(o.shape), units), o.props.sunLevel ? SUN_LABEL[o.props.sunLevel] : o.props.sunHours != null ? `${o.props.sunHours} h` : '—', o.props.soil ? tr(o.props.soil) : '—', o.props.irrigation ? tr(o.props.irrigation) : '—']),
     },
-    { type: 'heading', level: 2, text: 'Plants' },
+    { type: 'heading', level: 2, text: tr('Plants') },
     {
       type: 'table',
-      columns: ['Area', 'Plant', 'Method', 'Qty', 'Planting', 'Harvest', 'Est. yield'],
+      columns: [tr('Area'), tr('Plant'), tr('Method'), tr('Qty'), tr('Planting'), tr('Harvest'), tr('Est. yield')],
       widths: [8, 22, 12, 7, 19, 17, 15],
       rows: rows.map((r) => [
         r.host.code,
@@ -440,17 +447,17 @@ export function buildCompleteReport(ctx: ReportContext): ReportDoc {
     return [...m.entries()].map(([k, v]) => [k, [...v].sort().join(', ')] as [string, string]);
   };
   if (rows.length) {
-    blocks.push({ type: 'heading', level: 2, text: 'Watering and feeding needs' });
-    blocks.push({ type: 'heading', level: 3, text: 'Water need' }, { type: 'kv', rows: needs((p) => p.growing.water) });
-    blocks.push({ type: 'heading', level: 3, text: 'Feeding need' }, { type: 'kv', rows: needs((p) => p.care.feeding) });
+    blocks.push({ type: 'heading', level: 2, text: tr('Watering and feeding needs') });
+    blocks.push({ type: 'heading', level: 3, text: tr('Water need') }, { type: 'kv', rows: needs((p) => p.growing.water) });
+    blocks.push({ type: 'heading', level: 3, text: tr('Feeding need') }, { type: 'kv', rows: needs((p) => p.care.feeding) });
   }
 
   const woody = rows.filter((r) => r.host.kind === 'tree' || r.host.kind === 'shrub');
   if (woody.length) {
-    blocks.push({ type: 'heading', level: 2, text: 'Trees and shrubs' });
+    blocks.push({ type: 'heading', level: 2, text: tr('Trees and shrubs') });
     blocks.push({
       type: 'table',
-      columns: ['Code', 'Species', 'Planted', 'Mature size', 'Current size', 'First harvest', 'Est. yield'],
+      columns: [tr('Code'), tr('Species'), tr('Planted'), tr('Mature size'), tr('Current size'), tr('First harvest'), tr('Est. yield')],
       rows: woody.map((r) => {
         const tp = r.host.props.tree ?? {};
         const p = r.plant;
@@ -458,32 +465,32 @@ export function buildCompleteReport(ctx: ReportContext): ReportDoc {
           r.host.code,
           nameOf(r, ctx.language),
           tp.plantingDate ? formatDate(tp.plantingDate) : '—',
-          p?.planting.matureHeightCm ? `H ${formatRange(p.planting.matureHeightCm)} × W ${p.planting.matureWidthCm ? formatRange(p.planting.matureWidthCm) : '?'} cm` : '—',
-          tp.currentHeightMm ? `H ${formatLength(tp.currentHeightMm, units)}` : '—',
-          p?.timing.yearsToFirstHarvest ? `${formatRange(p.timing.yearsToFirstHarvest)} yr` : '—',
+          p?.planting.matureHeightCm ? tr('H {{height}} × W {{width}} cm', { height: formatRange(p.planting.matureHeightCm), width: p.planting.matureWidthCm ? formatRange(p.planting.matureWidthCm) : '?' }) : '—',
+          tp.currentHeightMm ? tr('H {{height}}', { height: formatLength(tp.currentHeightMm, units) }) : '—',
+          p?.timing.yearsToFirstHarvest ? tr('{{range}} yr', { range: formatRange(p.timing.yearsToFirstHarvest) }) : '—',
           r.harvest.total ? kg(r.harvest.total) : 'n/a',
         ];
       }),
     });
   }
 
-  blocks.push({ type: 'pagebreak' }, { type: 'heading', level: 2, text: 'Planting calendar' });
+  blocks.push({ type: 'pagebreak' }, { type: 'heading', level: 2, text: tr('Planting calendar') });
   for (const [ym, events] of groupEventsByMonth(cal.events)) {
     const [y, m] = ym.split('-').map(Number);
     blocks.push({ type: 'heading', level: 3, text: `${MONTH_NAMES[m - 1]} ${y}` });
     blocks.push({ type: 'bullets', items: events.map((e) => `${formatDateRange(e.start, e.end)}: ${e.title}`) });
   }
 
-  blocks.push({ type: 'heading', level: 2, text: 'Crop rotation' });
-  if (!rotation.length) blocks.push({ type: 'paragraph', style: 'muted', text: 'No rotation history yet. Plantings from each season build it up automatically.' });
+  blocks.push({ type: 'heading', level: 2, text: tr('Crop rotation') });
+  if (!rotation.length) blocks.push({ type: 'paragraph', style: 'muted', text: tr('No rotation history yet. Plantings from each season build it up automatically.') });
   for (const b of rotation) {
     const o = doc.objects[b.objectId];
-    blocks.push({ type: 'paragraph', text: `${o.code} ${o.name}: ${b.entries.map((e) => `${e.season} ${e.group}${e.crops.length ? ` (${e.crops.join(', ')})` : ''}`).join(' → ') || '—'}${b.suggestion ? ` · Suggested for ${b.suggestion.season}: ${b.suggestion.group}` : ''}` });
+    blocks.push({ type: 'paragraph', text: `${o.code} ${o.name}: ${b.entries.map((e) => `${e.season} ${tr(e.group)}${e.crops.length ? ` (${e.crops.join(', ')})` : ''}`).join(' → ') || '—'}${b.suggestion ? ` · ${tr('Suggested for {{season}}: {{group}}', { season: b.suggestion.season, group: tr(b.suggestion.group) })}` : ''}` });
     for (const i of b.issues) blocks.push({ type: 'paragraph', style: 'warning', text: i.message });
   }
 
   if (doc.notes.length || Object.values(doc.objects).some((o) => o.props.notes)) {
-    blocks.push({ type: 'heading', level: 2, text: 'Notes' });
+    blocks.push({ type: 'heading', level: 2, text: tr('Notes') });
     for (const n of doc.notes) blocks.push({ type: 'heading', level: 3, text: n.title }, { type: 'paragraph', text: n.body });
     const objNotes = Object.values(doc.objects).filter((o) => o.props.notes);
     if (objNotes.length) blocks.push({ type: 'bullets', items: objNotes.map((o) => `${o.code} ${o.name}: ${o.props.notes}`) });
@@ -496,24 +503,24 @@ export function buildCompleteReport(ctx: ReportContext): ReportDoc {
     for (const w of r.warnings) warnings.push(`${r.host.code} ${nameOf(r)}: ${w}`);
   }
   for (const e of cal.events) for (const w of e.warnings) warnings.push(`${e.title}: ${w}`);
-  if (doc.backgrounds.some((b) => !b.calibration)) warnings.push('A blueprint image is not calibrated; measurements taken from it may be off.');
-  blocks.push({ type: 'heading', level: 2, text: 'Warnings' });
-  blocks.push(warnings.length ? { type: 'bullets', items: [...new Set(warnings)] } : { type: 'paragraph', style: 'muted', text: 'No warnings.' });
+  if (doc.backgrounds.some((b) => !b.calibration)) warnings.push(tr('A blueprint image is not calibrated; measurements taken from it may be off.'));
+  blocks.push({ type: 'heading', level: 2, text: tr('Warnings') });
+  blocks.push(warnings.length ? { type: 'bullets', items: [...new Set(warnings)] } : { type: 'paragraph', style: 'muted', text: tr('No warnings.') });
 
-  blocks.push({ type: 'heading', level: 2, text: 'Assumptions and data sources' });
+  blocks.push({ type: 'heading', level: 2, text: tr('Assumptions and data sources') });
   blocks.push({
     type: 'bullets',
     items: [
-      'All measurements are real-world dimensions from the scaled plan.',
-      'Plant quantities are laid out on each area’s actual shape using the mid-range recommended spacing with an edge margin of half the spacing, unless you set other values.',
-      'Harvest estimates are ranges from plant yield data and are not guarantees; crops without reliable yield data are excluded from totals.',
-      'Calendar dates are derived from average frost dates and plant timing data.',
-      'Companion planting notes are labelled by evidence level; traditional advice is not presented as fact.',
+      tr('All measurements are real-world dimensions from the scaled plan.'),
+      tr('Plant quantities are laid out on each area’s actual shape using the mid-range recommended spacing with an edge margin of half the spacing, unless you set other values.'),
+      tr('Harvest estimates are ranges from plant yield data and are not guarantees; crops without reliable yield data are excluded from totals.'),
+      tr('Calendar dates are derived from average frost dates and plant timing data.'),
+      tr('Companion planting notes are labelled by evidence level; traditional advice is not presented as fact.'),
     ],
   });
   const usedSources = new Set(rows.flatMap((r) => r.plant?.provenance.sources.map((s) => s.id) ?? []));
   const srcRows = [...usedSources].map((id) => ctx.sources.get(id)).filter((s): s is DataSource => !!s);
-  if (srcRows.length) blocks.push({ type: 'table', columns: ['Source', 'Licence', 'Notes'], widths: [30, 15, 55], rows: srcRows.map((s) => [s.title, s.license, s.notes ?? '']) });
+  if (srcRows.length) blocks.push({ type: 'table', columns: [tr('Source'), tr('Licence'), tr('Notes')], widths: [30, 15, 55], rows: srcRows.map((s) => [s.title, s.license, s.notes ?? '']) });
   return { ...header(ctx, 'complete'), blocks };
 }
 

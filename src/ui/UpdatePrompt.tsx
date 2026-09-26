@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useEditor } from '../editor/store';
 import { flushSave } from '../app/autosave';
+import { t } from '../i18n';
 
 /** How often an open app asks the server whether a new version exists. */
 const UPDATE_CHECK_MS = 60 * 60 * 1000;
@@ -78,15 +79,15 @@ export function UpdatePrompt() {
       <div className="toast">
         {update ? (
           <div className="col" style={{ gap: 6 }}>
-            <strong>A new version of Garden Toolkit is available.</strong>
-            <span className="muted">Your work is saved. Reload to update, or it updates when you close this garden.</span>
+            <strong>{t('A new version of Garden Toolkit is available.')}</strong>
+            <span className="muted">{t('Your work is saved. Reload to update, or it updates when you close this garden.')}</span>
             <div className="row">
-              <button className="btn sm primary" onClick={() => void update()}>Reload now</button>
-              <button className="btn sm" onClick={() => setUpdate(null)}>Later</button>
+              <button className="btn sm primary" onClick={() => void update()}>{t('Reload now')}</button>
+              <button className="btn sm" onClick={() => setUpdate(null)}>{t('Later')}</button>
             </div>
           </div>
         ) : (
-          <span>Garden Toolkit is ready to work offline.</span>
+          <span>{t('Garden Toolkit is ready to work offline.')}</span>
         )}
       </div>
     </div>

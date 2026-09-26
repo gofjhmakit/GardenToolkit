@@ -3,11 +3,12 @@ import { AlertTriangle, CalendarPlus, Download, EyeOff, RotateCcw } from 'lucide
 import { useEditor } from '../../editor/store';
 import { usePlantLookup } from '../../app/lookup';
 import { generatePlantingCalendar, groupEventsByMonth, type CalendarEvent } from '../../engine/calendar';
-import { MONTH_NAMES, formatDateRange, parseIso } from '../../lib/dates';
+import { MONTH_NAMES, formatDate, formatDateRange, parseIso } from '../../lib/dates';
 import { newId } from '../../lib/ids';
 import { calendarCsv, calendarIcs } from '../../reports/csv';
 import { downloadText, safeFileName } from '../../lib/download';
 import { Checkbox } from '../components/Fields';
+import { t, tn } from '../../i18n';
 
 export const EVENT_COLORS: Record<CalendarEvent['type'], string> = {
   prepare: '#7A4F2A',
@@ -21,14 +22,14 @@ export const EVENT_COLORS: Record<CalendarEvent['type'], string> = {
 };
 
 const TYPE_LABELS: Record<CalendarEvent['type'], string> = {
-  prepare: 'Prepare',
-  'sow-indoors': 'Sow indoors',
-  'direct-sow': 'Sow outdoors',
-  transplant: 'Transplant',
-  'plant-out': 'Plant out',
-  succession: 'Succession',
-  harvest: 'Harvest',
-  custom: 'Task',
+  prepare: t('Prepare'),
+  'sow-indoors': t('Sow indoors'),
+  'direct-sow': t('Sow outdoors'),
+  transplant: t('Transplant'),
+  'plant-out': t('Plant out'),
+  succession: t('Succession'),
+  harvest: t('Harvest'),
+  custom: t('Task'),
 };
 
 export function CalendarView() {
@@ -56,18 +57,18 @@ export function CalendarView() {
     <div className="view-inner">
       <div className="view-header">
         <div>
-          <h1>Planting calendar {doc.settings.activeSeason}</h1>
+          <h1>{t('Planting calendar {{year}}', { year: doc.settings.activeSeason })}</h1>
           <p className="muted">
-            Generated from your plants and frost dates (last frost {cal.lastFrost}, first frost {cal.firstFrost}). Edits you make here are kept when the calendar is regenerated.
+            {t('Generated from your plants and frost dates (last frost {{last}}, first frost {{first}}). Edits you make here are kept when the calendar is regenerated.', { last: formatDate(cal.lastFrost), first: formatDate(cal.firstFrost) })}
           </p>
         </div>
         <span className="spacer" />
-        <Checkbox checked={showDone} onChange={setShowDone} label="Show completed" />
+        <Checkbox checked={showDone} onChange={setShowDone} label={t('Show completed')} />
         <button className="btn" onClick={() => downloadText(calendarIcs(doc, lookup), `${safeFileName(doc.meta.name)}-calendar.ics`, 'text/calendar')}>
-          <Download size={14} /> iCal
+          <Download size={14} />{' '}{t('iCal')}
         </button>
         <button className="btn" onClick={() => downloadText(calendarCsv(doc, lookup), `${safeFileName(doc.meta.name)}-calendar.csv`, 'text/csv')}>
-          <Download size={14} /> CSV
+          <Download size={14} />{' '}{t('CSV')}
         </button>
       </div>
       {cal.warnings.map((w, i) => (
@@ -75,7 +76,7 @@ export function CalendarView() {
           <AlertTriangle size={14} />
           <span>
             {w}{' '}
-            <button className="btn sm" onClick={() => useEditor.getState().setWorkspace('settings')}>Set location</button>
+            <button className="btn sm" onClick={() => useEditor.getState().setWorkspace('settings')}>{t('Set location')}</button>
           </span>
         </div>
       ))}
@@ -92,20 +93,20 @@ export function CalendarView() {
         }}
       >
         <CalendarPlus size={16} />
-        <input className="input" style={{ flex: 1, minWidth: 200 }} placeholder="Add your own task, e.g. “Order seed potatoes”" aria-label="Task title" value={taskTitle} maxLength={300} onChange={(e) => setTaskTitle(e.target.value)} />
-        <input className="input" style={{ width: 160 }} type="date" aria-label="Task date" value={taskDate} onChange={(e) => setTaskDate(e.target.value)} />
+        <input className="input" style={{ flex: 1, minWidth: 200 }} placeholder={t('Add your own task, e.g. “Order seed potatoes”')} aria-label={t('Task title')} value={taskTitle} maxLength={300} onChange={(e) => setTaskTitle(e.target.value)} />
+        <input className="input" style={{ width: 160 }} type="date" aria-label={t('Task date')} value={taskDate} onChange={(e) => setTaskDate(e.target.value)} />
         <button className="btn primary" type="submit" disabled={!taskTitle.trim()}>
-          Add task
+          {t('Add task')}
         </button>
         {hiddenCount > 0 && (
           <button type="button" className="btn ghost" onClick={() => useEditor.getState().commit('Restore hidden events', (d) => {
             for (const o of Object.values(d.calendarOverrides)) delete o.hidden;
           })}>
-            <RotateCcw size={13} /> Restore {hiddenCount} hidden
+            <RotateCcw size={13} /> {tn('Restore {{count}} hidden', hiddenCount)}
           </button>
         )}
       </form>
-      {cal.events.length === 0 && <div className="empty-state">No events yet — add plants to your beds to generate the calendar.</div>}
+      {cal.events.length === 0 && <div className="empty-state">{t('No events yet — add plants to your beds to generate the calendar.')}</div>}
       <div>
         {[...groups.entries()].map(([ym, events]) => {
           const [y, m] = ym.split('-').map(Number);
@@ -118,12 +119,12 @@ export function CalendarView() {
               <div>
                 {events.map((e) => (
                   <div key={e.id} className={`event ${e.done ? 'done' : ''}`}>
-                    <input type="checkbox" checked={e.done} aria-label={`Mark "${e.title}" done`} onChange={(ev) => setOverride(e.id, { done: ev.target.checked }, 'Mark done')} />
+                    <input type="checkbox" checked={e.done} aria-label={t('Mark "{{title}}" done', { title: e.title })} onChange={(ev) => setOverride(e.id, { done: ev.target.checked }, 'Mark done')} />
                     <span className="event-type" style={{ background: EVENT_COLORS[e.type] }} title={TYPE_LABELS[e.type]} />
                     <div style={{ flex: 1 }}>
                       <div className="event-title">
                         <strong>{e.title}</strong> <span className="muted small">{formatDateRange(e.start, e.end)}</span>
-                        {e.overridden && <span className="badge accent" style={{ marginLeft: 6 }}>your date</span>}
+                        {e.overridden && <span className="badge accent" style={{ marginLeft: 6 }}>{t('your date')}</span>}
                       </div>
                       <div className="tiny muted">{e.basis}</div>
                       {e.warnings.map((w, i) => (
@@ -132,13 +133,13 @@ export function CalendarView() {
                         </div>
                       ))}
                     </div>
-                    <input className="input sm" style={{ width: 140 }} type="date" aria-label={`Change date of "${e.title}"`} value={e.start} onChange={(ev) => ev.target.value && setOverride(e.id, { start: ev.target.value }, 'Change date')} />
+                    <input className="input sm" style={{ width: 140 }} type="date" aria-label={t('Change date of "{{title}}"', { title: e.title })} value={e.start} onChange={(ev) => ev.target.value && setOverride(e.id, { start: ev.target.value }, 'Change date')} />
                     {e.overridden && e.type !== 'custom' && (
-                      <button className="icon-btn sm" title="Reset to calculated date" aria-label="Reset date" onClick={() => setOverride(e.id, { start: null }, 'Reset date')}>
+                      <button className="icon-btn sm" title={t('Reset to calculated date')} aria-label={t('Reset date')} onClick={() => setOverride(e.id, { start: null }, 'Reset date')}>
                         <RotateCcw size={13} />
                       </button>
                     )}
-                    <button className="icon-btn sm" title={e.type === 'custom' ? 'Delete task' : 'Hide event'} aria-label="Hide event" onClick={() => setOverride(e.id, { hidden: true }, 'Hide event')}>
+                    <button className="icon-btn sm" title={e.type === 'custom' ? t('Delete task') : t('Hide event')} aria-label={t('Hide event')} onClick={() => setOverride(e.id, { hidden: true }, 'Hide event')}>
                       <EyeOff size={13} />
                     </button>
                   </div>

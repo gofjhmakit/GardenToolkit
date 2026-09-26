@@ -26,6 +26,7 @@ import {
 } from '../../editor/commands';
 import { editorApi, screenToWorld } from '../../editor/store';
 import { toast } from '../components/feedback';
+import { t, tn } from '../../i18n';
 
 const st = () => editorApi.getState();
 
@@ -69,7 +70,7 @@ export function copyToClipboard(event?: ClipboardEvent): boolean {
   } else {
     navigator.clipboard?.writeText(text).catch(() => undefined);
   }
-  st().showFlash(`Copied ${payload.objects.length} object${payload.objects.length === 1 ? '' : 's'}`);
+  st().showFlash(tn('Copied {{count}} objects', payload.objects.length));
   return true;
 }
 
@@ -147,7 +148,7 @@ export async function pasteFromMenu(): Promise<void> {
   }
   const internal = st().clipboard;
   if (internal) pastePayload(internal);
-  else toast('info', 'Nothing to paste.');
+  else toast('info', t('Nothing to paste.'));
 }
 
 export function duplicateSelection(): void {

@@ -28,6 +28,7 @@ import { makeLookup } from './lookup';
 import { prepareBlueprint } from './images';
 import { announceClosed, announceOpen, useTabGuard } from './tabGuard';
 import { toast } from '../ui/components/feedback';
+import { t, tn } from '../i18n';
 
 export function navigate(hash: string): void {
   if (location.hash !== hash) location.hash = hash;
@@ -41,7 +42,7 @@ export async function openProjectById(id: string): Promise<{ ok: true } | { ok: 
   markLoaded(res.doc);
   editorApi.getState().open(res.doc);
   if (res.migratedFrom != null) {
-    toast('info', `Project upgraded from format ${res.migratedFrom} to the current version.`);
+    toast('info', t('Project upgraded from format {{from}} to the current version.', { from: res.migratedFrom }));
     await saveProject(res.doc);
   }
   await resetAutosave(res.doc);
@@ -118,7 +119,7 @@ export async function exportStoredProject(id: string, format: 'package' | 'json'
   if (editorApi.getState().doc?.id === id) await flushSave();
   const res = await loadProject(id);
   if (!res?.ok) {
-    toast('error', 'This project could not be read for export.');
+    toast('error', t('This project could not be read for export.'));
     return false;
   }
   if (format === 'package') await exportProjectPackage(res.doc);
@@ -138,15 +139,15 @@ export async function exportAllProjects(): Promise<number> {
     else skipped.push(m.name);
   }
   if (!entries.length) {
-    toast('info', 'There are no projects to export yet.');
+    toast('info', t('There are no projects to export yet.'));
     return 0;
   }
   const catalog = usePlants.getState().catalog;
   const blob = await buildBackupArchive(entries, (id) => catalog.get(id));
   const stamp = new Date().toISOString().slice(0, 10);
   downloadBlob(blob, `garden-toolkit-backup-${stamp}.gtkbackup`);
-  if (skipped.length) toast('error', `${skipped.length} unreadable project(s) were not included`, skipped);
-  else toast('ok', `Exported ${entries.length} project${entries.length === 1 ? '' : 's'} to one backup file`);
+  if (skipped.length) toast('error', tn('{{count}} unreadable projects were not included', skipped.length), skipped);
+  else toast('ok', tn('Exported {{count}} projects to one backup file', entries.length));
   return entries.length;
 }
 
@@ -193,7 +194,7 @@ export async function importBlueprint(file: File): Promise<void> {
   try {
     prepared = await prepareBlueprint(file);
   } catch (e) {
-    toast('error', 'Could not import the image', [e instanceof Error ? e.message : String(e)]);
+    toast('error', t('Could not import the image'), [e instanceof Error ? e.message : String(e)]);
     return;
   }
   const assetId = newId('ast');
@@ -232,8 +233,8 @@ export async function importBlueprint(file: File): Promise<void> {
   );
   editorApi.getState().selectBackground(bgId);
   requestAnimationFrame(() => editorApi.getState().fitToContent());
-  toast('ok', 'Blueprint imported', [
+  toast('ok', t('Blueprint imported'), [
     ...(prepared.note ? [prepared.note] : []),
-    'Next: calibrate the scale (Calibrate tool) by clicking two points with a known distance.',
+    t('Next: calibrate the scale (Calibrate tool) by clicking two points with a known distance.'),
   ]);
 }

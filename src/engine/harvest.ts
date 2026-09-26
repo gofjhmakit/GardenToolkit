@@ -4,6 +4,8 @@
  * inventing a number.
  */
 import { addRanges, type Range } from '../domain/range';
+import { formatNumber } from '../domain/units';
+import { language, t } from '../i18n';
 import type { Confidence, Plant } from '../plants/schema';
 import type { Planting } from '../domain/project';
 
@@ -25,7 +27,7 @@ export interface HarvestInput {
   language?: string;
 }
 
-const fmt = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: n < 10 ? 1 : 0 });
+const fmt = (n: number) => formatNumber(n, n < 10 ? 1 : 0);
 
 export function calculateExpectedHarvest(input: HarvestInput): HarvestEstimate {
   const { plant, quantity, areaM2, override } = input;
@@ -39,7 +41,7 @@ export function calculateExpectedHarvest(input: HarvestInput): HarvestEstimate {
     assumptions: [],
     unavailableReason: null,
   };
-  const lang = input.language ?? 'en';
+  const lang = input.language ?? language();
   const dataNote = y?.assumptions?.[lang] ?? y?.assumptions?.en;
 
   if (override) {
@@ -55,27 +57,27 @@ export function calculateExpectedHarvest(input: HarvestInput): HarvestEstimate {
       total,
       basis: 'override',
       confidence: 'unknown',
-      assumptions: [`User-specified yield (${override.basis}): ${fmt(r.min)}–${fmt(r.max)} kg.`],
+      assumptions: [t('User-specified yield ({{basis}}): {{min}}–{{max}} kg.', { basis: t(override.basis), min: fmt(r.min), max: fmt(r.max) })],
     };
   }
 
   if (!y || (!y.perPlantKg && !y.perM2Kg)) {
-    return { ...base, unavailableReason: 'Yield estimate unavailable — no reliable yield data for this plant.' };
+    return { ...base, unavailableReason: t('Yield estimate unavailable — no reliable yield data for this plant.') };
   }
 
   if (y.perPlantKg && quantity != null && quantity > 0) {
     const total = { min: y.perPlantKg.min * quantity, max: y.perPlantKg.max * quantity };
-    const assumptions = [`${fmt(y.perPlantKg.min)}–${fmt(y.perPlantKg.max)} kg per plant × ${quantity} plants.`];
+    const assumptions = [t('{{min}}–{{max}} kg per plant × {{count}} plants.', { min: fmt(y.perPlantKg.min), max: fmt(y.perPlantKg.max), count: quantity })];
     if (dataNote) assumptions.push(dataNote);
     return { ...base, total, basis: 'per-plant', assumptions };
   }
   if (y.perM2Kg && areaM2 > 0) {
     const total = { min: y.perM2Kg.min * areaM2, max: y.perM2Kg.max * areaM2 };
-    const assumptions = [`${fmt(y.perM2Kg.min)}–${fmt(y.perM2Kg.max)} kg/m² × ${areaM2.toFixed(2)} m².`];
+    const assumptions = [t('{{min}}–{{max}} kg/m² × {{area}} m².', { min: fmt(y.perM2Kg.min), max: fmt(y.perM2Kg.max), area: formatNumber(areaM2) })];
     if (dataNote) assumptions.push(dataNote);
     return { ...base, total, basis: 'per-m2', assumptions };
   }
-  return { ...base, unavailableReason: 'Yield data exists per plant, but the plant quantity is unknown.' };
+  return { ...base, unavailableReason: t('Yield data exists per plant, but the plant quantity is unknown.') };
 }
 
 /** Sums estimates, skipping unavailable ones; reports how many were included. */

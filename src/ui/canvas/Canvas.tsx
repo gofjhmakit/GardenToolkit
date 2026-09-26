@@ -17,36 +17,37 @@ import { CalibrateDialog } from './CalibrateDialog';
 import { requestTextFocus } from '../panels/ObjectInspector';
 import { TouchController } from './touch';
 import { useCoarsePointer } from '../useCompact';
+import { t } from '../../i18n';
 
 /** Shorter hints for touch screens (no keyboard, no hover). */
 const TOUCH_HINTS: Record<string, string> = {
-  select: 'Tap to select · Drag to move · Two fingers to pan & zoom · Long-press for actions',
-  hand: 'Drag to pan · Pinch to zoom',
-  rect: 'Drag to draw · Tap for default size',
-  ellipse: 'Drag to draw',
-  polygon: 'Tap to add points · Tap the first point or Finish to close',
-  polyline: 'Tap to add points · Double-tap or Finish to end',
-  text: 'Tap to place a text label',
-  dimension: 'Tap the start and end points',
-  tree: 'Tap to place a tree · Drag to set the canopy',
-  shrub: 'Tap to place a shrub · Drag to set its width',
-  calibrate: 'Tap two points whose real distance you know',
+  select: t('Tap to select · Drag to move · Two fingers to pan & zoom · Long-press for actions'),
+  hand: t('Drag to pan · Pinch to zoom'),
+  rect: t('Drag to draw · Tap for default size'),
+  ellipse: t('Drag to draw'),
+  polygon: t('Tap to add points · Tap the first point or Finish to close'),
+  polyline: t('Tap to add points · Double-tap or Finish to end'),
+  text: t('Tap to place a text label'),
+  dimension: t('Tap the start and end points'),
+  tree: t('Tap to place a tree · Drag to set the canopy'),
+  shrub: t('Tap to place a shrub · Drag to set its width'),
+  calibrate: t('Tap two points whose real distance you know'),
 };
 
 const TOOL_HINTS: Record<string, string> = {
-  select: 'Click to select · Shift/Ctrl-click to add · Drag to move (Alt-drag duplicates) · Double-click a polygon to edit points',
-  hand: 'Drag to pan · Scroll to zoom',
-  rect: 'Drag to draw · Shift = square · Alt = from centre · Click for default size',
-  ellipse: 'Drag to draw · Shift = circle · Alt = from centre',
-  polygon: 'Click to add points · Click the first point, double-click or Enter to finish · Backspace removes a point · Esc cancels',
-  polyline: 'Click to add points · Double-click or Enter to finish · Shift = 15° angles',
-  freehand: 'Drag to draw a freeform outline',
-  text: 'Click to place a text label',
-  dimension: 'Click the start and end points · Shift = 15° angles',
-  measure: 'Drag to measure a distance (not saved)',
-  tree: 'Click to place a tree · Drag to set the canopy radius',
-  shrub: 'Click to place a shrub · Drag to set its width',
-  calibrate: 'Click two points on the blueprint whose real distance you know',
+  select: t('Click to select · Shift/Ctrl-click to add · Drag to move (Alt-drag duplicates) · Double-click a polygon to edit points'),
+  hand: t('Drag to pan · Scroll to zoom'),
+  rect: t('Drag to draw · Shift = square · Alt = from centre · Click for default size'),
+  ellipse: t('Drag to draw · Shift = circle · Alt = from centre'),
+  polygon: t('Click to add points · Click the first point, double-click or Enter to finish · Backspace removes a point · Esc cancels'),
+  polyline: t('Click to add points · Double-click or Enter to finish · Shift = 15° angles'),
+  freehand: t('Drag to draw a freeform outline'),
+  text: t('Click to place a text label'),
+  dimension: t('Click the start and end points · Shift = 15° angles'),
+  measure: t('Drag to measure a distance (not saved)'),
+  tree: t('Click to place a tree · Drag to set the canopy radius'),
+  shrub: t('Click to place a shrub · Drag to set its width'),
+  calibrate: t('Click two points on the blueprint whose real distance you know'),
 };
 
 export function Canvas() {
@@ -212,8 +213,8 @@ export function Canvas() {
         ref={svgRef}
         className="canvas-svg"
         role="application"
-        aria-label="Garden design canvas. Use the Layers panel and Inspector for keyboard access to objects."
-        aria-roledescription="drawing canvas"
+        aria-label={t('Garden design canvas. Use the Layers panel and Inspector for keyboard access to objects.')}
+        aria-roledescription={t('drawing canvas')}
         tabIndex={0}
         style={{ cursor }}
         onPointerDown={onPointerDown}
@@ -247,47 +248,47 @@ export function Canvas() {
             <div className="empty-state-icon" style={{ alignSelf: 'center' }}>
               <ImagePlus size={20} />
             </div>
-            <h2>Start your garden plan</h2>
-            <p className="muted">Import a site plan or aerial photo and calibrate its scale, or start drawing beds directly — everything is measured in real-world units.</p>
+            <h2>{t('Start your garden plan')}</h2>
+            <p className="muted">{t('Import a site plan or aerial photo and calibrate its scale, or start drawing beds directly — everything is measured in real-world units.')}</p>
             <div className="row" style={{ justifyContent: 'center' }}>
               <button className="btn primary" onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
-                Import blueprint…
+                {t('Import blueprint…')}
               </button>
               <button className="btn" onClick={() => useEditor.getState().setTool('rect', 'bed')}>
-                Draw a bed
+                {t('Draw a bed')}
               </button>
             </div>
             <button className="btn ghost sm" style={{ alignSelf: 'center' }} onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: '?' }))}>
-              Keyboard shortcuts (?)
+              {t('Keyboard shortcuts (?)')}
             </button>
           </div>
         </div>
       )}
       {hint && !isEmpty && !pendingMulti && <div className={hintFaded ? 'canvas-hint fading' : 'canvas-hint'}>{hint}</div>}
       {pendingMulti && (
-        <div className="draw-actions" role="group" aria-label="Drawing">
+        <div className="draw-actions" role="group" aria-label={t('Drawing')}>
           <button className="btn sm" onClick={() => interaction.reset()}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button className="btn primary sm" onClick={() => interaction.finishPolygon()}>
-            Finish shape
+            {t('Finish shape')}
           </button>
         </div>
       )}
-      <div className="zoom-controls" role="group" aria-label="Zoom">
-        <button className="icon-btn sm" title="Zoom out" aria-label="Zoom out" onClick={() => useEditor.getState().zoomAt(1 / 1.25, { x: viewport.width / 2, y: viewport.height / 2 })}>
+      <div className="zoom-controls" role="group" aria-label={t('Zoom')}>
+        <button className="icon-btn sm" title={t('Zoom out')} aria-label={t('Zoom out')} onClick={() => useEditor.getState().zoomAt(1 / 1.25, { x: viewport.width / 2, y: viewport.height / 2 })}>
           <Minus size={14} />
         </button>
-        <button className="btn ghost sm num" style={{ minWidth: 52 }} title="Reset zoom to 100% (1 m = 100 px)" onClick={() => useEditor.getState().zoomAt(0.1 / view.scale, { x: viewport.width / 2, y: viewport.height / 2 })}>
+        <button className="btn ghost sm num" style={{ minWidth: 52 }} title={t('Reset zoom to 100% (1 m = 100 px)')} onClick={() => useEditor.getState().zoomAt(0.1 / view.scale, { x: viewport.width / 2, y: viewport.height / 2 })}>
           {zoomPercent(view)}%
         </button>
-        <button className="icon-btn sm" title="Zoom in" aria-label="Zoom in" onClick={() => useEditor.getState().zoomAt(1.25, { x: viewport.width / 2, y: viewport.height / 2 })}>
+        <button className="icon-btn sm" title={t('Zoom in')} aria-label={t('Zoom in')} onClick={() => useEditor.getState().zoomAt(1.25, { x: viewport.width / 2, y: viewport.height / 2 })}>
           <Plus size={14} />
         </button>
-        <button className="icon-btn sm" title="Fit to screen (Shift+1)" aria-label="Fit to screen" onClick={() => useEditor.getState().fitToContent()}>
+        <button className="icon-btn sm" title={t('Fit to screen (Shift+1)')} aria-label={t('Fit to screen')} onClick={() => useEditor.getState().fitToContent()}>
           <Maximize size={14} />
         </button>
-        <button className="icon-btn sm" title="Zoom to selection (Shift+2)" aria-label="Zoom to selection" disabled={!selection.length} onClick={() => useEditor.getState().zoomToSelection()}>
+        <button className="icon-btn sm" title={t('Zoom to selection (Shift+2)')} aria-label={t('Zoom to selection')} disabled={!selection.length} onClick={() => useEditor.getState().zoomToSelection()}>
           <Scan size={14} />
         </button>
       </div>

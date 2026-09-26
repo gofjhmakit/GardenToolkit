@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { create } from 'zustand';
 import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { Dialog } from './Dialog';
+import { t } from '../../i18n';
 
 interface Toast {
   id: number;
@@ -70,20 +71,20 @@ export function FeedbackHost() {
   return (
     <>
       <div className="toast-host" role="status" aria-live="polite">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast ${t.kind}`}>
-            {t.kind === 'error' ? <AlertTriangle size={16} color="var(--danger)" /> : t.kind === 'ok' ? <CheckCircle2 size={16} color="var(--ok)" /> : <Info size={16} />}
+        {toasts.map((item) => (
+          <div key={item.id} className={`toast ${item.kind}`}>
+            {item.kind === 'error' ? <AlertTriangle size={16} color="var(--danger)" /> : item.kind === 'ok' ? <CheckCircle2 size={16} color="var(--ok)" /> : <Info size={16} />}
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{t.title}</div>
-              {t.details?.length ? (
+              <div style={{ fontWeight: 600 }}>{item.title}</div>
+              {item.details?.length ? (
                 <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
-                  {t.details.slice(0, 6).map((d, i) => (
+                  {item.details.slice(0, 6).map((d, i) => (
                     <li key={i}>{d}</li>
                   ))}
                 </ul>
               ) : null}
             </div>
-            <button className="icon-btn sm" aria-label="Dismiss" onClick={() => dismiss(t.id)}>
+            <button className="icon-btn sm" aria-label={t('Dismiss')} onClick={() => dismiss(item.id)}>
               <X size={14} />
             </button>
           </div>
@@ -109,10 +110,10 @@ function ConfirmDialog({ req }: { req: ConfirmReq }) {
       footer={
         <>
           <button id="confirm-cancel" className="btn" onClick={() => close(false)}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button className={`btn ${req.danger ? 'danger solid' : 'primary'}`} onClick={() => close(true)}>
-            {req.confirmLabel ?? 'OK'}
+            {req.confirmLabel ?? t('OK')}
           </button>
         </>
       }
@@ -137,10 +138,10 @@ function PromptDialog({ req }: { req: PromptReq }) {
       footer={
         <>
           <button className="btn" onClick={() => close(null)}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button className="btn primary" disabled={!value.trim()} onClick={() => close(value.trim().slice(0, req.maxLength ?? 200))}>
-            {req.confirmLabel ?? 'OK'}
+            {req.confirmLabel ?? t('OK')}
           </button>
         </>
       }

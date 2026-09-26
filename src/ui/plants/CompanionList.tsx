@@ -1,6 +1,7 @@
 import type { CompanionFinding } from '../../engine/companions';
 import { EVIDENCE_LABEL } from '../../engine/companions';
 import { plantDisplayName, localizedText } from '../../plants/names';
+import { t } from '../../i18n';
 
 export function CompanionList({ findings, title }: { findings: CompanionFinding[]; title: string }) {
   return (
@@ -17,7 +18,7 @@ export function CompanionList({ findings, title }: { findings: CompanionFinding[
           </div>
         </div>
       ))}
-      <p className="tiny muted">Evidence levels: “Documented” = supported by research (with stated limits); “Common claim” = widely repeated, mixed evidence; “Traditional” = folklore, largely untested.</p>
+      <p className="tiny muted">{t('Evidence levels: “Documented” = supported by research (with stated limits); “Common claim” = widely repeated, mixed evidence; “Traditional” = folklore, largely untested.')}</p>
     </div>
   );
 }

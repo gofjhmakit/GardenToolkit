@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { t } from '../i18n';
 
 interface Props {
   children: ReactNode;
@@ -38,14 +39,14 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="home" role="alert">
         <div className="home-inner">
           <div className="empty-state">
-            <h2>Something went wrong</h2>
-            <p>This view could not be displayed. Your saved projects are still stored in this browser.</p>
+            <h2>{t('Something went wrong')}</h2>
+            <p>{t('This view could not be displayed. Your saved projects are still stored in this browser.')}</p>
             <pre className="small" style={{ textAlign: 'left', whiteSpace: 'pre-wrap' }}>{this.state.error.message}</pre>
             <button className="btn primary" onClick={() => this.props.onHome?.()}>
-              Back to projects
+              {t('Back to projects')}
             </button>{' '}
             <button className="btn" onClick={() => location.reload()}>
-              Reload
+              {t('Reload')}
             </button>
           </div>
         </div>

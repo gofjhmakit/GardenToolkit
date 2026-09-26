@@ -6,11 +6,13 @@
  * overrides keyed by the event id, so regenerating never loses them.
  */
 import type { ProjectDoc } from '../domain/project';
-import { addDays, addWeeks, isValidIsoDate, maxIso, monthDayToIso, minIso } from '../lib/dates';
+import { addDays, addWeeks, formatDate, isValidIsoDate, maxIso, monthDayToIso, minIso } from '../lib/dates';
 import type { Plant, TimingWindow } from '../plants/schema';
 import { frostDates, isSouthernHemisphere } from './climate';
 import type { PlantLookup } from './plantings';
 import { plantDisplayName } from '../plants/names';
+// Imported as `tr`: `t` is used below for a plant's timing data.
+import { t as tr, tn } from '../i18n';
 
 export type CalendarEventType =
   | 'prepare'
@@ -64,27 +66,32 @@ export function resolveWindow(w: TimingWindow, a: Anchors): { start: string; end
       end = addDays(end, 182);
     }
     if (end < start) end = monthDayToIso(a.year + 1, w.end);
-    return { start, end, basis: a.southern ? 'Fixed seasonal window (shifted for southern hemisphere)' : 'Fixed seasonal window' };
+    return { start, end, basis: a.southern ? tr('Fixed seasonal window (shifted for southern hemisphere)') : tr('Fixed seasonal window') };
   }
   const anchor = w.relativeTo === 'lastFrost' ? a.lastFrost : a.firstFrost;
-  const label = w.relativeTo === 'lastFrost' ? 'last spring frost' : 'first autumn frost';
-  const describe = (wk: number) => (wk === 0 ? `at ${label}` : `${Math.abs(wk)} wk ${wk < 0 ? 'before' : 'after'} ${label}`);
+  const last = w.relativeTo === 'lastFrost';
+  const describe = (wk: number) => {
+    if (wk === 0) return last ? tr('at last spring frost') : tr('at first autumn frost');
+    const n = Math.abs(wk);
+    if (wk < 0) return last ? tn('{{count}} wk before last spring frost', n) : tn('{{count}} wk before first autumn frost', n);
+    return last ? tn('{{count}} wk after last spring frost', n) : tn('{{count}} wk after first autumn frost', n);
+  };
   return {
     start: addWeeks(anchor, w.startWeeks),
     end: addWeeks(anchor, w.endWeeks),
-    basis: w.startWeeks === w.endWeeks ? describe(w.startWeeks) : `${describe(w.startWeeks)} to ${describe(w.endWeeks)}`,
+    basis: w.startWeeks === w.endWeeks ? describe(w.startWeeks) : tr('{{from}} to {{to}}', { from: describe(w.startWeeks), to: describe(w.endWeeks) }),
   };
 }
 
 function eventTitle(type: CalendarEventType, name: string, where: string): string {
   const verb: Record<CalendarEventType, string> = {
-    prepare: 'Prepare',
-    'sow-indoors': 'Sow indoors:',
-    'direct-sow': 'Sow outdoors:',
-    transplant: 'Transplant:',
-    'plant-out': 'Plant:',
-    succession: 'Succession sow:',
-    harvest: 'Harvest:',
+    prepare: tr('Prepare'),
+    'sow-indoors': tr('Sow indoors:'),
+    'direct-sow': tr('Sow outdoors:'),
+    transplant: tr('Transplant:'),
+    'plant-out': tr('Plant:'),
+    succession: tr('Succession sow:'),
+    harvest: tr('Harvest:'),
     custom: '',
   };
   return `${verb[type]} ${name}${where ? ` (${where})` : ''}`.trim();
@@ -114,7 +121,11 @@ function harvestWindow(
       return {
         start,
         end,
-        basis: `${dtm.min}–${dtm.max} days to maturity from ${t.maturityFrom === 'transplant' ? 'transplanting' : 'sowing'}${t.harvestDurationWeeks ? `, harvest lasting up to ${durWeeks} weeks` : ''}`,
+        basis:
+          (t.maturityFrom === 'transplant'
+            ? tr('{{min}}–{{max}} days to maturity from transplanting', { min: dtm.min, max: dtm.max })
+            : tr('{{min}}–{{max}} days to maturity from sowing', { min: dtm.min, max: dtm.max })) +
+          (t.harvestDurationWeeks ? tr(', harvest lasting up to {{weeks}} weeks', { weeks: durWeeks }) : ''),
       };
     }
   }
@@ -141,7 +152,7 @@ export function generatePlantingCalendar(
   const warnings: string[] = [];
   if (fd.placeholder) {
     warnings.push(
-      `Frost dates are not set for this project; placeholder dates (${fd.lastFrost} / ${fd.firstFrost}) are used. Set your location for accurate timing.`,
+      tr('Frost dates are not set for this project; placeholder dates ({{last}} / {{first}}) are used. Set your location for accurate timing.', { last: formatDate(fd.lastFrost), first: formatDate(fd.firstFrost) }),
     );
   }
 
@@ -174,7 +185,7 @@ export function generatePlantingCalendar(
         plantingId: planting.id,
         plantId: planting.plantId,
         objectIds: [host.id],
-        basis: isValidIsoDate(userStart) ? 'Date set on the planting' : win?.basis ?? '',
+        basis: isValidIsoDate(userStart) ? tr('Date set on the planting') : win?.basis ?? '',
         overridden: false,
         done: false,
         note: '',
@@ -211,7 +222,7 @@ export function generatePlantingCalendar(
           title: eventTitle('succession', label, where),
           start: d,
           end: null,
-          basis: `Every ${t.successionIntervalDays.min}–${t.successionIntervalDays.max} days while the sowing window lasts`,
+          basis: tr('Every {{min}}–{{max}} days while the sowing window lasts', { min: t.successionIntervalDays.min, max: t.successionIntervalDays.max }),
         });
         d = addDays(d, interval);
         n++;
@@ -223,15 +234,15 @@ export function generatePlantingCalendar(
     const hw = plant ? harvestWindow(plant, anchors, sowStart, transStart) : null;
     const harvestWarnings: string[] = [];
     if (hw && plant?.growing.frostTolerance === 'tender' && hw.end > anchors.firstFrost) {
-      harvestWarnings.push('Harvest window extends past the average first frost; protect the crop or harvest earlier.');
+      harvestWarnings.push(tr('Harvest window extends past the average first frost; protect the crop or harvest earlier.'));
     }
     if (hw && hw.start > anchors.firstFrost && plant?.lifecycle === 'annual') {
-      harvestWarnings.push('The crop may not mature before the first autumn frost at this location.');
+      harvestWarnings.push(tr('The crop may not mature before the first autumn frost at this location.'));
     }
     let harvestYearNote = '';
     const yrs = t.yearsToFirstHarvest;
     if (yrs && yrs.min >= 1 && plant?.lifecycle !== 'annual') {
-      harvestYearNote = ` First harvest typically ${yrs.min === yrs.max ? yrs.min : `${yrs.min}–${yrs.max}`} year(s) after planting.`;
+      harvestYearNote = ' ' + tr('First harvest typically {{years}} year(s) after planting.', { years: yrs.min === yrs.max ? yrs.min : `${yrs.min}–${yrs.max}` });
     }
     if (hw || isValidIsoDate(planting.dates.harvestStart)) {
       const ev = push('harvest', hw ? { ...hw, basis: hw.basis + harvestYearNote } : null, planting.dates.harvestStart, harvestWarnings);
@@ -250,13 +261,13 @@ export function generatePlantingCalendar(
     events.push({
       id: `${objectId}:prepare:${season}`,
       type: 'prepare',
-      title: `Prepare ${host.code ? `${host.code} ` : ''}${host.name}`,
+      title: tr('Prepare {{area}}', { area: `${host.code ? `${host.code} ` : ''}${host.name}` }),
       start: addDays(first, -14),
       end: addDays(first, -1),
       plantingId: null,
       plantId: null,
       objectIds: [objectId],
-      basis: 'Two weeks before the first sowing/planting in this area',
+      basis: tr('Two weeks before the first sowing/planting in this area'),
       overridden: false,
       done: false,
       note: '',
@@ -276,7 +287,7 @@ export function generatePlantingCalendar(
       plantingId: null,
       plantId: null,
       objectIds: task.objectId ? [task.objectId] : [],
-      basis: 'Custom task',
+      basis: tr('Custom task'),
       overridden: false,
       done: task.done,
       note: task.notes,

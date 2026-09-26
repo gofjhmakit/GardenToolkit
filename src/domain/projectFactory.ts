@@ -1,5 +1,6 @@
 import { newId } from '../lib/ids';
 import { DEFAULT_LAYERS, kindInfo } from './objectKinds';
+import { t } from '../i18n';
 import {
   DOC_VERSION,
   type GardenObject,
@@ -32,7 +33,8 @@ export function createProject(
   const now = (opts.now ?? new Date()).toISOString();
   const layers: Layer[] = DEFAULT_LAYERS.map((l) => ({
     id: `layer-${l.key}`,
-    name: l.name,
+    // Default layers are named in the user's language; they are ordinary editable names afterwards.
+    name: t(l.name),
     role: l.role,
     visible: true,
     locked: false,
@@ -41,7 +43,7 @@ export function createProject(
   return {
     id: opts.id ?? newId('prj'),
     docVersion: DOC_VERSION,
-    meta: { name: name.trim() || 'Untitled garden', description: '', createdAt: now, updatedAt: now },
+    meta: { name: name.trim() || t('Untitled garden'), description: '', createdAt: now, updatedAt: now },
     location: { ...defaultLocation(), ...opts.location },
     settings: {
       unitSystem: 'metric',

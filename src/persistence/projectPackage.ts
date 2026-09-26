@@ -24,6 +24,7 @@ import {
   toProjectFile,
   type AssetInfo,
 } from './projectFile';
+import { t } from '../i18n';
 
 export const LIMITS = {
   maxFileBytes: 300 * 1024 * 1024,
@@ -175,7 +176,7 @@ export async function importProjectFile(
   knownPlant: (id: string) => boolean,
 ): Promise<ImportResult> {
   try {
-    if (input.size > LIMITS.maxFileBytes) return fail('The file is too large to import.');
+    if (input.size > LIMITS.maxFileBytes) return fail(t('The file is too large to import.'));
     const bytes = await blobBytes(input);
     const isZip = bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
     let jsonText: string;
@@ -187,7 +188,7 @@ export async function importProjectFile(
       const accept = (size: number) => {
         extracted += size;
         if (extracted > LIMITS.maxExtractedBytes) {
-          rejectReason = 'The package is too large to import.';
+          rejectReason = t('The package is too large to import.');
           return false;
         }
         return true;
@@ -195,7 +196,7 @@ export async function importProjectFile(
       const files = await unzipAsync(bytes, (f) => {
         entryCount++;
         if (entryCount > LIMITS.maxEntries) {
-          rejectReason = 'The package contains too many files.';
+          rejectReason = t('The package contains too many files.');
           return false;
         }
         if (f.name === 'project.json') {
@@ -207,7 +208,7 @@ export async function importProjectFile(
         }
         if (/^assets\/[A-Za-z0-9_.-]+\.(png|jpe?g|webp)$/i.test(f.name)) {
           if (f.originalSize > LIMITS.maxAssetBytes) {
-            rejectReason = `Asset ${f.name} is too large.`;
+            rejectReason = t('Asset {{name}} is too large.', { name: f.name });
             return false;
           }
           return accept(f.originalSize);
@@ -228,10 +229,10 @@ export async function importProjectFile(
     try {
       raw = JSON.parse(jsonText);
     } catch {
-      return fail('The file is not valid JSON — it may be damaged or not a Garden Toolkit project.');
+      return fail(t('The file is not valid JSON — it may be damaged or not a Garden Toolkit project.'));
     }
     if (!raw || typeof raw !== 'object' || (raw as Record<string, unknown>).format !== PROJECT_FILE_FORMAT) {
-      return fail('This file is not a Garden Toolkit project (unexpected "format").');
+      return fail(t('This file is not a Garden Toolkit project (unexpected "format").'));
     }
     let migrated: Record<string, unknown>;
     try {
@@ -242,7 +243,7 @@ export async function importProjectFile(
     const parsed = ProjectFileSchema.safeParse(migrated);
     if (!parsed.success) {
       return fail(
-        'The project file is damaged or incomplete and could not be imported.',
+        t('The project file is damaged or incomplete and could not be imported.'),
         parsed.error.issues.slice(0, 15).map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`),
       );
     }
@@ -256,23 +257,23 @@ export async function importProjectFile(
         try {
           data = base64ToBytes(entry.data);
         } catch {
-          warnings.push(`Embedded image "${entry.name || entry.id}" is not valid base64 and was skipped.`);
+          warnings.push(t('Embedded image "{{name}}" is not valid base64 and was skipped.', { name: entry.name || entry.id }));
           continue;
         }
       } else if (entry.path) {
         data = binaryAssets.get(entry.path);
       }
       if (!data) {
-        warnings.push(`Image "${entry.name || entry.id}" is missing from the file.`);
+        warnings.push(t('Image "{{name}}" is missing from the file.', { name: entry.name || entry.id }));
         continue;
       }
       if (data.length > LIMITS.maxAssetBytes) {
-        warnings.push(`Image "${entry.name || entry.id}" is too large and was skipped.`);
+        warnings.push(t('Image "{{name}}" is too large and was skipped.', { name: entry.name || entry.id }));
         continue;
       }
       const mime = detectImageMime(data);
       if (!mime) {
-        warnings.push(`File "${entry.name || entry.id}" is not a PNG, JPEG or WebP image and was skipped.`);
+        warnings.push(t('File "{{name}}" is not a PNG, JPEG or WebP image and was skipped.', { name: entry.name || entry.id }));
         continue;
       }
       const id = newId('ast');
@@ -294,7 +295,7 @@ export async function importProjectFile(
     });
     return { ok: true, doc, assets, warnings: [...warnings, ...mapWarnings] };
   } catch (e) {
-    return fail('The file could not be read.', [e instanceof Error ? e.message : String(e)]);
+    return fail(t('The file could not be read.'), [e instanceof Error ? e.message : String(e)]);
   }
 }
 
@@ -347,7 +348,7 @@ export interface NamedImportResult {
  */
 export async function importAnyFile(input: Blob, name: string, knownPlant: (id: string) => boolean): Promise<NamedImportResult[]> {
   try {
-    if (input.size > LIMITS.maxFileBytes) return [{ source: name, result: fail('The file is too large to import.') }];
+    if (input.size > LIMITS.maxFileBytes) return [{ source: name, result: fail(t('The file is too large to import.')) }];
     const head = new Uint8Array(await input.slice(0, 4).arrayBuffer());
     const isZip = head.length === 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
     if (!isZip) return [{ source: name, result: await importProjectFile(input, knownPlant) }];
@@ -358,19 +359,19 @@ export async function importAnyFile(input: Blob, name: string, knownPlant: (id: 
     const files = await unzipAsync(new Uint8Array(await input.arrayBuffer()), (f) => {
       entries++;
       if (entries > LIMITS.maxEntries) {
-        rejectReason = 'The archive contains too many files.';
+        rejectReason = t('The archive contains too many files.');
         return false;
       }
       if (f.name === 'project.json') hasProjectJson = true;
       // Only nested project packages are read from backups; everything else is ignored.
       if (/^projects\/[^/]+\.gtkproject$/.test(f.name)) {
         if (f.originalSize > LIMITS.maxFileBytes) {
-          rejectReason = `${f.name} is too large.`;
+          rejectReason = t('{{name}} is too large.', { name: f.name });
           return false;
         }
         extracted += f.originalSize;
         if (extracted > LIMITS.maxExtractedBytes) {
-          rejectReason = 'The backup is too large to import in one go. Import its projects separately.';
+          rejectReason = t('The backup is too large to import in one go. Import its projects separately.');
           return false;
         }
         return true;
@@ -389,6 +390,6 @@ export async function importAnyFile(input: Blob, name: string, knownPlant: (id: 
     }
     return out;
   } catch (e) {
-    return [{ source: name, result: fail('The file could not be read.', [e instanceof Error ? e.message : String(e)]) }];
+    return [{ source: name, result: fail(t('The file could not be read.'), [e instanceof Error ? e.message : String(e)]) }];
   }
 }

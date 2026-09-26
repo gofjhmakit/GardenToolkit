@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { dist, type Vec } from '../../domain/geometry';
-import { formatLength, parseLength } from '../../domain/units';
+import { formatLength, formatNumber, parseLength } from '../../domain/units';
 import { calibrateBackground } from '../../editor/commands';
 import { useEditor } from '../../editor/store';
 import { Dialog } from '../components/Dialog';
 import { Checkbox } from '../components/Fields';
+import { t, tn } from '../../i18n';
 
 export function CalibrateDialog({ bgId, a, b, onClose }: { bgId: string; a: Vec; b: Vec; onClose: () => void }) {
   const doc = useEditor((s) => s.doc)!;
@@ -20,22 +21,22 @@ export function CalibrateDialog({ bgId, a, b, onClose }: { bgId: string; a: Vec;
     useEditor.getState().commit('Calibrate blueprint scale', (d) => {
       calibrateBackground(d, bgId, a, b, parsed!, { scaleObjects });
     });
-    useEditor.getState().showFlash(`Scale calibrated: ${formatLength(parsed!)} between the reference points.`);
+    useEditor.getState().showFlash(t('Scale calibrated: {{length}} between the reference points.', { length: formatLength(parsed!) }));
     onClose();
   };
   return (
     <Dialog
       open
-      title="Calibrate blueprint scale"
+      title={t('Calibrate blueprint scale')}
       onClose={onClose}
       initialFocus="calib-distance"
       footer={
         <>
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button className="btn primary" disabled={!valid} onClick={apply}>
-            Apply scale
+            {t('Apply scale')}
           </button>
         </>
       }
@@ -48,27 +49,27 @@ export function CalibrateDialog({ bgId, a, b, onClose }: { bgId: string; a: Vec;
         }}
       >
         <p>
-          Enter the real-world distance between the two points you clicked on <strong>{bg?.name ?? 'the blueprint'}</strong>.
+          {t('Enter the real-world distance between the two points you clicked on {{name}}.', { name: bg?.name ?? t('the blueprint') })}
         </p>
-        <p className="muted small">Currently measured on the plan: {formatLength(measured, doc.settings.unitSystem)} (under the present scale assumption).</p>
+        <p className="muted small">{t('Currently measured on the plan: {{length}} (under the present scale assumption).', { length: formatLength(measured, doc.settings.unitSystem) })}</p>
         <div className="field">
-          <label htmlFor="calib-distance">Real distance</label>
+          <label htmlFor="calib-distance">{t('Real distance')}</label>
           <input
             id="calib-distance"
             className="input"
-            placeholder="e.g. 10 m, 850 cm, 32 ft"
+            placeholder={t('e.g. 10 m, 850 cm, 32 ft')}
             value={text}
             aria-invalid={text !== '' && !valid}
             onChange={(e) => setText(e.target.value)}
           />
-          <div className="hint">A bare number is read as {doc.settings.unitSystem === 'imperial' ? 'feet' : 'metres'}. Longer reference distances give more accurate results.</div>
+          <div className="hint">{doc.settings.unitSystem === 'imperial' ? t('A bare number is read as feet. Longer reference distances give more accurate results.') : t('A bare number is read as metres. Longer reference distances give more accurate results.')}</div>
         </div>
-        {valid && <p className="small">The image will be scaled by ×{(parsed! / measured).toFixed(4)}.</p>}
+        {valid && <p className="small">{t('The image will be scaled by ×{{factor}}.', { factor: formatNumber(parsed! / measured, 4) })}</p>}
         {objectCount > 0 && (
           <Checkbox
             checked={scaleObjects}
             onChange={setScaleObjects}
-            label={`Also rescale the ${objectCount} existing object${objectCount === 1 ? '' : 's'} drawn on this plan`}
+            label={tn('Also rescale the {{count}} existing objects drawn on this plan', objectCount)}
           />
         )}
       </form>

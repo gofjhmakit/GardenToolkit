@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { t } from '../../i18n';
 
 interface DialogProps {
   open: boolean;
@@ -44,7 +45,7 @@ export function Dialog({ open, title, onClose, children, footer, wide, className
           <div className="dialog-header">
             <h2 id={titleId}>{title}</h2>
             <span className="spacer" />
-            <button type="button" className="icon-btn" onClick={onClose} aria-label="Close dialog">
+            <button type="button" className="icon-btn" onClick={onClose} aria-label={t('Close dialog')}>
               <X size={16} />
             </button>
           </div>

@@ -4,6 +4,7 @@ import { ObjectInspector } from './ObjectInspector';
 import { MultiInspector } from './MultiInspector';
 import { BackgroundInspector } from './BackgroundInspector';
 import { ProjectSummary } from './ProjectSummary';
+import { t } from '../../i18n';
 
 export function Inspector() {
   const doc = useEditor((s) => s.doc);
@@ -35,7 +36,7 @@ export function Inspector() {
     body = <ProjectSummary />;
   }
   return (
-    <aside className="side right" aria-label="Inspector">
+    <aside className="side right" aria-label={t('Inspector')}>
       <div className="side-header">{header ?? <h2>{title}</h2>}</div>
       <div className="side-body" key={selection.join(",") || bgId || "garden"}>{body}</div>
     </aside>

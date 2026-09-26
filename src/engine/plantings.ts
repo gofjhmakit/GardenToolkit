@@ -7,6 +7,7 @@ import { shapeToPolygon, splitPolygonByShares, type Vec } from '../domain/geomet
 import type { GardenObject, Planting, ProjectDoc } from '../domain/project';
 import { plantingsForObject } from '../domain/projectFactory';
 import { kindInfo } from '../domain/objectKinds';
+import { t } from '../i18n';
 import { scaleRange, type Range } from '../domain/range';
 import type { Plant, PlantingMethod } from '../plants/schema';
 import { calculatePlantCapacity, resolveRowAxis, type CapacityResult, type PlantingRules } from './capacity';
@@ -57,7 +58,7 @@ export function resolveShares(plantings: Planting[]): { shares: Map<string, numb
   let explicitSum = explicit.reduce((s, p) => s + (p.areaShare ?? 0), 0);
   let warning: string | null = null;
   if (explicitSum > 1 + 1e-9) {
-    warning = `Area shares add up to ${Math.round(explicitSum * 100)}%; they have been scaled to fit.`;
+    warning = t('Area shares add up to {{pct}}%; they have been scaled to fit.', { pct: Math.round(explicitSum * 100) });
     for (const p of explicit) shares.set(p.id, (p.areaShare ?? 0) / explicitSum);
     explicitSum = 1;
   } else {
@@ -124,7 +125,7 @@ export function computeObjectPlantings(
     });
     const warnings = [...capacity.warnings];
     if (warning && i === 0) warnings.push(warning);
-    if (!plant) warnings.push('Plant record not found in the database; showing stored project values only.');
+    if (!plant) warnings.push(t('Plant record not found in the database; showing stored project values only.'));
     const quantity = planting.quantityOverride ?? capacity.plants;
     return {
       planting,

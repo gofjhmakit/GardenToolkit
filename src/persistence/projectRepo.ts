@@ -6,6 +6,7 @@ import { newId } from '../lib/ids';
 import type { ProjectDoc } from '../domain/project';
 import { getDb, type AssetRecord, type ProjectMeta, type SnapshotRecord } from './db';
 import { parseStoredDoc, type ParseDocResult } from './migrations';
+import { t } from '../i18n';
 
 export const MAX_AUTO_SNAPSHOTS = 20;
 
@@ -206,7 +207,7 @@ export async function recoverFromSnapshot(projectId: string, snapshotId: string)
   await db.transaction('rw', [db.projects, db.docs, db.snapshots], async () => {
     const current = await db.docs.get(projectId);
     if (current) {
-      await db.snapshots.put({ id: newId('snap'), projectId, createdAt: new Date().toISOString(), label: 'Before recovery (unreadable)', auto: false, doc: current.doc });
+      await db.snapshots.put({ id: newId('snap'), projectId, createdAt: new Date().toISOString(), label: t('Before recovery (unreadable)'), auto: false, doc: current.doc });
     }
     await db.docs.put({ id: projectId, doc });
     await db.projects.put(metaFor(doc));

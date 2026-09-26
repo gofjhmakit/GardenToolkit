@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   CalendarDays,
@@ -59,39 +58,40 @@ import { TabGuardBanner } from './TabGuardBanner';
 import { MenuButton } from '../components/Menu';
 import { exportProjectJson, exportProjectPackage } from '../../app/projectActions';
 import { useCompact } from '../useCompact';
+import { t } from '../../i18n';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
-  { id: 'select', label: 'Select', key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'hand', label: 'Pan', key: 'H', icon: <Hand size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'select', label: t('Select'), key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'hand', label: t('Pan'), key: 'H', icon: <Hand size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 const DRAW_TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode }[] = [
-  { id: 'rect', label: 'Rectangle', key: 'R', icon: <Square size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'ellipse', label: 'Ellipse / circle', key: 'O', icon: <Circle size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'polygon', label: 'Polygon', key: 'P', icon: <Hexagon size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'freehand', label: 'Freehand area', key: 'F', icon: <Pencil size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'polyline', label: 'Line / path', key: 'L', icon: <Spline size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'rect', label: t('Rectangle'), key: 'R', icon: <Square size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'ellipse', label: t('Ellipse / circle'), key: 'O', icon: <Circle size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'polygon', label: t('Polygon'), key: 'P', icon: <Hexagon size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'freehand', label: t('Freehand area'), key: 'F', icon: <Pencil size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'polyline', label: t('Line / path'), key: 'L', icon: <Spline size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 const SYMBOL_TOOLS: { id: ToolId; label: string; icon: React.ReactNode }[] = [
-  { id: 'tree', label: 'Tree', icon: <TreeDeciduous size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'shrub', label: 'Shrub / bush', icon: <Flower2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'tree', label: t('Tree'), icon: <TreeDeciduous size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'shrub', label: t('Shrub / bush'), icon: <Flower2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 const ANNOT_TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode }[] = [
-  { id: 'text', label: 'Text label', key: 'T', icon: <Type size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'dimension', label: 'Dimension line', key: 'D', icon: <MoveHorizontal size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'measure', label: 'Measure distance', key: 'M', icon: <Ruler size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
-  { id: 'calibrate', label: 'Calibrate blueprint scale', key: 'K', icon: <Scale size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'text', label: t('Text label'), key: 'T', icon: <Type size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'dimension', label: t('Dimension line'), key: 'D', icon: <MoveHorizontal size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'measure', label: t('Measure distance'), key: 'M', icon: <Ruler size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
+  { id: 'calibrate', label: t('Calibrate blueprint scale'), key: 'K', icon: <Scale size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
 ];
 
 const WORKSPACES: { id: Workspace; label: string; icon: React.ReactNode }[] = [
-  { id: 'design', label: 'Design', icon: <MapIcon size={14} strokeWidth={1.75} /> },
-  { id: 'plantings', label: 'Plantings', icon: <Sprout size={14} strokeWidth={1.75} /> },
-  { id: 'calendar', label: 'Calendar', icon: <CalendarDays size={14} strokeWidth={1.75} /> },
-  { id: 'harvest', label: 'Harvest', icon: <Wheat size={14} strokeWidth={1.75} /> },
-  { id: 'care', label: 'Care guide', icon: <ClipboardList size={14} strokeWidth={1.75} /> },
-  { id: 'rotation', label: 'Crop rotation', icon: <Repeat size={14} strokeWidth={1.75} /> },
-  { id: 'plants', label: 'Plant database', icon: <BookOpen size={14} strokeWidth={1.75} /> },
-  { id: 'reports', label: 'Reports & export', icon: <FileDown size={14} strokeWidth={1.75} /> },
-  { id: 'settings', label: 'Garden settings', icon: <Settings size={14} strokeWidth={1.75} /> },
+  { id: 'design', label: t('Design'), icon: <MapIcon size={14} strokeWidth={1.75} /> },
+  { id: 'plantings', label: t('Plantings'), icon: <Sprout size={14} strokeWidth={1.75} /> },
+  { id: 'calendar', label: t('Calendar'), icon: <CalendarDays size={14} strokeWidth={1.75} /> },
+  { id: 'harvest', label: t('Harvest'), icon: <Wheat size={14} strokeWidth={1.75} /> },
+  { id: 'care', label: t('Care guide'), icon: <ClipboardList size={14} strokeWidth={1.75} /> },
+  { id: 'rotation', label: t('Crop rotation'), icon: <Repeat size={14} strokeWidth={1.75} /> },
+  { id: 'plants', label: t('Plant database'), icon: <BookOpen size={14} strokeWidth={1.75} /> },
+  { id: 'reports', label: t('Reports & export'), icon: <FileDown size={14} strokeWidth={1.75} /> },
+  { id: 'settings', label: t('Garden settings'), icon: <Settings size={14} strokeWidth={1.75} /> },
 ];
 
 /** Kinds offered in the "Draw as" selector, grouped. */
@@ -104,7 +104,6 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
   const workspace = useEditor((s) => s.workspace);
   const showLeft = usePrefs((s) => s.showLeftPanel);
   const showRight = usePrefs((s) => s.showRightPanel);
-  const { t } = useTranslation();
   const [helpOpen, setHelpOpen] = useState(false);
   const [addPlantsFor, setAddPlantsFor] = useState<string[] | null>(null);
   const compact = useCompact();
@@ -143,19 +142,19 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
   }));
 
   const toolbar = (
-    <div className="tools" role="toolbar" aria-label="Drawing tools">
-      <div className="tool-group" role="group" aria-label="Selection">
-        {TOOLS.map((t) => (
-          <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
-            {t.icon}
+    <div className="tools" role="toolbar" aria-label={t('Drawing tools')}>
+      <div className="tool-group" role="group" aria-label={t('Selection')}>
+        {TOOLS.map((tb) => (
+          <ToolButton key={tb.id} active={tool === tb.id} label={tb.label} shortcut={tb.key} onClick={() => setTool(tb.id)}>
+            {tb.icon}
           </ToolButton>
         ))}
       </div>
-      <div className="tool-group" role="group" aria-label="Shapes">
+      <div className="tool-group" role="group" aria-label={t('Shapes')}>
         <select
           className="select kind-select"
-          aria-label="Object type to draw"
-          title="Object type for the shape tools"
+          aria-label={t('Object type to draw')}
+          title={t('Object type for the shape tools')}
           value={drawKind}
           onChange={(e) => {
             const k = e.target.value as ObjectKind;
@@ -165,7 +164,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
           }}
         >
           {kindGroups.map((g) => (
-            <optgroup key={g.group} label={g.group}>
+            <optgroup key={g.group} label={t(g.group)}>
               {g.kinds.map((k) => (
                 <option key={k.kind} value={k.kind}>
                   {k.label}
@@ -174,23 +173,23 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
             </optgroup>
           ))}
         </select>
-        {DRAW_TOOLS.map((t) => (
-          <ToolButton key={t.id} active={tool === t.id} label={`${t.label} — draws: ${kindInfo(drawKind).label}`} shortcut={t.key} onClick={() => setTool(t.id)}>
-            {t.icon}
+        {DRAW_TOOLS.map((tb) => (
+          <ToolButton key={tb.id} active={tool === tb.id} label={t('{{tool}} — draws: {{kind}}', { tool: tb.label, kind: kindInfo(drawKind).label })} shortcut={tb.key} onClick={() => setTool(tb.id)}>
+            {tb.icon}
           </ToolButton>
         ))}
       </div>
-      <div className="tool-group" role="group" aria-label="Plant symbols">
-        {SYMBOL_TOOLS.map((t) => (
-          <ToolButton key={t.id} active={tool === t.id} label={t.label} onClick={() => setTool(t.id)}>
-            {t.icon}
+      <div className="tool-group" role="group" aria-label={t('Plant symbols')}>
+        {SYMBOL_TOOLS.map((tb) => (
+          <ToolButton key={tb.id} active={tool === tb.id} label={tb.label} onClick={() => setTool(tb.id)}>
+            {tb.icon}
           </ToolButton>
         ))}
       </div>
-      <div className="tool-group" role="group" aria-label="Annotation and measuring">
-        {ANNOT_TOOLS.map((t) => (
-          <ToolButton key={t.id} active={tool === t.id} label={t.label} shortcut={t.key} onClick={() => setTool(t.id)}>
-            {t.icon}
+      <div className="tool-group" role="group" aria-label={t('Annotation and measuring')}>
+        {ANNOT_TOOLS.map((tb) => (
+          <ToolButton key={tb.id} active={tool === tb.id} label={tb.label} shortcut={tb.key} onClick={() => setTool(tb.id)}>
+            {tb.icon}
           </ToolButton>
         ))}
       </div>
@@ -200,10 +199,10 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
   return (
     <div className={compact ? 'editor compact' : 'editor'}>
       <a href="#main-canvas" className="skip-link">
-        Skip to canvas
+        {t('Skip to canvas')}
       </a>
       <header className="topbar">
-        <button className="icon-btn" onClick={onHome} title="All projects" aria-label="Back to all projects">
+        <button className="icon-btn" onClick={onHome} title={t('All projects')} aria-label={t('Back to all projects')}>
           <span className="brand-mark">
             <Leaf size={15} />
           </span>
@@ -216,13 +215,13 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
         {!compact && toolbar}
         <span className="spacer" />
         {compact && <UndoRedo />}
-        <button className="icon-btn" aria-label="Import blueprint image or PDF" title="Import blueprint image or PDF" onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
+        <button className="icon-btn" aria-label={t('Import blueprint image or PDF')} title={t('Import blueprint image or PDF')} onClick={() => window.dispatchEvent(new CustomEvent('gtk:import-blueprint'))}>
           <ImagePlus size={16} strokeWidth={1.75} absoluteStrokeWidth />
         </button>
         <ExportButton iconOnly={compact} />
         <AddPlantsButton iconOnly={compact} />
       </header>
-      <nav className="worktabs" role="tablist" aria-label="Workspaces">
+      <nav className="worktabs" role="tablist" aria-label={t('Workspaces')}>
         {WORKSPACES.map((w) => (
           <button key={w.id} role="tab" aria-selected={workspace === w.id} onClick={() => useEditor.getState().setWorkspace(w.id)}>
             {w.icon}
@@ -237,7 +236,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
             <div className="mobile-canvas">
               <Canvas />
               {sheet && (
-                <BottomSheet label={sheet === 'layers' ? 'Layers' : 'Details'} onClose={() => setSheet(null)}>
+                <BottomSheet label={sheet === 'layers' ? t('Layers') : t('Details')} onClose={() => setSheet(null)}>
                   {sheet === 'layers' ? <LayersPanel /> : <Inspector />}
                 </BottomSheet>
               )}
@@ -245,7 +244,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
             <div className="mobile-tools">
               <button className="btn sm mobile-sheet-btn" aria-pressed={sheet === 'layers'} onClick={() => setSheet(sheet === 'layers' ? null : 'layers')}>
                 <LayersIcon size={16} strokeWidth={1.75} />
-                <span>Layers</span>
+                <span>{t('Layers')}</span>
               </button>
               <div className="mobile-tools-scroll">{toolbar}</div>
               <DetailsButton active={sheet === 'details'} onClick={() => setSheet(sheet === 'details' ? null : 'details')} />
@@ -259,7 +258,7 @@ export function EditorShell({ onHome }: { onHome: () => void }) {
           </>
         ) : (
           <div className="view" role="tabpanel">
-            <Suspense fallback={<div className="view-inner muted">Loading…</div>}>
+            <Suspense fallback={<div className="view-inner muted">{t('Loading…')}</div>}>
             {workspace === 'plantings' && <PlantingsView />}
             {workspace === 'calendar' && <CalendarView />}
             {workspace === 'harvest' && <HarvestView />}
@@ -295,7 +294,6 @@ function ToolButton({ active, label, shortcut, onClick, children }: { active: bo
 }
 
 function AddPlantsButton({ iconOnly = false }: { iconOnly?: boolean }) {
-  const { t } = useTranslation();
   const doc = useEditor((s) => s.doc);
   const selection = useEditor((s) => s.selection);
   const plantable = doc ? selection.filter((id) => doc.objects[id] && kindInfo(doc.objects[id].kind).plantable) : [];
@@ -304,7 +302,7 @@ function AddPlantsButton({ iconOnly = false }: { iconOnly?: boolean }) {
       className="btn primary sm"
       aria-label={iconOnly ? t('Add plants') : undefined}
       disabled={!plantable.length}
-      title={plantable.length ? `Add plants to ${plantable.length} selected area(s)` : 'Select one or more beds or areas to add plants'}
+      title={plantable.length ? `Add plants to ${plantable.length} selected area(s)` : t('Select one or more beds or areas to add plants')}
       onClick={() => window.dispatchEvent(new CustomEvent('gtk:add-plants', { detail: { ids: plantable } }))}
     >
       <Sprout size={14} />
@@ -320,18 +318,18 @@ function ExportButton({ iconOnly = false }: { iconOnly?: boolean }) {
   if (!doc) return null;
   return (
     <MenuButton
-      label="Export"
+      label={t('Export')}
       className={iconOnly ? 'icon-btn' : 'btn sm'}
       entries={() => [
-        { type: 'label', label: 'Project backup (re-importable)' },
-        { label: 'Project package (.gtkproject)', onSelect: () => void exportProjectPackage(useEditor.getState().doc!) },
-        { label: 'Single JSON file', onSelect: () => void exportProjectJson(useEditor.getState().doc!, true) },
+        { type: 'label', label: t('Project backup (re-importable)') },
+        { label: t('Project package (.gtkproject)'), onSelect: () => void exportProjectPackage(useEditor.getState().doc!) },
+        { label: t('Single JSON file'), onSelect: () => void exportProjectJson(useEditor.getState().doc!, true) },
         { type: 'separator' },
-        { label: 'PDF documents, plans & CSV…', onSelect: () => useEditor.getState().setWorkspace('reports') },
+        { label: t('PDF documents, plans & CSV…'), onSelect: () => useEditor.getState().setWorkspace('reports') },
       ]}
     >
       <Download size={iconOnly ? 16 : 14} strokeWidth={1.75} />
-      {iconOnly ? <span className="sr-only">Export</span> : 'Export'}
+      {iconOnly ? <span className="sr-only">{t('Export')}</span> : t('Export')}
     </MenuButton>
   );
 }
@@ -341,10 +339,10 @@ function UndoRedo() {
   const canRedo = useEditor((s) => s.future.length > 0);
   return (
     <>
-      <button className="icon-btn" aria-label="Undo" title="Undo" disabled={!canUndo} onClick={() => useEditor.getState().undo()}>
+      <button className="icon-btn" aria-label={t('Undo')} title={t('Undo')} disabled={!canUndo} onClick={() => useEditor.getState().undo()}>
         <Undo2 size={16} strokeWidth={1.75} absoluteStrokeWidth />
       </button>
-      <button className="icon-btn" aria-label="Redo" title="Redo" disabled={!canRedo} onClick={() => useEditor.getState().redo()}>
+      <button className="icon-btn" aria-label={t('Redo')} title={t('Redo')} disabled={!canRedo} onClick={() => useEditor.getState().redo()}>
         <Redo2 size={16} strokeWidth={1.75} absoluteStrokeWidth />
       </button>
     </>
@@ -357,7 +355,7 @@ function DetailsButton({ active, onClick }: { active: boolean; onClick: () => vo
   return (
     <button className={count ? 'btn sm mobile-sheet-btn has-selection' : 'btn sm mobile-sheet-btn'} aria-pressed={active} onClick={onClick}>
       <PanelBottomOpen size={16} strokeWidth={1.75} />
-      <span>{count ? `Details (${count})` : 'Details'}</span>
+      <span>{count ? `Details (${count})` : t('Details')}</span>
     </button>
   );
 }
@@ -374,7 +372,7 @@ function BottomSheet({ label, onClose, children }: { label: string; onClose: () 
   return (
     <section className="bottom-sheet" role="region" aria-label={label}>
       <div className="bottom-sheet-grip" aria-hidden="true" />
-      <button className="icon-btn bottom-sheet-close" aria-label={`Close ${label.toLowerCase()}`} onClick={onClose}>
+      <button className="icon-btn bottom-sheet-close" aria-label={t('Close {{name}}', { name: label.toLowerCase() })} onClick={onClose}>
         <X size={18} strokeWidth={1.75} />
       </button>
       {children}

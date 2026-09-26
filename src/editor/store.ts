@@ -12,6 +12,7 @@ import type { ProjectDoc, ObjectKind } from '../domain/project';
 import type { Bounds, Vec } from '../domain/geometry';
 import type { ClipboardPayload } from './commands';
 import { contentBounds, expandToGroups, selectionBounds } from './commands';
+import { t } from '../i18n';
 
 // Freezing is useful in development but costs time on large documents.
 setAutoFreeze(import.meta.env?.DEV ?? false);
@@ -243,7 +244,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
       saveStatus: 'pending',
       vertexEditId: null,
     });
-    get().showFlash(`Undo: ${entry.label}`);
+    get().showFlash(t('Undo: {{action}}', { action: t(entry.label) }));
   },
 
   redo() {
@@ -259,7 +260,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
       saveStatus: 'pending',
       vertexEditId: null,
     });
-    get().showFlash(`Redo: ${entry.label}`);
+    get().showFlash(t('Redo: {{action}}', { action: t(entry.label) }));
   },
 
   setSelection(ids, mode = 'replace') {

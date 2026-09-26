@@ -10,6 +10,7 @@ import { plantDisplayName } from '../../plants/names';
 import { Stat } from './PlantingsView';
 import { ConfidenceBadge } from '../panels/PlantingCard';
 import { plantColor } from '../plantColors';
+import { t, tn } from '../../i18n';
 
 export function HarvestView() {
   const doc = useEditor((s) => s.doc)!;
@@ -40,26 +41,26 @@ export function HarvestView() {
     <div className="view-inner">
       <div className="view-header">
         <div>
-          <h1>Harvest plan {doc.settings.activeSeason}</h1>
-          <p className="muted">Estimated ranges based on plant yield data and your quantities. Crops without reliable yield data are listed but not totalled.</p>
+          <h1>{t('Harvest plan {{year}}', { year: doc.settings.activeSeason })}</h1>
+          <p className="muted">{t('Estimated ranges based on plant yield data and your quantities. Crops without reliable yield data are listed but not totalled.')}</p>
         </div>
       </div>
       <div className="stat-grid">
-        <Stat label="Estimated total harvest" value={total.total ? `${formatRange(total.total)} kg` : '—'} sub="a range, not a guarantee" />
-        <Stat label="Crops with yield data" value={String(total.included)} />
-        <Stat label="Without yield data" value={String(total.excluded)} sub="excluded from the total" />
+        <Stat label={t('Estimated total harvest')} value={total.total ? `${formatRange(total.total)} kg` : '—'} sub={t('a range, not a guarantee')} />
+        <Stat label={t('Crops with yield data')} value={String(total.included)} />
+        <Stat label={t('Without yield data')} value={String(total.excluded)} sub={t('excluded from the total')} />
       </div>
       {list.length === 0 ? (
-        <div className="empty-state">No plantings yet.</div>
+        <div className="empty-state">{t('No plantings yet.')}</div>
       ) : (
         <div className="card flush">
           <table className="table" style={{ minWidth: 820 }}>
             <thead>
               <tr>
-                <th>Crop</th>
-                <th>Areas</th>
-                <th className="r">Plants</th>
-                <th className="r">Estimated yield</th>
+                <th>{t('Crop')}</th>
+                <th>{t('Areas')}</th>
+                <th className="r">{t('Plants')}</th>
+                <th className="r">{t('Estimated yield')}</th>
                 <th style={{ width: '38%' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
                     {MONTH_NAMES.map((m) => (
@@ -79,8 +80,8 @@ export function HarvestView() {
                   <td>{p.areas.join(', ')}</td>
                   <td className="r num">{p.qty.toLocaleString()}{p.qtyUnknown ? '+' : ''}</td>
                   <td className="r num" title={[...new Set(p.assumptions)].join('\n')}>
-                    {p.total ? `${formatRange(p.total, p.total.max < 10 ? 1 : 0)} kg` : <span className="muted tiny">Yield estimate unavailable</span>}
-                    {p.total && p.excluded > 0 && <div className="tiny muted">{p.excluded} planting(s) without data</div>}
+                    {p.total ? `${formatRange(p.total, p.total.max < 10 ? 1 : 0)} kg` : <span className="muted tiny">{t('Yield estimate unavailable')}</span>}
+                    {p.total && p.excluded > 0 && <div className="tiny muted">{tn('{{count}} plantings without data', p.excluded)}</div>}
                   </td>
                   <td>
                     <div className="timeline" title={p.windows.map((w) => formatDateRange(w.start, w.end)).join('; ')}>
@@ -90,7 +91,7 @@ export function HarvestView() {
                         return <span key={i} className="bar" style={{ left: `${a * 100}%`, width: `max(4px, ${(b - a) * 100}%)`, background: p.color }} />;
                       })}
                     </div>
-                    <div className="tiny muted">{p.windows.map((w) => formatDateRange(w.start, w.end)).join('; ') || 'No harvest window data'}</div>
+                    <div className="tiny muted">{p.windows.map((w) => formatDateRange(w.start, w.end)).join('; ') || t('No harvest window data')}</div>
                   </td>
                 </tr>
               ))}
@@ -99,7 +100,7 @@ export function HarvestView() {
         </div>
       )}
       <p className="small muted">
-        To record your own expectations, open a planting in the Design inspector (Variety, dates, yield & notes) and set “Your expected yield”. Harvest logging (actual vs. estimated) is planned; the data model keeps estimates and overrides separate to make that possible.
+        {t('To record your own expectations, open a planting in the Design inspector (Variety, dates, yield & notes) and set “Your expected yield”. Harvest logging (actual vs. estimated) is planned; the data model keeps estimates and overrides separate to make that possible.')}
       </p>
     </div>
   );

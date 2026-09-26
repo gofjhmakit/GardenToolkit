@@ -4,6 +4,7 @@ import { loadProject } from '../../persistence/projectRepo';
 import { contentBounds } from '../../editor/commands';
 import { worldOutline, expandBounds, isClosedShape } from '../../domain/geometry';
 import { kindInfo } from '../../domain/objectKinds';
+import { locale } from '../../i18n';
 
 /** Small drawing of a project's objects for the project list (no images, no plant markers). */
 export const ProjectThumb = memo(function ProjectThumb({ id, updatedAt }: { id: string; updatedAt: string }) {
@@ -45,7 +46,7 @@ export const ProjectThumb = memo(function ProjectThumb({ id, updatedAt }: { id: 
 
 export function relativeTime(iso: string, now = Date.now()): string {
   const diff = (Date.parse(iso) - now) / 1000;
-  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' });
   const abs = Math.abs(diff);
   if (abs < 60) return rtf.format(Math.round(diff), 'second');
   if (abs < 3600) return rtf.format(Math.round(diff / 60), 'minute');

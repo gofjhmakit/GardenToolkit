@@ -10,6 +10,8 @@ import { anchorsFor, formatMonthSpan, plantSeasons } from '../../engine/plantSea
 import { relationsForPlant, EVIDENCE_LABEL, matchesEndpoint } from '../../engine/companions';
 import { ConfidenceBadge, METHOD_LABELS } from '../panels/PlantingCard';
 import { defaultLocation } from '../../domain/projectFactory';
+import { language, t } from '../../i18n';
+import { formatDate } from '../../lib/dates';
 
 const r = (x: Range | null | undefined, unit = '', digits = 1) => (x ? formatRange(x, digits, unit) : null);
 
@@ -29,10 +31,10 @@ export function PlantDetail({ plant }: { plant: Plant }) {
   const season = useEditor((s) => s.doc?.settings.activeSeason) ?? new Date().getFullYear();
   const anchors = anchorsFor(loc, season);
   const seasons = plantSeasons(plant, anchors);
-  const names = Object.entries(plant.names.common).filter(([lang]) => lang !== 'en');
+  const names = Object.entries(plant.names.common).filter(([lang]) => lang !== language());
   const g = plant.growing;
   const p = plant.planting;
-  const t = plant.timing;
+  const item = plant.timing;
   const care = plant.care;
   const y = plant.yield;
   const relations = relationsForPlant(plant, catalog.companions);
@@ -66,14 +68,14 @@ export function PlantDetail({ plant }: { plant: Plant }) {
             {plant.taxonomy.family ? <span style={{ fontStyle: 'normal' }}> · {plant.taxonomy.family}</span> : null}
           </div>
         </div>
-        <button className="icon-btn" aria-pressed={fav} aria-label={fav ? 'Remove from favourites' : 'Add to favourites'} onClick={() => toggleFavourite(plant.id)}>
+        <button className="icon-btn" aria-pressed={fav} aria-label={fav ? t('Remove from favourites') : t('Add to favourites')} onClick={() => toggleFavourite(plant.id)}>
           <Star size={16} fill={fav ? 'var(--warn)' : 'none'} color={fav ? 'var(--warn)' : 'currentColor'} />
         </button>
       </div>
       <div className="row wrap" style={{ margin: '8px 0', gap: 4 }}>
         <span className="badge" style={{ borderColor: CATEGORY_COLORS[plant.category], color: CATEGORY_COLORS[plant.category] }}>{CATEGORY_LABELS[plant.category]}</span>
         {plant.lifecycle && <span className="badge">{plant.lifecycle}</span>}
-        {plant.edible != null && <span className="badge">{plant.edible ? 'edible' : 'not edible'}</span>}
+        {plant.edible != null && <span className="badge">{plant.edible ? 'edible' : t('not edible')}</span>}
         {plant.tags.slice(0, 6).map((tag) => (
           <span key={tag} className="badge">
             {tag}
@@ -82,92 +84,92 @@ export function PlantDetail({ plant }: { plant: Plant }) {
       </div>
       {(names.length > 0 || plant.names.common.en?.length > 1 || plant.names.synonyms.length > 0) && (
         <dl className="kv">
-          {plant.names.common.en?.length > 1 && <Row label="Also called" value={plant.names.common.en.slice(1).join(', ')} />}
+          {(plant.names.common[language()]?.length ?? 0) > 1 && <Row label={t('Also called')} value={plant.names.common[language()].slice(1).join(', ')} />}
           {names.map(([lang, list]) => (
-            <Row key={lang} label={`Name (${lang})`} value={list.join(', ')} />
+            <Row key={lang} label={t('Name ({{lang}})', { lang })} value={list.join(', ')} />
           ))}
-          {plant.names.synonyms.length > 0 && <Row label="Synonyms" value={<i>{plant.names.synonyms.join(', ')}</i>} />}
+          {plant.names.synonyms.length > 0 && <Row label={t('Synonyms')} value={<i>{plant.names.synonyms.join(', ')}</i>} />}
         </dl>
       )}
 
       <section className="detail-section">
-        <h4>Growing conditions</h4>
+        <h4>{t('Growing conditions')}</h4>
         <dl className="kv">
-          <Row label="Light" value={g.sun?.map((s) => SUN_LABEL[s]).join(', ')} />
-          <Row label="Min. direct sun" value={g.sunHoursMin != null ? `${g.sunHoursMin} h/day` : null} />
-          <Row label="Water" value={g.water} />
-          <Row label="Soil" value={g.soil?.join(', ')} />
-          <Row label="Soil pH" value={r(g.ph)} />
-          <Row label="Drainage" value={g.drainage} />
-          <Row label="Frost" value={g.frostTolerance} />
-          <Row label="Finnish zones" value={g.finnishZones ? `${formatRange(g.finnishZones)}` : null} />
-          <Row label="USDA zones" value={g.usdaZones ? formatRange(g.usdaZones) : null} />
+          <Row label={t('Light')} value={g.sun?.map((s) => SUN_LABEL[s]).join(', ')} />
+          <Row label={t('Min. direct sun')} value={g.sunHoursMin != null ? t('{{hours}} h/day', { hours: g.sunHoursMin }) : null} />
+          <Row label={t('Water')} value={g.water ? t(g.water) : null} />
+          <Row label={t('Soil')} value={g.soil?.map((s) => t(s)).join(', ')} />
+          <Row label={t('Soil pH')} value={r(g.ph)} />
+          <Row label={t('Drainage')} value={g.drainage} />
+          <Row label={t('Frost')} value={g.frostTolerance ? t(g.frostTolerance) : null} />
+          <Row label={t('Finnish zones')} value={g.finnishZones ? `${formatRange(g.finnishZones)}` : null} />
+          <Row label={t('USDA zones')} value={g.usdaZones ? formatRange(g.usdaZones) : null} />
         </dl>
       </section>
 
       <section className="detail-section">
-        <h4>Planting</h4>
+        <h4>{t('Planting')}</h4>
         <dl className="kv">
-          <Row label="Methods" value={p.methods.map((m) => METHOD_LABELS[m]).join(', ')} />
-          <Row label="In-row spacing" value={r(p.inRowSpacingCm, 'cm')} />
-          <Row label="Row spacing" value={r(p.rowSpacingCm, 'cm')} />
-          <Row label="Grid spacing" value={r(p.gridSpacingCm, 'cm')} />
-          <Row label="Seed spacing" value={r(p.seedSpacingCm, 'cm')} />
-          <Row label="Seed depth" value={r(p.seedDepthCm, 'cm')} />
-          <Row label="Planting depth" value={r(p.plantingDepthCm, 'cm')} />
-          <Row label="Germination" value={p.germinationDays ? `${formatRange(p.germinationDays)} days${p.germinationTempC ? ` at ${formatRange(p.germinationTempC)} °C` : ''}` : null} />
-          <Row label="Sowing rate" value={r(p.seedRateGPerM2, 'g/m²')} />
-          <Row label="Mature height" value={r(p.matureHeightCm, 'cm', 0)} />
-          <Row label="Mature width" value={r(p.matureWidthCm, 'cm', 0)} />
-          <Row label="Containers" value={p.containerSuitable == null ? null : p.containerSuitable ? `Suitable${p.containerVolumeL ? ` (${formatRange(p.containerVolumeL)} L)` : ''}` : 'Not recommended'} />
-          <Row label="Transplanting" value={localizedText(p.transplanting)} />
-          <Row label="Direct sowing" value={localizedText(p.directSowing)} />
+          <Row label={t('Methods')} value={p.methods.map((m) => METHOD_LABELS[m]).join(', ')} />
+          <Row label={t('In-row spacing')} value={r(p.inRowSpacingCm, 'cm')} />
+          <Row label={t('Row spacing')} value={r(p.rowSpacingCm, 'cm')} />
+          <Row label={t('Grid spacing')} value={r(p.gridSpacingCm, 'cm')} />
+          <Row label={t('Seed spacing')} value={r(p.seedSpacingCm, 'cm')} />
+          <Row label={t('Seed depth')} value={r(p.seedDepthCm, 'cm')} />
+          <Row label={t('Planting depth')} value={r(p.plantingDepthCm, 'cm')} />
+          <Row label={t('Germination')} value={p.germinationDays ? (p.germinationTempC ? t('{{days}} days at {{temp}} °C', { days: formatRange(p.germinationDays), temp: formatRange(p.germinationTempC) }) : t('{{days}} days', { days: formatRange(p.germinationDays) })) : null} />
+          <Row label={t('Sowing rate')} value={r(p.seedRateGPerM2, 'g/m²')} />
+          <Row label={t('Mature height')} value={r(p.matureHeightCm, 'cm', 0)} />
+          <Row label={t('Mature width')} value={r(p.matureWidthCm, 'cm', 0)} />
+          <Row label={t('Containers')} value={p.containerSuitable == null ? null : p.containerSuitable ? (p.containerVolumeL ? t('Suitable ({{volume}} L)', { volume: formatRange(p.containerVolumeL) }) : t('Suitable')) : t('Not recommended')} />
+          <Row label={t('Transplanting')} value={localizedText(p.transplanting)} />
+          <Row label={t('Direct sowing')} value={localizedText(p.directSowing)} />
         </dl>
       </section>
 
       <section className="detail-section">
-        <h4>Timing {loc.lastFrost ? '(for this garden)' : '(placeholder frost dates)'}</h4>
+        <h4>{t('Timing')} {loc.lastFrost ? t('(for this garden)') : t('(placeholder frost dates)')}</h4>
         <dl className="kv">
-          <Row label="Sow" value={formatMonthSpan(seasons.sow)} />
-          <Row label="Plant out" value={formatMonthSpan(seasons.plant)} />
-          <Row label="Harvest" value={formatMonthSpan(seasons.harvest)} />
-          <Row label="Days to maturity" value={t.daysToMaturity ? `${formatRange(t.daysToMaturity)} from ${t.maturityFrom ?? 'sowing'}` : null} />
-          <Row label="First harvest" value={t.yearsToFirstHarvest ? `${formatRange(t.yearsToFirstHarvest)} year(s) after planting` : null} />
-          <Row label="Succession" value={t.successionIntervalDays ? `every ${formatRange(t.successionIntervalDays)} days` : null} />
+          <Row label={t('Sow')} value={formatMonthSpan(seasons.sow)} />
+          <Row label={t('Plant out')} value={formatMonthSpan(seasons.plant)} />
+          <Row label={t('Harvest')} value={formatMonthSpan(seasons.harvest)} />
+          <Row label={t('Days to maturity')} value={item.daysToMaturity ? (item.maturityFrom === 'transplant' ? t('{{days}} from transplanting', { days: formatRange(item.daysToMaturity) }) : t('{{days}} from sowing', { days: formatRange(item.daysToMaturity) })) : null} />
+          <Row label={t('First harvest')} value={item.yearsToFirstHarvest ? t('{{years}} year(s) after planting', { years: formatRange(item.yearsToFirstHarvest) }) : null} />
+          <Row label={t('Succession')} value={item.successionIntervalDays ? t('every {{days}} days', { days: formatRange(item.successionIntervalDays) }) : null} />
         </dl>
       </section>
 
       <section className="detail-section">
-        <h4>Care</h4>
+        <h4>{t('Care')}</h4>
         <dl className="kv">
           {careRows.map(([label, text]) => (
             <Row key={label} label={label} value={localizedText(text)} />
           ))}
-          <Row label="Feeding need" value={care.feeding} />
+          <Row label={t('Feeding need')} value={care.feeding ? t(care.feeding) : null} />
         </dl>
       </section>
 
       <section className="detail-section">
-        <h4>Yield</h4>
+        <h4>{t('Yield')}</h4>
         {y && (y.perPlantKg || y.perM2Kg) ? (
           <div className="col" style={{ gap: 4 }}>
             <div>
-              {y.perPlantKg && <span className="num">{formatRange(y.perPlantKg, 2)} kg/plant </span>}
+              {y.perPlantKg && <span className="num">{formatRange(y.perPlantKg, 2)} {t('kg/plant')} </span>}
               {y.perM2Kg && <span className="num">{formatRange(y.perM2Kg, 1)} kg/m² </span>}
               <ConfidenceBadge c={y.confidence} />
             </div>
             {y.assumptions && <div className="small muted">{localizedText(y.assumptions)}</div>}
           </div>
         ) : (
-          <p className="muted small">Yield estimate unavailable — no reliable data.</p>
+          <p className="muted small">{t('Yield estimate unavailable — no reliable data.')}</p>
         )}
       </section>
 
       <section className="detail-section">
-        <h4>Rotation & companions</h4>
+        <h4>{t('Rotation & companions')}</h4>
         <dl className="kv">
-          <Row label="Rotation group" value={plant.rotation?.group} />
-          <Row label="Fixes nitrogen" value={plant.rotation?.nitrogenFixer ? 'Yes' : null} />
+          <Row label={t('Rotation group')} value={plant.rotation?.group} />
+          <Row label={t('Fixes nitrogen')} value={plant.rotation?.nitrogenFixer ? 'Yes' : null} />
         </dl>
         {relations.length > 0 ? (
           <ul style={{ paddingLeft: 16, margin: '6px 0' }} className="small">
@@ -175,22 +177,22 @@ export function PlantDetail({ plant }: { plant: Plant }) {
               const otherEnd = matchesEndpoint(rel.a, plant) ? rel.b : rel.a;
               return (
                 <li key={i}>
-                  {rel.kind === 'antagonistic' ? 'Avoid near' : 'Good with'} <strong>{other(otherEnd)}</strong> <span className="badge">{EVIDENCE_LABEL[rel.evidence]}</span>
+                  {rel.kind === 'antagonistic' ? t('Avoid near') : t('Good with')} <strong>{other(otherEnd)}</strong> <span className="badge">{EVIDENCE_LABEL[rel.evidence]}</span>
                   <div className="tiny muted">{localizedText(rel.mechanism)}</div>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <p className="muted small">No companion relationships recorded.</p>
+          <p className="muted small">{t('No companion relationships recorded.')}</p>
         )}
       </section>
 
       <section className="detail-section">
-        <h4>Data source</h4>
+        <h4>{t('Data source')}</h4>
         <p className="small">
-          Record confidence: <ConfidenceBadge c={plant.provenance.confidence as Confidence} /> · dataset <code>{plant.dataset}</code>
-          {plant.provenance.updated ? ` · updated ${plant.provenance.updated}` : ''}
+          {t('Record confidence:')} <ConfidenceBadge c={plant.provenance.confidence as Confidence} /> · {t('dataset')} <code>{plant.dataset}</code>
+          {plant.provenance.updated ? ` · ${t('updated {{date}}', { date: formatDate(plant.provenance.updated, 'long') })}` : ''}
         </p>
         {plant.provenance.sources.map((s) => {
           const src = catalog.sources.get(s.id);
