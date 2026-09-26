@@ -34,8 +34,10 @@ export function plant(id, scientific, common, spec) {
     care = {},
     yield: y = null,
     rotation = null,
+    uses = null,
     conf = 'medium',
     sourceNote,
+    updated = UPDATED,
   } = spec;
   return {
     id,
@@ -52,10 +54,23 @@ export function plant(id, scientific, common, spec) {
     care,
     yield: y,
     rotation,
+    ...(uses ? { uses } : {}),
     provenance: {
       sources: [{ id: 'gtk-editorial', ...(sourceNote ? { note: sourceNote } : {}) }],
       confidence: conf,
-      updated: UPDATED,
+      updated,
+      ...(uses ? { fields: { uses: { sources: ['gtk-editorial'], confidence: 'medium' } } } : {}),
     },
   };
+}
+
+/**
+ * Usage notes written into a record: u(parts, { food, med, other, keep, warn }), each text
+ * [english, finnish]. Medicinal text describes traditional use only.
+ */
+export function uses(parts, texts) {
+  const key = { food: 'culinary', med: 'medicinal', other: 'other', keep: 'preserving', warn: 'safety' };
+  const out = { parts };
+  for (const [k, [en, fi]] of Object.entries(texts)) out[key[k]] = t(en, fi);
+  return out;
 }

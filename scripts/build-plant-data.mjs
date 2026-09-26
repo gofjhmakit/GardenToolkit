@@ -18,6 +18,8 @@ import perennials2 from '../data/plants/seed/perennials2.mjs';
 import woody2 from '../data/plants/seed/woody2.mjs';
 import greenmanure from '../data/plants/seed/greenmanure.mjs';
 import herbs3 from '../data/plants/seed/herbs3.mjs';
+import finlandEdibles from '../data/plants/seed/finland-edibles.mjs';
+import finlandOrnamentals from '../data/plants/seed/finland-ornamentals.mjs';
 import { USES } from '../data/plants/seed/uses.mjs';
 import { applyEnrichment } from '../data/plants/seed/enrich.mjs';
 import { companions, rotation, sources } from '../data/plants/seed/relations.mjs';
@@ -25,7 +27,7 @@ import { HARDINESS } from '../data/plants/seed/hardiness.mjs';
 import { FI_TEXTS } from '../data/plants/seed/fi-texts.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const plants = [...vegetables, ...vegetables2, ...herbs, ...herbs2, ...herbs3, ...fruit, ...woody2, ...ornamentals, ...flowers2, ...perennials2, ...greenmanure];
+const plants = [...vegetables, ...vegetables2, ...herbs, ...herbs2, ...herbs3, ...finlandEdibles, ...fruit, ...woody2, ...ornamentals, ...flowers2, ...perennials2, ...greenmanure, ...finlandOrnamentals];
 
 const ids = new Set();
 for (const p of plants) {

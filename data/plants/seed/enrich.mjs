@@ -14,7 +14,7 @@ const ENRICHED = '2026-09-26';
  */
 
 // --- Shared pest and disease texts -------------------------------------------
-const P = {
+export const P = {
   BRASSICA: t('Cabbage root fly, flea beetles, cabbage white and diamondback moth caterpillars, aphids and slugs. Cover with fine insect mesh from sowing or planting.', 'Kaalikärpänen, kirpat, kaaliperhosen ja kaalikoin toukat, kirvat ja etanat. Peitä hienosilmäisellä hyönteisverkolla heti kylvöstä tai istutuksesta.'),
   APIACEAE: t('Carrot fly (rusty tunnels in roots) and carrot psyllid (curled leaves); cover with insect mesh right after sowing. Aphids on the leaves.', 'Porkkanakärpänen (ruosteenruskeat käytävät juurissa) ja porkkanakemppi (kähertyneet lehdet); peitä hyönteisverkolla heti kylvön jälkeen. Kirvoja lehdillä.'),
   ALLIUM: t('Onion fly maggots eat the bulbs and leek moth and allium leaf miner tunnel in leaves; insect mesh prevents both. Thrips in hot summers.', 'Sipulikärpäsen toukat syövät sipuleita, ja purjokoi sekä sipulimiinaajakärpänen kaivavat käytäviä lehtiin; hyönteisverkko estää molemmat. Ripsiäisiä helteisinä kesinä.'),
@@ -45,7 +45,7 @@ const P = {
   VINE_WEEVIL: t('Vine weevil adults notch the leaves and larvae eat roots; slugs.', 'Kärsäkkäät lovivat lehtiä ja niiden toukat syövät juuria; etanat.'),
 };
 
-const D = {
+export const D = {
   BRASSICA: t('Clubroot (keep pH above 7 by liming and rotate at least 4–6 years), seedling downy mildew, and black rot in wet summers.', 'Möhöjuuri (pidä pH yli 7 kalkitsemalla ja kierrätä vähintään 4–6 vuotta), taimien lehtihome ja märkinä kesinä mustalaho.'),
   APIACEAE: t('Leaf blight and powdery mildew in late summer; storage rots such as grey mould — store only healthy roots.', 'Loppukesällä lehtilaikku ja härmä; varastotauteja kuten harmaahome — varastoi vain terveet juuret.'),
   CELERY: t('Septoria leaf spot in wet weather; heart rot from calcium shortage when watering is uneven.', 'Märällä säällä sellerin lehtilaikku; epätasaisesta kastelusta johtuva kalsiumin puutteen sydänmätä.'),

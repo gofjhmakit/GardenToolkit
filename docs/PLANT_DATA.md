@@ -26,7 +26,7 @@ records under **Plant database → Data sources & licences**.
 
 | Dataset | Content | Licence | Status |
 | --- | --- | --- | --- |
-| `core.json` (`gtk-core`) | 395 curated temperate garden plants (88 vegetables, 88 herbs, 50 annual/biennial flowers, 55 perennials, 14 bulbs, 24 berries, fruit trees, vines, shrubs, trees, grasses, groundcovers and 11 green manures), Finnish names for almost all of them with planting, timing, care (including pests, diseases and watering for every plant), yield and rotation data; usage notes (food, traditional medicinal use, other uses, preserving, cautions) for 129 herbs; 13 companion relations; rotation rules | CC0-1.0 (our own texts; see Yrttitarha below) | Bundled |
+| `core.json` (`gtk-core`) | 498 curated garden plants with the focus on what grows outdoors in Finland (98 vegetables, 96 herbs, 57 annual/biennial flowers, 79 perennials, 15 bulbs, 26 berries, 10 fruit trees, 31 trees, 43 shrubs, 7 climbers, grasses, groundcovers and 12 green manures), Finnish names for almost all of them with planting, timing, care (including pests, diseases and watering for every plant), yield and rotation data; usage notes (food, traditional medicinal use, other uses, preserving, cautions) for 129 herbs; 13 companion relations; rotation rules | CC0-1.0 (our own texts; see Yrttitarha below) | Bundled |
 | `wikidata-names.json` (`gtk-wikidata-names`) | Names/taxonomy for thousands of garden-relevant species (en/fi/sv/de) — **names only** | CC0-1.0 | Pipeline ready (`npm run data:wikidata`); not generated in this repository yet because the build environment had no access to Wikidata |
 | User plants ("My plants") | Created in the app, stored in IndexedDB | User's own | Built in |
 
@@ -55,6 +55,16 @@ cultivation guides the database cites (Mikkeli trials). Medicinal notes describe
 only — no doses, no claims of cure — and every plant with known risks (toxic plants, drug
 interactions, pregnancy) carries a `safety` note that the app shows first; the app also says the
 information is not medical advice.
+
+**Finnish garden plants (September 2026).** `finland-edibles.mjs` and `finland-ornamentals.mjs` add
+plants commonly grown outdoors in Finland that were missing: vegetables and grains (savoy and red
+cabbage, walking onion, patience dock, barley…), herbs and wild edibles, old Finnish fruit and
+berries (kriikuna, hardy kiwi, half-high blueberry, juhannusruusu…), native and garden trees
+(alders, ash, elms, goat willow, Siberian fir…), classic shrubs and climbers (Hungarian lilac,
+Siberian pea shrub, alpine clematis…), perennials and groundcovers (globeflower, Maltese cross,
+harebell…), lawn grasses and summer annuals. Every record has growing conditions, spacing, timing,
+care, pests, diseases, a Finnish name and a hardiness zone; edible and useful plants carry usage
+notes credited to the editorial source. Tropical plants already in the dataset were kept.
 
 **Gap filling (`data/plants/seed/enrich.mjs`).** Soil pH and type, mature width and height, root and
 sowing depth, feeding, harvesting notes and low-confidence yield ranges were added where records had

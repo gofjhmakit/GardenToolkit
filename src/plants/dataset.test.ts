@@ -147,14 +147,22 @@ describe('plant data quality', () => {
     expect(unsafe).toEqual([]);
   });
 
-  it('credits the herb database on every usage note and keeps notes non-empty', () => {
+  it('credits a known source for every usage note and keeps notes non-empty', () => {
     const withUses = plants.filter((p) => p.uses);
     expect(withUses.length).toBeGreaterThanOrEqual(129);
     for (const p of withUses) {
-      expect(p.provenance.sources.map((s) => s.id), p.id).toContain('yrttitarha');
+      const credited = p.provenance.fields?.uses?.sources ?? [];
+      expect(credited.length, p.id).toBeGreaterThan(0);
+      for (const id of credited) expect(catalog.sources.has(id), `${p.id} → ${id}`).toBe(true);
       const u = p.uses!;
       expect(u.culinary || u.medicinal || u.other, p.id).toBeTruthy();
       expect(u.parts.length, p.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('credits Yrttitarha on the herbs summarised from it', () => {
+    for (const id of ['urtica-dioica', 'hypericum-perforatum', 'achillea-millefolium']) {
+      expect(catalog.get(id)!.provenance.sources.map((s) => s.id), id).toContain('yrttitarha');
     }
   });
 
@@ -184,6 +192,14 @@ describe('herb search', () => {
     expect(search('mesiangervo')[0]).toBe('filipendula-ulmaria');
     expect(search('koiruoho')[0]).toBe('artemisia-absinthium');
     expect(search('lakka')).toContain('rubus-chamaemorus');
+  });
+  it('finds plants grown in Finnish gardens by their Finnish names', () => {
+    const cases: [string, string][] = [
+      ['kurttukaali', 'brassica-oleracea-sabauda'], ['pesäsipuli', 'allium-x-proliferum'], ['kriikuna', 'prunus-domestica-insititia'],
+      ['minikiivi', 'actinidia-arguta'], ['tervaleppä', 'alnus-glutinosa'], ['unkarinsyreeni', 'syringa-josikaea'],
+      ['kullero', 'trollius-europaeus'], ['juhannusruusu', 'rosa-pimpinellifolia'], ['niittynurmikka', 'poa-pratensis'],
+    ];
+    for (const [q, id] of cases) expect(search(q)[0], q).toBe(id);
   });
   it('ranks names that start with the query above near-miss spellings', () => {
     // "mari" should list marigolds before wormwood's folk name "Mali".
