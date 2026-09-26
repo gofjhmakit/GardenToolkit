@@ -4,7 +4,7 @@
  * data/plants/seed. Schema validation happens in the test suite
  * (src/plants/dataset.test.ts) using the same zod schema the app uses.
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vegetables from '../data/plants/seed/vegetables.mjs';
@@ -46,5 +46,16 @@ const dataset = {
 
 const out = resolve(root, 'public/data/plants/core.json');
 mkdirSync(dirname(out), { recursive: true });
+// Keep the previous "generated" date when nothing else changed, so rebuilding
+// does not leave the committed file modified.
+if (existsSync(out)) {
+  try {
+    const prev = JSON.parse(readFileSync(out, 'utf8'));
+    const same = JSON.stringify({ ...prev, dataset: { ...prev.dataset, generated: dataset.dataset.generated } }) === JSON.stringify(dataset);
+    if (same) dataset.dataset.generated = prev.dataset.generated;
+  } catch {
+    // Unreadable previous file: just overwrite it.
+  }
+}
 writeFileSync(out, JSON.stringify(dataset));
 console.log(`Wrote ${plants.length} plants, ${companions.length} companion relations to ${out}`);
