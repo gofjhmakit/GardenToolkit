@@ -57,7 +57,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
   });
   useEffect(() => {
     // A shorter result list with the old scroll offset would place every row at the top.
-    listRef.current?.scrollTo({ top: 0 });
+    if (listRef.current) listRef.current.scrollTop = 0;
   }, [results]);
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
