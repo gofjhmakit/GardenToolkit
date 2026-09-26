@@ -47,7 +47,10 @@ growing zone (I–VIII) where it usually survives, plus a USDA zone range. These
 editorial approximations of commonly published nursery ratings; cultivars often differ by a zone
 or two. Tender perennials that are overwintered indoors have no zone rating on purpose. Finnish
 common names were included only where the maintainers were confident of them; a plant without a
-Finnish name shows its English name. Improving this data with properly cited sources is the most
+Finnish name shows its English name. Care notes, pests, yield assumptions, companion mechanisms
+and rotation texts are written in English in the seed files and translated in
+`data/plants/seed/fi-texts.mjs` (keyed by the English text); the build fills in `fi` from there
+and the dataset test fails if any localised text has no Finnish version. Improving this data with properly cited sources is the most
 valuable next step for the database (see "Adding data").
 
 ### Candidate sources reviewed

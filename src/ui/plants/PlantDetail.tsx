@@ -4,7 +4,8 @@ import { localizedText, plantDisplayName } from '../../plants/names';
 import { usePlants } from '../../app/plantStore';
 import { useEditor } from '../../editor/store';
 import { formatRange, type Range } from '../../domain/range';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '../plantColors';
+import { CATEGORY_LABELS, CATEGORY_COLORS, LIFECYCLE_LABELS } from '../plantColors';
+import { tagLabel } from '../../plants/tags';
 import { SUN_LABEL } from '../../engine/suitability';
 import { anchorsFor, formatMonthSpan, plantSeasons } from '../../engine/plantSeasons';
 import { relationsForPlant, EVIDENCE_LABEL, matchesEndpoint } from '../../engine/companions';
@@ -40,21 +41,21 @@ export function PlantDetail({ plant }: { plant: Plant }) {
   const relations = relationsForPlant(plant, catalog.companions);
   const fav = favourites.has(plant.id);
   const careRows: [string, Record<string, string> | null | undefined][] = [
-    ['Watering', care.watering],
-    ['Feeding', care.fertilizing],
-    ['Pruning', care.pruning],
-    ['Support', care.support],
-    ['Thinning', care.thinning],
-    ['Mulching', care.mulching],
-    ['Pests', care.pests],
-    ['Diseases', care.diseases],
-    ['Winter', care.winter],
-    ['Harvesting', care.harvesting],
-    ['Storage', care.storage],
+    [t('Watering'), care.watering],
+    [t('Feeding'), care.fertilizing],
+    [t('Pruning'), care.pruning],
+    [t('Support'), care.support],
+    [t('Thinning'), care.thinning],
+    [t('Mulching'), care.mulching],
+    [t('Pests'), care.pests],
+    [t('Diseases'), care.diseases],
+    [t('Winter'), care.winter],
+    [t('Harvesting'), care.harvesting],
+    [t('Storage'), care.storage],
   ];
   const other = (id: string) => {
-    if (id.startsWith('genus:')) return `${id.slice(6)} (genus)`;
-    if (id.startsWith('family:')) return `${id.slice(7)} (family)`;
+    if (id.startsWith('genus:')) return t('{{name}} (genus)', { name: id.slice(6) });
+    if (id.startsWith('family:')) return t('{{name}} (family)', { name: id.slice(7) });
     const q = catalog.get(id);
     return q ? plantDisplayName(q) : id;
   };
@@ -74,11 +75,11 @@ export function PlantDetail({ plant }: { plant: Plant }) {
       </div>
       <div className="row wrap" style={{ margin: '8px 0', gap: 4 }}>
         <span className="badge" style={{ borderColor: CATEGORY_COLORS[plant.category], color: CATEGORY_COLORS[plant.category] }}>{CATEGORY_LABELS[plant.category]}</span>
-        {plant.lifecycle && <span className="badge">{plant.lifecycle}</span>}
-        {plant.edible != null && <span className="badge">{plant.edible ? 'edible' : t('not edible')}</span>}
+        {plant.lifecycle && <span className="badge">{LIFECYCLE_LABELS[plant.lifecycle]}</span>}
+        {plant.edible != null && <span className="badge">{plant.edible ? t('edible') : t('not edible')}</span>}
         {plant.tags.slice(0, 6).map((tag) => (
           <span key={tag} className="badge">
-            {tag}
+            {tagLabel(tag)}
           </span>
         ))}
       </div>

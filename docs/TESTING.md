@@ -11,7 +11,7 @@ npx playwright test --project=phone   # only the phone/touch tests
 | Layer | Where | What |
 | --- | --- | --- |
 | Pure domain & engine | `src/domain/*.test.ts`, `src/engine/*.test.ts` | Units parsing/formatting, geometry (areas, hit tests, clipping, splitting), capacity for rows/grids/triangular/circles/concave shapes/broadcast/single plants, harvest ranges & overrides, calendar (frost-relative, fixed, southern hemisphere, successions, cross-year crops, overrides), rotation, companions, suitability, climate |
-| Plant data | `src/plants/*.test.ts` | Every bundled record validates; sources exist; yields have confidence; search (common/scientific/Finnish/fuzzy/accent-insensitive), filters, 10 000-record performance; Wikidata pipeline transform |
+| Plant data | `src/plants/*.test.ts` | Every bundled record validates; sources exist; yields have confidence; search (common/scientific/Finnish/fuzzy/accent-insensitive), filters, 10 000-record performance; Wikidata pipeline transform; every localised plant text has a Finnish version |
 | Editor | `src/editor/*.test.ts` | All commands (create, delete, duplicate, copy/paste, group, z-order, align, layers, calibration, planting assignment), store undo/redo, coalescing, gestures, selection modes, zoom independence, snapping |
 | Persistence | `src/persistence/*.test.ts` | Create/list/load/save/duplicate/delete, snapshots, reload, migrations, reference repair, package/JSON round trips, corrupted & hostile imports (prototype-named ids, impossible dates, absurd geometry, lying ZIP headers), save → reopen contract at every UI text limit |
 | Reports | `src/reports/*.test.ts` | Report builders for every document type, CSV escaping/injection, PDF text sanitising, iCal escaping, line folding and all-day end dates |

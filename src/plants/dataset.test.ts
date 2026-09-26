@@ -5,6 +5,7 @@ import { EMPTY_FILTER, filterPlants } from './filter';
 import { anchorsFor } from '../engine/plantSeasons';
 import { createProject } from '../domain/projectFactory';
 import type { Plant } from './schema';
+import { hasTagLabel } from './tags';
 
 describe('bundled plant dataset', () => {
   const catalog = loadCoreCatalog();
@@ -46,6 +47,28 @@ describe('bundled plant dataset', () => {
     expect(c.plants.size).toBe(1);
     expect(c.issues[0].plantId).toBe('broken');
     expect(c.addDataset({ format: 'something-else' })).toBe(false);
+  });
+  it('has a Finnish version of every localised text and no placeholder leaks', () => {
+    const missing: string[] = [];
+    const walk = (v: unknown, path: string): void => {
+      if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}[${i}]`));
+      else if (v && typeof v === 'object') {
+        const o = v as Record<string, unknown>;
+        if (typeof o.en === 'string') {
+          if (typeof o.fi !== 'string' || !o.fi.trim()) missing.push(`${path}: ${o.en}`);
+          expect(`${o.en} ${o.fi ?? ''}`, path).not.toMatch(/undefined|null|NaN/);
+        }
+        for (const [k, x] of Object.entries(o)) walk(x, `${path}.${k}`);
+      }
+    };
+    for (const p of catalog.all()) walk(p, p.id);
+    walk(catalog.companions, 'companions');
+    walk(catalog.rotationRules, 'rotation');
+    expect(missing).toEqual([]);
+  });
+  it('has a label for every tag', () => {
+    const unlabelled = new Set(catalog.all().flatMap((p) => p.tags).filter((tag) => !hasTagLabel(tag)));
+    expect([...unlabelled]).toEqual([]);
   });
 });
 

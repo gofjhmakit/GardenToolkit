@@ -2801,6 +2801,26 @@ html {
     overflow-x: auto;
     max-width: 100%;
   }
+  /* Reference tables whose text column matters more than alignment: one block per row. */
+  .view .table.stack thead {
+    display: none;
+  }
+  .view .table.stack tr,
+  .view .table.stack td {
+    display: block;
+  }
+  .view .table.stack tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .view .table.stack td {
+    border: 0;
+    padding: 2px 0;
+  }
+  .view .table.stack td[data-label]::before {
+    content: attr(data-label) ': ';
+    color: var(--muted);
+  }
   .pdb-header {
     flex-wrap: wrap;
     padding: 8px 12px !important;

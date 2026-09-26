@@ -7,7 +7,8 @@ import { EMPTY_FILTER, filterPlants, isFilterActive, type PlantFilter } from '..
 import { anchorsFor, formatMonthSpan, plantSeasons } from '../../engine/plantSeasons';
 import { PLANT_CATEGORIES, SUN_LEVELS, type Plant } from '../../plants/schema';
 import { plantDisplayName } from '../../plants/names';
-import { CATEGORY_COLORS, CATEGORY_LABELS } from '../plantColors';
+import { CATEGORY_COLORS, CATEGORY_LABELS, LIFECYCLE_LABELS } from '../plantColors';
+import { formatNumber } from '../../domain/units';
 import { SUN_LABEL } from '../../engine/suitability';
 import { formatRange } from '../../domain/range';
 import { MONTH_NAMES } from '../../lib/dates';
@@ -177,7 +178,7 @@ export function PlantBrowser({ selectedId, onSelect, onActivate, renderSide, aut
             </button>
           )}
           <div className="tiny muted" aria-live="polite">
-            {status === 'loading' ? t('Loading plant database…') : `${results.length.toLocaleString()} of ${catalog.plants.size.toLocaleString()} plants`}
+            {status === 'loading' ? t('Loading plant database…') : t('{{shown}} of {{total}} plants', { shown: formatNumber(results.length), total: formatNumber(catalog.plants.size) })}
           </div>
           {recentPlants.length > 0 && (
             <div className="row wrap" style={{ gap: 4 }}>
@@ -230,17 +231,17 @@ function PlantListItem({ plant, selected, favourite, onSelect, onActivate, onFav
   const spacing = plant.planting.inRowSpacingCm ?? plant.planting.gridSpacingCm;
   const sun = plant.growing.sun?.map((s) => SUN_LABEL[s]).join('/');
   return (
-    <div className="plant-item" id={`plant-${plant.id}`} role="option" aria-selected={selected} aria-label={`${plantDisplayName(plant)}, ${plant.names.scientific}${favourite ? ', favourite' : ''}`} onClick={onSelect} onDoubleClick={onActivate}>
+    <div className="plant-item" id={`plant-${plant.id}`} role="option" aria-selected={selected} aria-label={`${plantDisplayName(plant)}, ${plant.names.scientific}${favourite ? t(', favourite') : ''}`} onClick={onSelect} onDoubleClick={onActivate}>
       <span className="cat-dot" style={{ background: CATEGORY_COLORS[plant.category] }} aria-hidden="true" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="pname">{plantDisplayName(plant)}</div>
         <div className="sci">{plant.names.scientific}</div>
         <div className="meta">
-          {[CATEGORY_LABELS[plant.category], sun, plant.lifecycle ? plant.lifecycle[0].toUpperCase() + plant.lifecycle.slice(1) : null].filter(Boolean).join(' · ')}
+          {[CATEGORY_LABELS[plant.category], sun, plant.lifecycle ? LIFECYCLE_LABELS[plant.lifecycle] : null].filter(Boolean).join(' · ')}
         </div>
         <div className="meta">
-          {spacing ? `Spacing: ${formatRange(spacing)} cm` : t('Spacing: unknown')}
-          {harvest ? ` · Harvest: ${harvest}` : ''}
+          {spacing ? t('Spacing: {{range}} cm', { range: formatRange(spacing) }) : t('Spacing: unknown')}
+          {harvest ? t(' · Harvest: {{months}}', { months: harvest }) : ''}
           {plant.dataset === 'user' ? t(' · My plant') : ''}
         </div>
       </div>

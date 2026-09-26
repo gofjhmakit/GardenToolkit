@@ -19,6 +19,7 @@ import woody2 from '../data/plants/seed/woody2.mjs';
 import greenmanure from '../data/plants/seed/greenmanure.mjs';
 import { companions, rotation, sources } from '../data/plants/seed/relations.mjs';
 import { HARDINESS } from '../data/plants/seed/hardiness.mjs';
+import { FI_TEXTS } from '../data/plants/seed/fi-texts.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const plants = [...vegetables, ...vegetables2, ...herbs, ...herbs2, ...fruit, ...woody2, ...ornamentals, ...flowers2, ...perennials2, ...greenmanure];
@@ -39,6 +40,23 @@ for (const c of companions) {
     if (!end.includes(':') && !ids.has(end)) throw new Error(`Companion relation references unknown plant ${end}`);
   }
 }
+
+// Fill in Finnish for every localised text ({ en, fi? }) that does not set it inline.
+const untranslated = new Set();
+function localise(v) {
+  if (Array.isArray(v)) v.forEach(localise);
+  else if (v && typeof v === 'object') {
+    if (typeof v.en === 'string' && v.fi === undefined) {
+      if (FI_TEXTS[v.en]) v.fi = FI_TEXTS[v.en];
+      else untranslated.add(v.en);
+    }
+    Object.values(v).forEach(localise);
+  }
+}
+localise(plants);
+localise(companions);
+localise(rotation);
+if (untranslated.size) console.warn(`No Finnish text for ${untranslated.size} strings (add them to fi-texts.mjs):\n  ${[...untranslated].join('\n  ')}`);
 
 const dataset = {
   format: 'garden-toolkit-plants',

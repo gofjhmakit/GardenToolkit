@@ -13,7 +13,7 @@ import { plantingsCsv } from '../../reports/csv';
 import { downloadText, safeFileName } from '../../lib/download';
 import { METHOD_LABELS, ConfidenceBadge, STATUS_LABELS } from '../panels/PlantingCard';
 import { plantColor } from '../plantColors';
-import { t } from '../../i18n';
+import { t, tn } from '../../i18n';
 
 export function PlantingsView() {
   const doc = useEditor((s) => s.doc)!;
@@ -45,7 +45,7 @@ export function PlantingsView() {
         <Stat label={t('Vegetable & herb area')} value={formatArea(stats.vegetableAreaM2 * 1e6, units)} />
         <Stat label={t('Plants')} value={stats.plantCount.toLocaleString()} sub={stats.plantCountComplete ? undefined : t('some quantities unknown')} />
         <Stat label={t('Varieties')} value={String(stats.varieties)} />
-        <Stat label={t('Estimated harvest')} value={stats.harvest.total ? `${formatRange(stats.harvest.total)} kg` : '—'} sub={stats.harvest.excluded ? `${stats.harvest.excluded} crop(s) without yield data` : t('range, not a guarantee')} />
+        <Stat label={t('Estimated harvest')} value={stats.harvest.total ? `${formatRange(stats.harvest.total)} kg` : '—'} sub={stats.harvest.excluded ? tn('{{count}} crops without yield data', stats.harvest.excluded) : t('range, not a guarantee')} />
       </div>
       {rows.length === 0 ? (
         <div className="empty-state">
@@ -95,7 +95,7 @@ export function PlantingsView() {
                   </td>
                   <td className="r">
                     <NumberInput
-                      ariaLabel={`Your quantity for ${r.plant ? plantDisplayName(r.plant) : r.planting.plantId} in ${r.host.code}`}
+                      ariaLabel={t('Your quantity for {{plant}} in {{area}}', { plant: r.plant ? plantDisplayName(r.plant) : r.planting.plantId, area: r.host.code })}
                       value={r.planting.quantityOverride}
                       integer
                       min={0}

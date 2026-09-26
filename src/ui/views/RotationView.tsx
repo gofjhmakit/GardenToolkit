@@ -10,6 +10,7 @@ import { newId } from '../../lib/ids';
 import { Select } from '../components/Fields';
 import { t } from '../../i18n';
 import { localizedText } from '../../plants/names';
+import { ConfidenceBadge } from '../panels/PlantingCard';
 
 const GROUP_COLORS: Record<RotationGroup, string> = {
   legumes: '#2F6E3B',
@@ -118,9 +119,9 @@ export function RotationView() {
           }}
         >
           <strong>{t('Record an earlier season:')}</strong>
-          <Select<string> ariaLabel="Bed" value={bed} options={beds.map((o) => ({ value: o.id, label: `${o.code} ${o.name}` }))} onChange={(v) => setBed(v ?? '')} className="sm" />
+          <Select<string> ariaLabel={t('Bed')} value={bed} options={beds.map((o) => ({ value: o.id, label: `${o.code} ${o.name}` }))} onChange={(v) => setBed(v ?? '')} className="sm" />
           <input className="input sm" style={{ width: 80 }} aria-label={t('Year')} value={year} onChange={(e) => setYear(e.target.value)} inputMode="numeric" />
-          <Select<RotationGroup> ariaLabel="Crop group" value={group} options={ROTATION_GROUPS.filter((g) => g !== 'perennial').map((g) => ({ value: g, label: localizedText(ruleOf.get(g)?.label) ?? g }))} onChange={(v) => v && setGroup(v)} className="sm" />
+          <Select<RotationGroup> ariaLabel={t('Crop group')} value={group} options={ROTATION_GROUPS.filter((g) => g !== 'perennial').map((g) => ({ value: g, label: localizedText(ruleOf.get(g)?.label) ?? g }))} onChange={(v) => v && setGroup(v)} className="sm" />
           <input className="input sm" style={{ width: 160 }} placeholder={t('Crop (optional)')} aria-label={t('Crop')} value={crop} maxLength={200} onChange={(e) => setCrop(e.target.value)} />
           <button className="btn sm primary" type="submit">
             <Plus size={13} />{' '}{t('Add')}
@@ -152,10 +153,10 @@ export function RotationView() {
       <div className="card">
         <h4>{t('Rotation guidance')}</h4>
         <p className="small muted">{t('Suggestions follow one conventional four-course scheme ({{scheme}}); other schemes are equally valid. Intervals differ by crop group:', { scheme: ROTATION_SEQUENCE.map((g) => localizedText(ruleOf.get(g)?.label) ?? g).join(' → ') })}</p>
-        <table className="table">
+        <table className="table stack">
           <thead>
             <tr>
-              <th>{t('Group')}</th>
+              <th>{t('Crop group')}</th>
               <th>{t('Minimum years between')}</th>
               <th>{t('Why')}</th>
               <th>{t('Confidence')}</th>
@@ -164,10 +165,10 @@ export function RotationView() {
           <tbody>
             {rules.map((r) => (
               <tr key={r.group}>
-                <td>{localizedText(r.label)}</td>
-                <td>{r.minYearsBetween ? `${r.minYearsBetween.min}–${r.minYearsBetween.max}` : '—'}</td>
+                <td><strong>{localizedText(r.label)}</strong></td>
+                <td data-label={t('Minimum years between')}>{r.minYearsBetween ? `${r.minYearsBetween.min}–${r.minYearsBetween.max}` : '—'}</td>
                 <td>{localizedText(r.reason)}</td>
-                <td>{r.confidence}</td>
+                <td><ConfidenceBadge c={r.confidence} /></td>
               </tr>
             ))}
           </tbody>

@@ -33,7 +33,7 @@ from importing.
   "format": "garden-toolkit-project",
   "schemaVersion": 1,
   "exportedAt": "2026-09-25T12:00:00.000Z",
-  "generator": { "name": "Garden Toolkit", "version": "1.2.0" },
+  "generator": { "name": "Garden Toolkit", "version": "1.3.0" },
   "units": { "length": "mm", "angle": "deg", "coordinates": "…" },
   "project": { "id", "name", "description", "createdAt", "updatedAt" },
   "location": { "country", "region", "climateSystem", "climateZone", "lastFrost", "firstFrost",

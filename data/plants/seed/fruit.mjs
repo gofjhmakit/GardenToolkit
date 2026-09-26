@@ -1,6 +1,6 @@
 import { plant, R, LF, FF, FIX, t } from './_helpers.mjs';
 
-const MATURE = (x) => ({ confidence: 'low', assumptions: t(`Established, mature plants in good conditions. ${x}`.trim()) });
+const MATURE = (x = "") => ({ confidence: 'low', assumptions: t(`Established, mature plants in good conditions. ${x}`.trim()) });
 const CULTIVAR_HARDINESS = t(
   'Winter hardiness depends strongly on cultivar and rootstock. In cold regions (e.g. Finland), choose cultivars rated for your growing zone.',
 );

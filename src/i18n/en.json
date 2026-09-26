@@ -40,5 +40,7 @@
   "{{count}} varieties_one": "{{count}} variety",
   "{{count}} varieties_other": "{{count}} varieties",
   "{{name}} added to {{count}} areas_one": "{{name}} added to {{count}} area",
-  "{{name}} added to {{count}} areas_other": "{{name}} added to {{count}} areas"
+  "{{name}} added to {{count}} areas_other": "{{name}} added to {{count}} areas",
+  "Add plants to {{count}} selected areas_one": "Add plants to {{count}} selected area",
+  "{{count}} crops without yield data_one": "{{count}} crop without yield data"
 }

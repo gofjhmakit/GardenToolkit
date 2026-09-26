@@ -1,4 +1,4 @@
-import type { PlantCategory } from '../plants/schema';
+import type { LIFECYCLES, PlantCategory } from '../plants/schema';
 import { t } from '../i18n';
 
 export const CATEGORY_COLORS: Record<PlantCategory, string> = {
@@ -18,6 +18,12 @@ export const CATEGORY_COLORS: Record<PlantCategory, string> = {
   groundcover: '#1A727B',
   'green-manure': '#6A741C',
   aquatic: '#2F86C8',
+};
+
+export const LIFECYCLE_LABELS: Record<(typeof LIFECYCLES)[number], string> = {
+  annual: t('Annual'),
+  biennial: t('Biennial'),
+  perennial: t('Perennial'),
 };
 
 export const CATEGORY_LABELS: Record<PlantCategory, string> = {

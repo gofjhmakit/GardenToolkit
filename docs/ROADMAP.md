@@ -38,17 +38,16 @@
 
 **Platform**
 - Light and dark themes; accessibility (semantic controls, focus rings, keyboard access, axe checks in CI).
-- i18n infrastructure with a partial Finnish UI catalogue and localised plant names.
+- Full Finnish translation (UI, reports, number and date formats, plant names and plant texts) with a language switch in Settings.
 
 ## Known limitations / next steps
 
 1. **Plant data depth.** The bundled data is 328 curated records compiled from general guidance, not cited per field (see PLANT_DATA.md). Next: run `npm run data:wikidata` where Wikidata is reachable (it adds thousands of names-only species), then add cited, per-field sources and region-specific (Finnish) timing data.
-2. **Finnish translation.** The infrastructure is done; only the main chrome is translated. Remaining UI strings need wrapping in `t()` and translating in `src/i18n/fi.json`. Care texts in the plant data need `fi` entries.
-3. **Canvas:**
+2. **Canvas:**
    - no snapping to the blueprint image contents;
    - multi-selection resize with arbitrarily rotated objects keeps the aspect ratio;
    - no rotation handle for the blueprint (use the inspector);
    - no touch-optimised gestures beyond pinch and pan.
-4. **Harvest logging** (actual vs. estimated), recurring care tasks, a watering/fertiliser schedule, irrigation planning, seed inventory and a shopping list. The data model already separates estimates from overrides and supports seasons, tasks and notes, so these can be added on top.
-5. **Material calculator.** The raised-bed soil volume and edging estimate is in place. Lumber, irrigation and mulch are not implemented yet.
-6. **Optional sync or sharing.** Not planned by default. If added, reference data and personal data must stay clearly separated (datasets already carry origin metadata).
+3. **Harvest logging** (actual vs. estimated), recurring care tasks, a watering/fertiliser schedule, irrigation planning, seed inventory and a shopping list. The data model already separates estimates from overrides and supports seasons, tasks and notes, so these can be added on top.
+4. **Material calculator.** The raised-bed soil volume and edging estimate is in place. Lumber, irrigation and mulch are not implemented yet.
+5. **Optional sync or sharing.** Not planned by default. If added, reference data and personal data must stay clearly separated (datasets already carry origin metadata).

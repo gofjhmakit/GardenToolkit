@@ -58,7 +58,7 @@ import { TabGuardBanner } from './TabGuardBanner';
 import { MenuButton } from '../components/Menu';
 import { exportProjectJson, exportProjectPackage } from '../../app/projectActions';
 import { useCompact } from '../useCompact';
-import { t } from '../../i18n';
+import { t, tn } from '../../i18n';
 
 const TOOLS: { id: ToolId; label: string; key?: string; icon: React.ReactNode; kind?: ObjectKind }[] = [
   { id: 'select', label: t('Select'), key: 'V', icon: <MousePointer2 size={16} strokeWidth={1.75} absoluteStrokeWidth /> },
@@ -302,7 +302,7 @@ function AddPlantsButton({ iconOnly = false }: { iconOnly?: boolean }) {
       className="btn primary sm"
       aria-label={iconOnly ? t('Add plants') : undefined}
       disabled={!plantable.length}
-      title={plantable.length ? `Add plants to ${plantable.length} selected area(s)` : t('Select one or more beds or areas to add plants')}
+      title={plantable.length ? tn('Add plants to {{count}} selected areas', plantable.length) : t('Select one or more beds or areas to add plants')}
       onClick={() => window.dispatchEvent(new CustomEvent('gtk:add-plants', { detail: { ids: plantable } }))}
     >
       <Sprout size={14} />
