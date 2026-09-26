@@ -1,6 +1,13 @@
 import 'fake-indexeddb/auto';
 import '@testing-library/jest-dom/vitest';
 
+// Tests assert English UI text. The default language follows navigator.language, which Node
+// derives from the machine's locale, so pin it — otherwise the suite fails on a Finnish system.
+if (typeof navigator !== 'undefined') {
+  Object.defineProperty(navigator, 'language', { value: 'en-US', configurable: true });
+  Object.defineProperty(navigator, 'languages', { value: ['en-US', 'en'], configurable: true });
+}
+
 // jsdom gaps used by the UI.
 if (typeof window !== 'undefined') {
   if (!('ResizeObserver' in window)) {

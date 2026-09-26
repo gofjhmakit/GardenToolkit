@@ -135,10 +135,11 @@ test.describe('planting workflow & views', () => {
     await page.getByRole('button', { name: 'Herb', exact: true }).click();
     // A category filter narrows the list (counts follow the dataset, so compare, don't hard-code).
     const count = page.getByText(/^\d+ of \d+ plants$/);
-    await expect(count).toBeVisible();
-    const [shown, total] = ((await count.textContent()) ?? '').match(/\d+/g)!.map(Number);
+    const counts = async () => ((await count.textContent()) ?? '').match(/\d+/g)!.map(Number);
+    // Wait until the filter has been applied (the count starts as "N of N").
+    await expect.poll(async () => { const [shown, total] = await counts(); return shown < total; }).toBe(true);
+    const [shown] = await counts();
     expect(shown).toBeGreaterThan(20);
-    expect(shown).toBeLessThan(total);
     await page.getByLabel('Search plants').fill('basil');
     await page.getByRole('button', { name: 'Add to favourites' }).click();
     await expect(page.getByRole('heading', { name: 'Data source' })).toBeVisible();

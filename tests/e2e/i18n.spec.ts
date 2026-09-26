@@ -14,7 +14,7 @@ test('switching to Finnish translates the app, keeps the project and uses Finnis
   await page.getByRole('tab', { name: 'Suunnittelu' }).click();
   await expect(page.getByText('3,75 m²').first()).toBeVisible();
   await page.getByRole('button', { name: 'Takaisin kaikkiin projekteihin' }).click();
-  await expect(page.getByRole('heading', { name: 'Puutarhasi' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Puutarhasi', exact: true })).toBeVisible();
   await expect(page.getByText('1 kohde')).toBeVisible();
 
   // And back to English.
@@ -28,7 +28,7 @@ test('a Finnish browser starts in Finnish with Finnish plant names and months', 
   const ctx = await browser.newContext({ locale: 'fi-FI' });
   const page = await ctx.newPage();
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Puutarhasi' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Puutarhasi', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Uusi puutarha' }).first().click();
   await page.locator('#new-name').fill('Kotipuutarha');
   await page.getByLabel('Sijainti (valinnainen)').selectOption('fi-III');
