@@ -35,6 +35,7 @@ import {
   zOrder,
 } from './actions';
 import { usePlants } from '../../app/plantStore';
+import { APP_VERSION } from '../../persistence/projectFile';
 import { makeLookup } from '../../app/lookup';
 
 type MenuId = 'file' | 'edit' | 'view' | 'arrange' | 'help';
@@ -162,6 +163,8 @@ export function MenuBar({ onHome, onHelp, compact = false }: { onHome: () => voi
     help: () => [
       { label: 'Keyboard shortcuts', shortcut: '?', onSelect: onHelp },
       { label: 'Plant data sources & licences', onSelect: () => s.setWorkspace('plants') },
+      { type: 'separator' },
+      { type: 'label', label: `Garden Toolkit ${APP_VERSION}` },
     ],
   };
 

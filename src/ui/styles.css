@@ -2301,6 +2301,16 @@ kbd {
   z-index: 60;
   pointer-events: none;
 }
+.update-host {
+  left: 16px;
+  right: auto;
+}
+.app-version {
+  margin-top: 32px;
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
 .toast {
   pointer-events: auto;
   background: var(--raised);

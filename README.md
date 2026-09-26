@@ -58,7 +58,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Requirements: Node.js 20+ (developed with Node 22).
+Requirements: Node.js 24 LTS or newer (pinned in `.nvmrc`).
 
 | Command | What it does |
 | --- | --- |

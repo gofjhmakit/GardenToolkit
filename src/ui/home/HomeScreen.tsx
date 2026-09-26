@@ -11,6 +11,7 @@ import { confirmAsync, promptAsync, toast } from '../components/feedback';
 import { CLIMATE_PRESETS } from '../../engine/climate';
 import { Field, Select, TextInput } from '../components/Fields';
 import { ProjectThumb, relativeTime } from './ProjectThumb';
+import { APP_VERSION } from '../../persistence/projectFile';
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -130,6 +131,7 @@ export function HomeScreen() {
           <Feature icon={<WifiOff size={18} />} title="Works offline" text="Installable app; your plans and the plant database work without a connection." />
           <Feature icon={<ShieldCheck size={18} />} title="Private by design" text="No account, no tracking. Export a backup file whenever you like." />
         </div>}
+        <p className="app-version">Garden Toolkit {APP_VERSION}</p>
       </div>
       {createOpen && <CreateDialog onClose={() => setCreateOpen(false)} />}
       {menu && (
