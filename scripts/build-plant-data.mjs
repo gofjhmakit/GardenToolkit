@@ -17,12 +17,15 @@ import flowers2 from '../data/plants/seed/flowers2.mjs';
 import perennials2 from '../data/plants/seed/perennials2.mjs';
 import woody2 from '../data/plants/seed/woody2.mjs';
 import greenmanure from '../data/plants/seed/greenmanure.mjs';
+import herbs3 from '../data/plants/seed/herbs3.mjs';
+import { USES } from '../data/plants/seed/uses.mjs';
+import { applyEnrichment } from '../data/plants/seed/enrich.mjs';
 import { companions, rotation, sources } from '../data/plants/seed/relations.mjs';
 import { HARDINESS } from '../data/plants/seed/hardiness.mjs';
 import { FI_TEXTS } from '../data/plants/seed/fi-texts.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const plants = [...vegetables, ...vegetables2, ...herbs, ...herbs2, ...fruit, ...woody2, ...ornamentals, ...flowers2, ...perennials2, ...greenmanure];
+const plants = [...vegetables, ...vegetables2, ...herbs, ...herbs2, ...herbs3, ...fruit, ...woody2, ...ornamentals, ...flowers2, ...perennials2, ...greenmanure];
 
 const ids = new Set();
 for (const p of plants) {
@@ -35,10 +38,24 @@ for (const [id, [fiMax, usdaMin, usdaMax]] of Object.entries(HARDINESS)) {
   p.growing.finnishZones ??= { min: 1, max: fiMax };
   p.growing.usdaZones ??= { min: usdaMin, max: usdaMax };
 }
+applyEnrichment(plants);
 for (const c of companions) {
   for (const end of [c.a, c.b]) {
     if (!end.includes(':') && !ids.has(end)) throw new Error(`Companion relation references unknown plant ${end}`);
   }
+}
+
+// Usage notes (culinary, traditional medicinal, other uses, safety), summarised from the
+// Yrttitarha herb database in our own words; the source is credited on each record.
+for (const [id, { tags = [], ...uses }] of Object.entries(USES)) {
+  const p = plants.find((x) => x.id === id);
+  if (!p) throw new Error(`Usage entry for unknown plant ${id}`);
+  p.uses = uses;
+  for (const tag of tags) if (!p.tags.includes(tag)) p.tags.push(tag);
+  if (!p.provenance.sources.some((s) => s.id === 'yrttitarha')) {
+    p.provenance.sources.push({ id: 'yrttitarha', note: 'Uses summarised from the Yrttitarha herb database' });
+  }
+  p.provenance.fields = { ...p.provenance.fields, uses: { sources: ['yrttitarha'], confidence: 'medium' } };
 }
 
 // Fill in Finnish for every localised text ({ en, fi? }) that does not set it inline.

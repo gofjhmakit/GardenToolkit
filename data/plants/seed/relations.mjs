@@ -99,4 +99,14 @@ export const sources = [
     notes:
       'Compiled by the Garden Toolkit maintainers from widely published, general horticultural guidance (seed-packet conventions, national gardening-organisation and university-extension style planting charts). Values are NOT verified field-by-field against a single citable source; ranges are intentionally broad and each record carries a confidence level. Treat as a starting point and verify locally.',
   },
+  {
+    id: 'yrttitarha',
+    title: 'Yrttitarha – herb database (yrttitarha.fi)',
+    url: 'http://www.yrttitarha.fi/kanta/haku.cgi?hakusanat=kaikki-suomi',
+    license: 'Referenced, not copied',
+    attribution: 'Yrttitarha herb database and its cultivation guides (Finnish).',
+    retrieved: '2026-09-26',
+    notes:
+      'Used as a reference for herb uses (food, traditional medicinal and other uses), cautions and Finnish cultivation figures. The texts in this dataset are our own short summaries; no text is reproduced. Traditional medicinal use is reported for information only and is not medical advice.',
+  },
 ];

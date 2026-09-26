@@ -52,7 +52,7 @@ export default [
     care: { diseases: t('Powdery mildew; water at the base.') },
     conf: 'low',
   }),
-  plant('lobularia-maritima', 'Lobularia maritima', { en: ['Sweet alyssum'] }, {
+  plant('lobularia-maritima', 'Lobularia maritima', { en: ['Sweet alyssum'], fi: ['Tuoksulimaska'] }, {
     family: 'Brassicaceae', category: 'flower', lifecycle: 'annual', edible: false, tags: ['annual-flower', 'beneficial-insects', 'edging'],
     growing: { sun: ['full-sun', 'partial-shade'], sunHoursMin: 4, water: 'medium', frostTolerance: 'half-hardy' },
     planting: { methods: ['grid'], gridSpacingCm: R(15, 20), inRowSpacingCm: R(15, 20), seedDepthCm: R(0, 0.2), containerSuitable: true, matureHeightCm: R(10, 20) },

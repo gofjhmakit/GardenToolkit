@@ -6,6 +6,8 @@ import { anchorsFor } from '../engine/plantSeasons';
 import { createProject } from '../domain/projectFactory';
 import type { Plant } from './schema';
 import { hasTagLabel } from './tags';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 describe('bundled plant dataset', () => {
   const catalog = loadCoreCatalog();
@@ -111,5 +113,80 @@ describe('plant search', () => {
     expect(hits[0]).toBe('synthetic-4242');
     expect(t1 - t0).toBeLessThan(5000);
     expect(t2 - t1).toBeLessThan(200);
+  });
+});
+
+describe('plant data quality', () => {
+  const catalog = loadCoreCatalog();
+  const plants = catalog.all();
+
+  it('keeps pH, sizes and depths within plausible ranges', () => {
+    const bad: string[] = [];
+    for (const p of plants) {
+      const { ph } = p.growing;
+      if (ph && (ph.min < 3 || ph.max > 9)) bad.push(`${p.id} pH ${ph.min}-${ph.max}`);
+      const h = p.planting.matureHeightCm;
+      if (h && (h.min <= 0 || h.max > 5000)) bad.push(`${p.id} height`);
+      const w = p.planting.matureWidthCm;
+      if (w && (w.min <= 0 || w.max > 2000)) bad.push(`${p.id} width`);
+      const sd = p.planting.seedDepthCm;
+      if (sd && (sd.min < 0 || sd.max > 10)) bad.push(`${p.id} seed depth`);
+      const pd = p.planting.plantingDepthCm;
+      if (pd && (pd.min < 0 || pd.max > 40)) bad.push(`${p.id} planting depth`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('gives every plant pest, disease and watering notes', () => {
+    const missing = plants.filter((p) => !p.care.pests || !p.care.diseases || (p.growing.water && !p.care.watering)).map((p) => p.id);
+    expect(missing).toEqual([]);
+  });
+
+  it('warns about every plant tagged toxic that has usage notes', () => {
+    const unsafe = plants.filter((p) => p.tags.includes('toxic') && p.uses && !p.uses.safety).map((p) => p.id);
+    expect(unsafe).toEqual([]);
+  });
+
+  it('credits the herb database on every usage note and keeps notes non-empty', () => {
+    const withUses = plants.filter((p) => p.uses);
+    expect(withUses.length).toBeGreaterThanOrEqual(129);
+    for (const p of withUses) {
+      expect(p.provenance.sources.map((s) => s.id), p.id).toContain('yrttitarha');
+      const u = p.uses!;
+      expect(u.culinary || u.medicinal || u.other, p.id).toBeTruthy();
+      expect(u.parts.length, p.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('includes the traditional Finnish herbs, including wild and woody ones', () => {
+    for (const id of ['urtica-dioica', 'taraxacum-officinale', 'chamaenerion-angustifolium', 'filipendula-ulmaria', 'achillea-millefolium', 'hypericum-perforatum', 'rubus-chamaemorus', 'vaccinium-myrtillus', 'betula-pendula', 'rhodiola-rosea', 'cetraria-islandica', 'aegopodium-podagraria']) {
+      expect(catalog.get(id)?.uses, id).toBeTruthy();
+    }
+  });
+
+  it('has no plant listed twice in the enrichment table (a later entry would silently replace the earlier one)', () => {
+    const src = readFileSync(resolve(__dirname, '../../data/plants/seed/enrich.mjs'), 'utf8');
+    const ids = [...src.matchAll(/^ {2}'([a-z0-9-]+)': \{/gm)].map((m) => m[1]);
+    const dups = ids.filter((id, i) => ids.indexOf(id) !== i);
+    expect(dups).toEqual([]);
+  });
+});
+
+describe('herb search', () => {
+  const catalog = loadCoreCatalog();
+  const anchors = anchorsFor(createProject('x', { location: { lastFrost: '05-20', firstFrost: '09-25' } }).location, 2026);
+  const search = (q: string) => filterPlants(catalog, { ...EMPTY_FILTER, query: q }, new Set(), anchors).map((p) => p.id);
+  it('finds wild and traditional herbs by Finnish and scientific names', () => {
+    expect(search('nokkonen')[0]).toBe('urtica-dioica');
+    expect(search('voikukka')[0]).toBe('taraxacum-officinale');
+    expect(search('maitohorsma')[0]).toBe('chamaenerion-angustifolium');
+    expect(search('Epilobium')).toContain('chamaenerion-angustifolium');
+    expect(search('mesiangervo')[0]).toBe('filipendula-ulmaria');
+    expect(search('koiruoho')[0]).toBe('artemisia-absinthium');
+    expect(search('lakka')).toContain('rubus-chamaemorus');
+  });
+  it('ranks names that start with the query above near-miss spellings', () => {
+    // "mari" should list marigolds before wormwood's folk name "Mali".
+    expect(search('mari').indexOf('artemisia-absinthium')).toBeGreaterThan(search('mari').indexOf('tagetes-patula'));
   });
 });

@@ -92,6 +92,26 @@ export const TimingWindowSchema = z.discriminatedUnion('relativeTo', [
 ]);
 export type TimingWindow = z.infer<typeof TimingWindowSchema>;
 
+/** Plant parts that are used (eaten, brewed, dried…). */
+export const PLANT_PARTS = [
+  'leaves',
+  'shoots',
+  'flowers',
+  'buds',
+  'fruit',
+  'seeds',
+  'roots',
+  'rhizome',
+  'bulbs',
+  'bark',
+  'needles',
+  'sap',
+  'resin',
+  'whole-plant',
+] as const;
+export const PlantPartSchema = z.enum(PLANT_PARTS);
+export type PlantPart = z.infer<typeof PlantPartSchema>;
+
 export const SourceRefSchema = z.object({
   id: z.string(),
   note: z.string().optional(),
@@ -204,6 +224,21 @@ export const PlantSchema = z.object({
       harvestEvents: nullableRange,
       assumptions: LocalizedTextSchema.nullable().optional(),
       confidence: ConfidenceSchema.default('unknown'),
+    })
+    .nullable()
+    .optional(),
+  /**
+   * How the plant is used. Medicinal text describes traditional/herbal use only,
+   * never dosing or medical advice; `safety` holds cautions and toxicity notes.
+   */
+  uses: z
+    .object({
+      parts: z.array(PlantPartSchema).default([]),
+      culinary: LocalizedTextSchema.nullable().optional(),
+      medicinal: LocalizedTextSchema.nullable().optional(),
+      other: LocalizedTextSchema.nullable().optional(),
+      preserving: LocalizedTextSchema.nullable().optional(),
+      safety: LocalizedTextSchema.nullable().optional(),
     })
     .nullable()
     .optional(),

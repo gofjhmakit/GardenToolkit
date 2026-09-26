@@ -138,6 +138,9 @@ export class PlantCatalog {
         boost: { common: 3, scientific: 2, synonyms: 1.5 },
         prefix: true,
         fuzzy: (term) => (term.length > 3 ? 0.2 : false),
+        // A name that starts with what was typed ranks above a near-miss spelling
+        // ("mari" → Marigold before Mali), while typos still find their plant.
+        weights: { prefix: 0.6, fuzzy: 0.25 },
         combineWith: 'AND',
       },
       // Accent-insensitive matching so "paarynapuu" finds "Päärynäpuu".

@@ -144,7 +144,7 @@ export default [
     timing: { flowering: LF(-2, 2) },
     care: { pruning: t('Prune right after flowering; flowers form on last year\'s wood.'), winter: t('Flower buds freeze in hard winters — choose hardy cultivars (e.g. "Northern Gold", "Meadowlark").') },
   }),
-  woody('weigela-florida', 'Weigela florida', { en: ['Weigela'] }, 'Caprifoliaceae', {
+  woody('weigela-florida', 'Weigela florida', { en: ['Weigela'], fi: ['Ruusuweigela'] }, 'Caprifoliaceae', {
     category: 'shrub', tags: ['shrub', 'pollinators'], sun: ['full-sun', 'partial-shade'], spacing: R(120, 180), height: R(120, 200), root: 'medium',
     timing: { flowering: LF(6, 10) },
     care: { pruning: t('Thin oldest stems after flowering.'), winter: CULTIVAR_HARDINESS },

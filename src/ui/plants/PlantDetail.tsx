@@ -1,5 +1,5 @@
 import { Star } from 'lucide-react';
-import type { Plant, Confidence } from '../../plants/schema';
+import type { Plant, PlantPart, Confidence } from '../../plants/schema';
 import { localizedText, plantDisplayName } from '../../plants/names';
 import { usePlants } from '../../app/plantStore';
 import { useEditor } from '../../editor/store';
@@ -23,6 +23,45 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <dt>{label}</dt>
       <dd>{value}</dd>
     </>
+  );
+}
+
+const PART_LABELS: Record<PlantPart, () => string> = {
+  leaves: () => t('leaf'),
+  shoots: () => t('young shoot'),
+  flowers: () => t('flower'),
+  buds: () => t('bud'),
+  fruit: () => t('fruit / berry'),
+  seeds: () => t('seed'),
+  roots: () => t('root (plant part)'),
+  rhizome: () => t('rhizome'),
+  bulbs: () => t('bulb'),
+  bark: () => t('bark'),
+  needles: () => t('needle'),
+  sap: () => t('sap'),
+  resin: () => t('resin'),
+  'whole-plant': () => t('whole plant'),
+};
+
+function UsesSection({ uses }: { uses: NonNullable<Plant['uses']> }) {
+  const safety = localizedText(uses.safety);
+  return (
+    <section className="detail-section">
+      <h4>{t('Uses')}</h4>
+      {safety && (
+        <p className="small" role="note" style={{ borderLeft: '3px solid var(--danger)', paddingLeft: 8 }}>
+          <strong>{t('Caution:')}</strong> {safety}
+        </p>
+      )}
+      <dl className="kv">
+        <Row label={t('Parts used')} value={uses.parts.length ? uses.parts.map((part) => PART_LABELS[part]()).join(', ') : null} />
+        <Row label={t('Food & drink')} value={localizedText(uses.culinary)} />
+        <Row label={t('Traditional medicinal use')} value={localizedText(uses.medicinal)} />
+        <Row label={t('Other uses')} value={localizedText(uses.other)} />
+        <Row label={t('Preserving')} value={localizedText(uses.preserving)} />
+      </dl>
+      {uses.medicinal && <p className="tiny muted">{t('Traditional use is described for information only; it is not medical advice.')}</p>}
+    </section>
   );
 }
 
@@ -149,6 +188,8 @@ export function PlantDetail({ plant }: { plant: Plant }) {
           <Row label={t('Feeding need')} value={care.feeding ? t(care.feeding) : null} />
         </dl>
       </section>
+
+      {plant.uses && <UsesSection uses={plant.uses} />}
 
       <section className="detail-section">
         <h4>{t('Yield')}</h4>

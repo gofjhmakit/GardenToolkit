@@ -138,6 +138,7 @@ export function tagLabel(tag: string): string {
     'weed-suppressing': t('weed suppressing'),
     wildflower: t('wildflower'),
     wildlife: t('wildlife'),
+    'wild-harvest': t('wild harvest'),
     'wind-pollinated': t('wind pollinated'),
     'winter-cover': t('winter cover'),
     'winter-hardy': t('winter hardy'),
