@@ -3,6 +3,8 @@
 A local-first, offline-capable garden planner for home gardeners: a lightweight mix of 2D CAD
 editor, plant database, planting calculator, planting calendar and garden documentation tool.
 
+You can test/use it here https://gofjhmakit.github.io/GardenToolkit/.
+
 - **Design** your garden on a scaled plan. Import a blueprint/aerial image or PDF, calibrate
   its scale, then draw beds, raised beds, paths, lawns, trees, greenhouses and more.
 - **Edit like a desktop design app.** Multi-select, marquee, copy/paste, undo/redo, grouping,
